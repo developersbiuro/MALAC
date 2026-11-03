@@ -14,12 +14,29 @@
 // values still stored in 03… shape render correctly when a form (e.g.
 // the address book) is opened for editing.
 
-// The 10 national digits of any raw/partial/stored value.
+// The national digits of a RAW value coming out of the text field (user
+// typing or pasting into the national-part box). The field only ever shows
+// the national part, so a leading "92" here can only be a pasted
+// international number, and a leading "0" is the local trunk prefix —
+// neither belongs in the national part.
 export function nationalDigits(raw) {
   let d = String(raw || "").replace(/\D/g, "");
   if (d.length > 10 && d.startsWith("92")) d = d.slice(2); // intl paste: 92 + 10 digits
-  if (d.length > 10 && d.startsWith("0")) d = d.replace(/^0+/, ""); // local paste: 0 + 10 digits
+  if (d.startsWith("0")) d = d.replace(/^0+/, ""); // trunk 0 (typed or pasted local form)
   return d.slice(0, 10);
+}
+
+// The national digits to DISPLAY for a STORED value. Stored values are
+// canonical ("+92" + national digits), so the national part is quite
+// literally what follows the "+92" — parsing must use that, NOT the raw
+// rules above: re-parsing a partial canonical value like "+923" with the
+// raw rules leaks the "92" into the field (the user types one digit and
+// three appear). Legacy stored values in 03… shape fall back to the raw
+// parse so old addresses still open correctly for editing.
+export function displayNational(stored) {
+  const s = String(stored || "");
+  if (s.startsWith("+92")) return s.slice(3).replace(/\D/g, "").slice(0, 10);
+  return nationalDigits(s);
 }
 
 // Any raw input -> the stored form: "+92" + national digits, or "".
@@ -49,7 +66,7 @@ export default function PhoneInput({
         title="Sahi Pakistani mobile number likhein — maslan 0300 1234567"
         className="flex-1 min-w-0 bg-transparent outline-none placeholder:text-gray-400"
         placeholder={placeholder}
-        value={group(nationalDigits(value))}
+        value={group(displayNational(value))}
         onChange={(e) => onChange(normalizePkInput(e.target.value))}
       />
     </div>
