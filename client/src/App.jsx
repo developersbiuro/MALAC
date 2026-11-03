@@ -14,6 +14,8 @@ import CartPage from "./pages/CartPage.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
+import TrackOrder from "./pages/TrackOrder.jsx";
+import ProfileSettings from "./pages/ProfileSettings.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -72,6 +74,9 @@ export default function App() {
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+        {/* Public tracking (order ID + phone, no login) and account settings */}
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/account/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />

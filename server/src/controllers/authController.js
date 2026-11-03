@@ -13,6 +13,10 @@ const publicUser = (u) => ({
   addresses: u.addresses, emailVerified: u.emailVerified,
   phoneVerified: u.phoneVerified, avatar: u.avatar || "",
   accountStatus: u.accountStatus || "active",
+  // True only when a password credential is loaded on the document (the
+  // /me handler re-fetches with +passwordHash); lets the Profile Settings
+  // page decide whether to offer "change password" at all.
+  hasPassword: Boolean(u.passwordHash),
 });
 
 const STAFF_ROLES = ["admin", "vice-admin"];
@@ -287,7 +291,76 @@ export const googleLogin = asyncHandler(async (req, res) => {
   res.json({ user: publicUser(user), token: generateToken(user), demo: profile.demo });
 });
 
-export const me = asyncHandler(async (req, res) => res.json({ user: publicUser(req.user) }));
+export const me = asyncHandler(async (req, res) => {
+  // Re-fetch with the password hash selected so hasPassword is accurate
+  // (passwordHash is select:false and `protect` does not load it).
+  const full = await User.findById(req.user._id).select("+passwordHash");
+  res.json({ user: publicUser(full || req.user) });
+});
+
+// -- Profile settings (signed-in users, own account only) --
+// Only the display name is editable here. Email and phone are the
+// account's OTP-verified identities, so they are deliberately NOT
+// changeable through this endpoint.
+export const updateProfile = asyncHandler(async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  if (!name) return res.status(400).json({ message: "Name cannot be empty" });
+  req.user.name = name;
+  await req.user.save();
+  const full = await User.findById(req.user._id).select("+passwordHash");
+  res.json({ user: publicUser(full || req.user) });
+});
+
+// Change password: only for accounts that HAVE one (customers who chose
+// a password at sign-up; staff who set one via the approval-gated reset).
+// Google / OTP-only accounts have no passwordHash and get a clear 400 —
+// they keep signing in with Google or a one-time code.
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword) return res.status(400).json({ message: "Current password is required" });
+  const pwErr = passwordError(newPassword);
+  if (pwErr) return res.status(400).json({ message: pwErr });
+  const user = await User.findById(req.user._id).select("+passwordHash");
+  if (!user || !user.passwordHash) {
+    return res.status(400).json({
+      message: "No password is set for this account. You sign in with Google or a one-time code instead.",
+    });
+  }
+  if (!verifyPassword(currentPassword, user.passwordHash)) {
+    return res.status(401).json({ message: "Current password is incorrect" });
+  }
+  user.passwordHash = hashPassword(newPassword);
+  await user.save();
+  res.json({ message: "Password updated." });
+});
+
+// -- Address book: add is above (addAddress); edit/delete below. Every
+// handler operates only on req.user's own address subdocuments. --
+const ADDRESS_FIELDS = ["label", "fullName", "phone", "city", "area", "street", "postalCode"];
+
+export const updateAddress = asyncHandler(async (req, res) => {
+  const address = req.user.addresses.id(req.params.addressId);
+  if (!address) return res.status(404).json({ message: "Address not found" });
+  for (const field of ADDRESS_FIELDS) {
+    if (req.body[field] !== undefined) address[field] = req.body[field];
+  }
+  if (req.body.isDefault !== undefined) {
+    address.isDefault = Boolean(req.body.isDefault);
+    if (address.isDefault) {
+      req.user.addresses.forEach((a) => { if (!a._id.equals(address._id)) a.isDefault = false; });
+    }
+  }
+  await req.user.save();
+  res.json({ addresses: req.user.addresses });
+});
+
+export const deleteAddress = asyncHandler(async (req, res) => {
+  const address = req.user.addresses.id(req.params.addressId);
+  if (!address) return res.status(404).json({ message: "Address not found" });
+  address.deleteOne();
+  await req.user.save();
+  res.json({ addresses: req.user.addresses });
+});
 
 export const addAddress = asyncHandler(async (req, res) => {
   if (req.body.isDefault) req.user.addresses.forEach((a) => (a.isDefault = false));

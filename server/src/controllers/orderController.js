@@ -15,6 +15,51 @@ export const placeOrder = asyncHandler(async (req, res) => {
   res.status(201).json({ order });
 });
 
+// -- Public order tracking (no login) --
+// Guests track with the two facts only the buyer knows: the human order
+// ID from their confirmation AND the phone number placed on the order.
+// The phone is compared on its last 10 digits so +92 / 0 / bare formats
+// all match. A single generic 404 covers both "no such order" and
+// "phone does not match" so the endpoint never reveals which failed.
+// The response is a LIMITED view: no user account data, no address, no
+// payment screenshots/transaction details.
+const last10Digits = (value) => String(value || "").replace(/\D/g, "").slice(-10);
+
+export const trackOrder = asyncHandler(async (req, res) => {
+  const orderId = String(req.body.orderId || "").trim();
+  const phoneDigits = last10Digits(req.body.phone);
+  const notFound = () => res.status(404).json({
+    message: "We could not find an order matching that order ID and phone number. Please check both and try again.",
+  });
+  if (!orderId || phoneDigits.length < 10) return notFound();
+  let order = await Order.findOne({ orderId });
+  if (!order && orderId !== orderId.toUpperCase()) {
+    order = await Order.findOne({ orderId: orderId.toUpperCase() });
+  }
+  if (!order) return notFound();
+  if (last10Digits(order.address?.phone) !== phoneDigits) return notFound();
+  res.json({
+    order: {
+      orderId: order.orderId,
+      status: order.status,
+      statusHistory: (order.statusHistory || []).map((h) => ({ status: h.status, at: h.at })),
+      items: order.items.map((i) => ({
+        title: i.title, variantLabel: i.variantLabel || "", qty: i.qty, price: i.price, image: i.image || "",
+      })),
+      subtotal: order.subtotal,
+      discount: order.discount,
+      shipping: order.shipping,
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      paymentVerificationStatus: order.paymentVerificationStatus,
+      deliveryMethod: order.deliveryMethod,
+      estimatedDelivery: order.estimatedDelivery || null,
+      createdAt: order.createdAt,
+    },
+  });
+});
+
 export const myOrders = asyncHandler(async (req, res) => {
   const filter = { user: req.user._id };
   if (req.query.status && ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;

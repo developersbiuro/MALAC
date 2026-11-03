@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Settings2 } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 
@@ -30,7 +32,12 @@ export default function MyOrders() {
 
   return (
     <main className="max-w-5xl mx-auto px-3 pt-4">
-      <h1 className="font-bold text-xl mb-3">My Orders</h1>
+      <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
+        <h1 className="font-bold text-xl">My Orders</h1>
+        <Link to="/account/settings" className="btn-lux text-xs px-4 py-2">
+          <Settings2 size={14} /> Profile Settings
+        </Link>
+      </div>
       <div className="flex gap-2 overflow-x-auto no-scrollbar bg-white rounded-md p-2">
         {TABS.map((t) => (
           <button key={t} onClick={() => setTab(t)}

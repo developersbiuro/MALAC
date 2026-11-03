@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, ShieldCheck } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, ShieldCheck, PackageSearch } from "lucide-react";
 import api from "../api/client.js";
 import { LOGO_FULL } from "../assets/logo.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -18,6 +18,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const searchRef = useRef(null);
 
   useEffect(() => { api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {}); }, []);
@@ -43,7 +44,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex justify-between">
           <span><span className="text-lux-pale font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1">|</span> Free Shipping on Orders Over Rs. 5,000</span>
           <span className="hidden sm:flex gap-3">
-            <Link to="/orders" className="hover:text-lux-pale">Track Order</Link>
+            <Link to="/track-order" className="hover:text-lux-pale">Track Order</Link>
             {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-lux-pale"><ShieldCheck size={12} /> Admin</Link>}
           </span>
         </div>
@@ -94,6 +95,9 @@ export default function Header() {
           )}
         </div>
 
+        <Link to="/track-order" className="btn-lux hidden md:inline-flex text-xs px-4 py-2 shrink-0">
+          <PackageSearch size={15} /> Track Order
+        </Link>
         <Link to="/wishlist" className="relative p-1.5" aria-label="Wishlist">
           <Heart size={22} />
           {wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-brand text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
@@ -110,11 +114,14 @@ export default function Header() {
           {accountOpen && (
             <div className="absolute right-0 top-full mt-1 bg-white shadow-xl rounded-md w-44 py-1 z-50 text-sm" onMouseLeave={() => setAccountOpen(false)}>
               {user ? <>
+                <Link to="/" className="block px-3 py-2 hover:bg-gray-50">Home</Link>
                 <Link to="/orders" className="block px-3 py-2 hover:bg-gray-50">My Orders</Link>
+                <Link to="/account/settings" className="block px-3 py-2 hover:bg-gray-50">Profile Settings</Link>
                 <Link to="/wishlist" className="block px-3 py-2 hover:bg-gray-50">Wishlist</Link>
                 {isStaff && <Link to="/admin" className="block px-3 py-2 hover:bg-gray-50">Admin Suite</Link>}
                 <button onClick={logout} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-red-500">Logout</button>
               </> : <>
+                <Link to="/" className="block px-3 py-2 hover:bg-gray-50">Home</Link>
                 <Link to="/login" className="block px-3 py-2 hover:bg-gray-50">Login</Link>
                 <Link to="/signup" className="block px-3 py-2 hover:bg-gray-50">Sign Up</Link>
                 <Link to="/admin" className="block px-3 py-2 hover:bg-gray-50">Admin Login</Link>
@@ -125,6 +132,7 @@ export default function Header() {
       </div>
       {/* Desktop category nav row (uppercase, malacpk-style) */}
       <nav className="hidden lg:flex gap-5 max-w-7xl mx-auto px-3 pb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-600 overflow-x-auto no-scrollbar">
+        <Link to="/" className={`whitespace-nowrap hover:text-lux-burnt ${pathname === "/" ? "text-lux-burnt" : ""}`}>Home</Link>
         <Link to="/shop" className="whitespace-nowrap hover:text-lux-burnt">All Products</Link>
         {categories.map((c) => (
           <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-lux-burnt">{c.name}</Link>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { BadgeCheck, Truck, ShieldCheck, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { BadgeCheck, Truck, ShieldCheck, MapPin, PackageSearch } from "lucide-react";
 import api from "../api/client.js";
 import HeroCarousel from "../components/HeroCarousel.jsx";
 import FlashSale from "../components/FlashSale.jsx";
@@ -14,6 +15,9 @@ const TRUST = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
+  const [trackId, setTrackId] = useState("");
+  const [trackPhone, setTrackPhone] = useState("");
   const [categories, setCategories] = useState([]);
   const [flash, setFlash] = useState([]);
   const [products, setProducts] = useState([]);
@@ -51,6 +55,28 @@ export default function Home() {
           </span>
         ))}
       </div>
+      {/* Track Your Order band — guests track with order ID + phone */}
+      <section className="bg-lux-ink text-white rounded-2xl mt-3 px-4 py-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3">
+        <div className="shrink-0">
+          <p className="eyebrow !text-lux-pale">Order Tracking</p>
+          <h2 className="font-serif text-2xl font-semibold leading-tight">Track Your Order</h2>
+          <p className="text-xs text-white/60">Use your order ID and the phone number from your order.</p>
+        </div>
+        <form
+          className="flex flex-col sm:flex-row gap-2 flex-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const q = new URLSearchParams({ orderId: trackId.trim(), phone: trackPhone.trim() });
+            navigate(`/track-order?${q.toString()}`);
+          }}
+        >
+          <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required placeholder="Order ID (MLC-...)"
+            className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
+          <input value={trackPhone} onChange={(e) => setTrackPhone(e.target.value)} required placeholder="Phone number (03xx-xxxxxxx)" inputMode="tel"
+            className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
+          <button className="btn-lux px-6 py-2.5 text-sm shrink-0"><PackageSearch size={16} /> Track Order</button>
+        </form>
+      </section>
       <FlashSale products={flash} />
       <CategoryGrid categories={categories} />
       <section className="mt-6">
