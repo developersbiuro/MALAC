@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { GOOGLE_CLIENT_ID, loadGoogleIdentity } from "../utils/google.js";
 
 // Customer login — three ways in:
 //  1) email + password (the password chosen at sign-up),
@@ -10,19 +11,73 @@ import { useAuth } from "../context/AuthContext.jsx";
 // Supports ?redirect=/checkout so shoppers return to checkout after login.
 // (Staff do NOT sign in here — they use the Admin Login at /admin.)
 export function GoogleButton({ onDone }) {
+  const [error, setError] = useState("");
+  const buttonRef = useRef(null);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
+
+  // Real mode (VITE_GOOGLE_CLIENT_ID configured): render the official
+  // Google Identity Services button. Google calls back with an ID token
+  // (credential), which the server verifies — no fabricated profile.
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID || !buttonRef.current) return;
+    let cancelled = false;
+    loadGoogleIdentity()
+      .then((google) => {
+        if (cancelled || !buttonRef.current) return;
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response) => {
+            setError("");
+            try {
+              const r = await api.post("/auth/google", { credential: response.credential });
+              onDoneRef.current(r.data);
+            } catch (err) {
+              setError(err.response?.data?.message || "Google sign-in failed");
+            }
+          },
+        });
+        google.accounts.id.renderButton(buttonRef.current, {
+          theme: "outline", size: "large", text: "continue_with",
+          width: Math.min(buttonRef.current.offsetWidth || 320, 400),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not load Google sign-in. Check your connection and try again.");
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  if (GOOGLE_CLIENT_ID) {
+    return (
+      <div>
+        <div ref={buttonRef} className="flex justify-center min-h-[44px]" />
+        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      </div>
+    );
+  }
+
+  // Demo mode (no client ID configured, e.g. local dev): prompt for an
+  // email and post a plain profile, which the server accepts only while
+  // its own GOOGLE_CLIENT_ID is also unset.
   const demoLogin = async () => {
-    // Demo mode: in production load Google Identity Services, get the ID
-    // token (credential), and POST { credential } instead of { profile }.
     const email = window.prompt("Demo Google sign-in: enter your Google email");
     if (!email) return;
-    const r = await api.post("/auth/google", { profile: { email, name: email.split("@")[0], sub: `demo-${email}` } });
-    onDone(r.data);
+    try {
+      const r = await api.post("/auth/google", { profile: { email, name: email.split("@")[0], sub: `demo-${email}` } });
+      onDone(r.data);
+    } catch (err) {
+      setError(err.response?.data?.message || "Google sign-in failed");
+    }
   };
   return (
-    <button onClick={demoLogin} type="button"
-      className="w-full border rounded py-2.5 text-sm font-medium flex items-center justify-center gap-2 bg-white hover:bg-gray-50">
-      <span className="font-extrabold text-[#4285F4]">G</span> Continue with Google
-    </button>
+    <div>
+      <button onClick={demoLogin} type="button"
+        className="w-full border rounded py-2.5 text-sm font-medium flex items-center justify-center gap-2 bg-white hover:bg-gray-50">
+        <span className="font-extrabold text-[#4285F4]">G</span> Continue with Google
+      </button>
+      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+    </div>
   );
 }
 
