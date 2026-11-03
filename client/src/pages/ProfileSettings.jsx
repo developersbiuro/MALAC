@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, MapPin, Star, Pencil, Trash2, Plus } from "lucide-react";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import LiveLocationButton from "../components/LiveLocationButton.jsx";
 
 // Profile Settings (/account/settings, login required — see
 // ProtectedRoute in App.jsx). Three sections:
@@ -15,7 +16,8 @@ import { useAuth } from "../context/AuthContext.jsx";
 //     /api/auth/addresses (own addresses only, server-enforced).
 const CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Sialkot"];
 const input = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
-const emptyAddress = { label: "Home", fullName: "", phone: "", city: "Lahore", area: "", street: "", postalCode: "", isDefault: false };
+const emptyAddress = { label: "Home", fullName: "", phone: "", city: "Lahore", area: "", street: "", postalCode: "", lat: null, lng: null, mapsUrl: "", isDefault: false };
+const mapLink = (a) => a.mapsUrl || (a.lat != null && a.lng != null ? `https://www.google.com/maps?q=${a.lat},${a.lng}` : "");
 
 function Section({ eyebrow, title, children }) {
   return (
@@ -80,9 +82,23 @@ export default function ProfileSettings() {
     setForm({
       label: a.label || "Home", fullName: a.fullName || "", phone: a.phone || "",
       city: a.city || "Lahore", area: a.area || "", street: a.street || "",
-      postalCode: a.postalCode || "", isDefault: Boolean(a.isDefault),
+      postalCode: a.postalCode || "",
+      lat: a.lat ?? null, lng: a.lng ?? null, mapsUrl: a.mapsUrl || "",
+      isDefault: Boolean(a.isDefault),
     });
     setEditingId(a._id);
+  };
+
+  // Live GPS capture: pin the coordinates to this address and use the
+  // reverse-geocoded suggestions to prefill street / area / city (only
+  // overwriting fields the lookup actually resolved).
+  const applyLocation = ({ lat, lng, mapsUrl, addressLine, area, city }) => {
+    setForm((f) => (f ? {
+      ...f, lat, lng, mapsUrl,
+      street: addressLine || f.street,
+      area: area || f.area,
+      city: city || f.city,
+    } : f));
   };
 
   const saveAddress = async (e) => {
@@ -203,6 +219,12 @@ export default function ProfileSettings() {
                   {a.fullName} · {a.phone}<br />
                   {a.street}, {a.area}, {a.city}{a.postalCode ? ` — ${a.postalCode}` : ""}
                 </p>
+                {a.lat != null && a.lng != null && (
+                  <p className="text-xs mt-1">
+                    <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 font-medium">📍 Location attached</span>{" "}
+                    <a href={mapLink(a)} target="_blank" rel="noreferrer" className="text-lux-burnt hover:underline">View map</a>
+                  </p>
+                )}
               </div>
               <div className="flex gap-1.5">
                 {!a.isDefault && (
@@ -258,6 +280,18 @@ export default function ProfileSettings() {
               <span className="text-xs font-medium text-gray-500">Street address, house no.</span>
               <input value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} required className={`${input} mt-1`} />
             </label>
+            <div className="sm:col-span-2">
+              <LiveLocationButton onLocation={applyLocation} />
+              {form.lat != null && form.lng != null ? (
+                <p className="text-xs mt-1.5">
+                  <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 font-medium">📍 Location attached</span>{" "}
+                  <a href={mapLink(form)} target="_blank" rel="noreferrer" className="text-lux-burnt hover:underline">View map</a>{" "}
+                  <button type="button" onClick={() => setForm({ ...form, lat: null, lng: null, mapsUrl: "" })} className="text-red-500 hover:underline">Remove pin</button>
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-1.5">Apni live location attach karein taake rider seedha aap tak pohanch sake (optional).</p>
+              )}
+            </div>
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
               <input type="checkbox" checked={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} className="accent-[#d97706]" />
               Set as my default delivery address

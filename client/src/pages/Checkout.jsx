@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Truck, CreditCard, Banknote, Smartphone, UploadCloud } from "lucide-react";
 import api from "../api/client.js";
+import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs, deliveryWindow } from "../utils/format.js";
@@ -11,6 +12,7 @@ import { rs, deliveryWindow } from "../utils/format.js";
 // rejects unauthenticated POST /api/orders with 401 (no guest ordering).
 const steps = ["Shipping Address", "Delivery Method", "Payment"];
 const MANUAL = ["JazzCash", "Easypaisa"];
+const CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Sialkot"];
 
 export default function Checkout() {
   const { items, subtotal, clear } = useCart();
@@ -20,7 +22,9 @@ export default function Checkout() {
   const [address, setAddress] = useState({
     fullName: user?.name || "", phone: user?.phone || "",
     city: "Lahore", area: "", street: "", postalCode: "",
+    lat: null, lng: null, mapsUrl: "",
   });
+  const [savedId, setSavedId] = useState(""); // "" = typing a new address
   const [deliveryMethod, setDeliveryMethod] = useState("Standard");
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [card, setCard] = useState({ number: "", expiry: "", cvc: "" });
@@ -35,6 +39,38 @@ export default function Checkout() {
   useEffect(() => {
     api.get("/settings/public").then((r) => setWallets(r.data.payments)).catch(() => setWallets(null));
   }, []);
+
+  // Picking a saved address fills the whole form — including its
+  // live-location pin when it has one, so the pin rides into the order.
+  const pickSaved = (id) => {
+    setSavedId(id);
+    const a = (user?.addresses || []).find((x) => x._id === id);
+    if (!a) {
+      setAddress({
+        fullName: user?.name || "", phone: user?.phone || "",
+        city: "Lahore", area: "", street: "", postalCode: "",
+        lat: null, lng: null, mapsUrl: "",
+      });
+      return;
+    }
+    setAddress({
+      fullName: a.fullName || user?.name || "", phone: a.phone || user?.phone || "",
+      city: a.city || "Lahore", area: a.area || "", street: a.street || "",
+      postalCode: a.postalCode || "",
+      lat: a.lat ?? null, lng: a.lng ?? null, mapsUrl: a.mapsUrl || "",
+    });
+  };
+
+  const applyLocation = ({ lat, lng, mapsUrl, addressLine, area, city }) => {
+    setAddress((cur) => ({
+      ...cur, lat, lng, mapsUrl,
+      street: addressLine || cur.street,
+      area: area || cur.area,
+      // The checkout city field is a fixed select — only adopt the
+      // reverse-geocoded city when it is one of the served cities.
+      city: CITIES.includes(city) ? city : cur.city,
+    }));
+  };
 
   const discount = coupon?.discount || 0;
   const shipping = useMemo(() => {
@@ -120,14 +156,39 @@ export default function Checkout() {
 
         {step === 0 && (
           <form className="grid sm:grid-cols-2 gap-3" onSubmit={(e) => { e.preventDefault(); setStep(1); }}>
+            {(user?.addresses?.length > 0) && (
+              <label className="block sm:col-span-2">
+                <span className="text-xs font-medium text-gray-500">Deliver to a saved address</span>
+                <select className={`${input} mt-1`} value={savedId} onChange={(e) => pickSaved(e.target.value)}>
+                  <option value="">Enter a new address manually</option>
+                  {user.addresses.map((a) => (
+                    <option key={a._id} value={a._id}>
+                      {a.label || "Home"} — {a.street}, {a.area}, {a.city}{a.lat != null && a.lng != null ? " 📍" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <input required placeholder="Full name" className={input} value={address.fullName} onChange={(e) => setAddress({ ...address, fullName: e.target.value })} />
             <input required placeholder="Phone (03xx-xxxxxxx)" className={input} value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} />
             <select className={input} value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })}>
-              {["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Sialkot"].map((c) => <option key={c}>{c}</option>)}
+              {(address.city && !CITIES.includes(address.city) ? [address.city, ...CITIES] : CITIES).map((c) => <option key={c}>{c}</option>)}
             </select>
             <input required placeholder="Area / Town" className={input} value={address.area} onChange={(e) => setAddress({ ...address, area: e.target.value })} />
             <input required placeholder="Street address, house no." className={`${input} sm:col-span-2`} value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
             <input placeholder="Postal code (optional)" className={input} value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} />
+            <div className="sm:col-span-2 border-t pt-3">
+              <LiveLocationButton onLocation={applyLocation} />
+              {address.lat != null && address.lng != null ? (
+                <p className="text-xs mt-1.5">
+                  <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 font-medium">📍 Location attached</span>{" "}
+                  <a href={address.mapsUrl || `https://www.google.com/maps?q=${address.lat},${address.lng}`} target="_blank" rel="noreferrer" className="text-brand hover:underline">View map</a>{" "}
+                  <button type="button" onClick={() => setAddress({ ...address, lat: null, lng: null, mapsUrl: "" })} className="text-red-500 hover:underline">Remove pin</button>
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 mt-1.5">Ya apni live location se order karein — rider seedha aap ki location par ayega (optional).</p>
+              )}
+            </div>
             <div className="sm:col-span-2"><button className="bg-brand text-white rounded px-6 py-2 text-sm font-medium">Continue to Delivery</button></div>
           </form>
         )}
@@ -235,6 +296,11 @@ export default function Checkout() {
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>
         <div className="flex justify-between"><span>Shipping ({deliveryMethod})</span><span>{shipping === 0 ? "Free" : rs(shipping)}</span></div>
         <div className="flex justify-between border-t pt-2 font-bold"><span>Total</span><span className="text-brand">{rs(total)}</span></div>
+        {address.lat != null && address.lng != null && (
+          <p className="pt-1">
+            <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-1 text-[11px] font-semibold">Delivery location pinned 📍</span>
+          </p>
+        )}
         {isManual && <p className="text-[11px] text-gray-400">For {paymentMethod}, the payable total above is the amount to transfer.</p>}
       </aside>
     </main>

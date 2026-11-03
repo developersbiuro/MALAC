@@ -103,6 +103,17 @@ export default function AdminOrders() {
                 <p>{selected.user?.name || selected.address?.fullName}</p>
                 <p className="text-gray-500">{selected.user?.email} · {selected.user?.phone || selected.address?.phone}</p>
                 <p className="text-gray-500">{selected.address?.street}, {selected.address?.area}, {selected.address?.city} {selected.address?.postalCode || ""}</p>
+                {selected.address?.lat != null && selected.address?.lng != null && (
+                  <p>
+                    <a
+                      href={selected.address.mapsUrl || `https://www.google.com/maps?q=${selected.address.lat},${selected.address.lng}`}
+                      target="_blank" rel="noreferrer"
+                      className="text-brand font-medium hover:underline"
+                    >
+                      📍 Customer Location — View on Map
+                    </a>
+                  </p>
+                )}
                 <p className="text-gray-500">{selected.deliveryMethod} delivery
                   {selected.estimatedDelivery ? ` · expected ${new Date(selected.estimatedDelivery).toLocaleDateString("en-PK")}` : ""}</p>
               </section>

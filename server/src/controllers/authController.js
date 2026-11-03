@@ -336,13 +336,41 @@ export const changePassword = asyncHandler(async (req, res) => {
 
 // -- Address book: add is above (addAddress); edit/delete below. Every
 // handler operates only on req.user's own address subdocuments. --
-const ADDRESS_FIELDS = ["label", "fullName", "phone", "city", "area", "street", "postalCode"];
+// lat/lng/mapsUrl carry the optional live-location pin. Coordinates are
+// range-checked and invalid values are dropped (never stored, never an
+// error); an explicit null clears a previously saved pin.
+const ADDRESS_FIELDS = ["label", "fullName", "phone", "city", "area", "street", "postalCode", "lat", "lng", "mapsUrl"];
+
+const validCoord = (value, min, max) => {
+  if (value === null || value === undefined || value === "") return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
+};
+
+// Whitelisted, sanitized copy of the address fields present in `body`.
+function pickAddressFields(body) {
+  const out = {};
+  for (const field of ADDRESS_FIELDS) {
+    if (body[field] === undefined) continue;
+    if (field === "lat" || field === "lng") {
+      if (body[field] === null) { out[field] = null; continue; } // explicit clear
+      const n = validCoord(body[field], field === "lat" ? -90 : -180, field === "lat" ? 90 : 180);
+      if (n !== undefined) out[field] = n;
+    } else if (field === "mapsUrl") {
+      if (body[field] === null) out[field] = null;
+      else if (typeof body[field] === "string") out[field] = body[field].slice(0, 500);
+    } else {
+      out[field] = body[field];
+    }
+  }
+  return out;
+}
 
 export const updateAddress = asyncHandler(async (req, res) => {
   const address = req.user.addresses.id(req.params.addressId);
   if (!address) return res.status(404).json({ message: "Address not found" });
-  for (const field of ADDRESS_FIELDS) {
-    if (req.body[field] !== undefined) address[field] = req.body[field];
+  for (const [field, value] of Object.entries(pickAddressFields(req.body))) {
+    address[field] = value === null ? undefined : value;
   }
   if (req.body.isDefault !== undefined) {
     address.isDefault = Boolean(req.body.isDefault);
@@ -364,7 +392,9 @@ export const deleteAddress = asyncHandler(async (req, res) => {
 
 export const addAddress = asyncHandler(async (req, res) => {
   if (req.body.isDefault) req.user.addresses.forEach((a) => (a.isDefault = false));
-  req.user.addresses.push(req.body);
+  const fields = pickAddressFields(req.body);
+  for (const field of ["lat", "lng", "mapsUrl"]) if (fields[field] === null) delete fields[field];
+  req.user.addresses.push({ ...fields, isDefault: Boolean(req.body.isDefault) });
   await req.user.save();
   res.status(201).json({ addresses: req.user.addresses });
 });

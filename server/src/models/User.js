@@ -8,6 +8,11 @@ const addressSchema = new mongoose.Schema({
   area: String,
   street: String,
   postalCode: String,
+  // Optional live-location pin captured from the customer's device GPS
+  // (browser geolocation) so the rider can navigate straight to them.
+  lat: Number,
+  lng: Number,
+  mapsUrl: String,
   isDefault: { type: Boolean, default: false },
 }, { _id: true });
 

@@ -3,6 +3,31 @@ import Product from "../models/Product.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
 
+// The delivery address is stored as a snapshot on the order. When the
+// customer ordered with their live location, the pin (lat/lng/mapsUrl)
+// rides along so staff can open it in a map. Coordinates are validated
+// here: an out-of-range or non-numeric pair is silently dropped — a bad
+// pin must never fail an otherwise valid order.
+function sanitizeAddressSnapshot(address) {
+  const snap = { ...(address || {}) };
+  const lat = Number(snap.lat);
+  const lng = Number(snap.lng);
+  const latOk = snap.lat !== null && snap.lat !== "" && Number.isFinite(lat) && lat >= -90 && lat <= 90;
+  const lngOk = snap.lng !== null && snap.lng !== "" && Number.isFinite(lng) && lng >= -180 && lng <= 180;
+  if (latOk && lngOk) {
+    snap.lat = lat;
+    snap.lng = lng;
+    snap.mapsUrl = typeof snap.mapsUrl === "string" && snap.mapsUrl
+      ? snap.mapsUrl.slice(0, 500)
+      : `https://www.google.com/maps?q=${lat},${lng}`;
+  } else {
+    delete snap.lat;
+    delete snap.lng;
+    delete snap.mapsUrl;
+  }
+  return snap;
+}
+
 // Prices are always recomputed on the server from the database.
 export async function createOrder({ user, items, address, paymentMethod, deliveryMethod, couponCode, paymentScreenshot, transactionId, senderAccount, senderTitle }) {
   if (!items?.length) throw new Error("Cart is empty");
@@ -52,7 +77,7 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     senderTitle: isManualWallet ? (senderTitle || "") : "",
     paymentVerificationStatus: isManualWallet ? "pending_verification" : "not_applicable",
     deliveryMethod: deliveryMethod || "Standard",
-    address,
+    address: sanitizeAddressSnapshot(address),
     estimatedDelivery: new Date(Date.now() + (deliveryMethod === "Express" ? 2 : 4) * 86400000),
     statusHistory: [{ status: "Pending", by: "customer", note: "Order placed" }],
   });

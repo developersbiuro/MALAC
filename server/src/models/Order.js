@@ -51,6 +51,10 @@ const orderSchema = new mongoose.Schema({
   address: {
     fullName: String, phone: String, city: String,
     area: String, street: String, postalCode: String,
+    // Live-location pin snapshot (copied from the delivery address when
+    // the customer ordered with "Use My Live Location"); shown to staff
+    // in the admin order detail as a maps link for the rider.
+    lat: Number, lng: Number, mapsUrl: String,
   },
   estimatedDelivery: Date,
 }, { timestamps: true });
