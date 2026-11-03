@@ -1,8 +1,10 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import express from "express";
+import mongoose from "mongoose";
 import morgan from "morgan";
 import env from "./config/env.js";
+import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
@@ -53,6 +55,35 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "2mb" }));
 if (env.nodeEnv === "development") app.use(morgan("dev"));
+
+// Database readiness gate. On Vercel the Express app is loaded and served
+// as a function WITHOUT executing server.js, so the startup connect there
+// never runs in production — the connection is therefore established here,
+// lazily, shared across concurrent requests, and retried on the next
+// request if it fails. Until the connection is up, DB-backed routes answer
+// 503 with the real connection error instead of Mongoose's opaque 10s
+// buffering timeout. /api/health intentionally stays DB-free so process
+// health and database health remain distinguishable.
+let connectPromise = null;
+function ensureDb() {
+  if (mongoose.connection.readyState === 1) return Promise.resolve();
+  if (!connectPromise) {
+    connectPromise = connectDB().catch((err) => {
+      connectPromise = null;
+      throw err;
+    });
+  }
+  return connectPromise;
+}
+app.use(async (req, res, next) => {
+  if (!req.path.startsWith("/api") || req.path === "/api/health") return next();
+  try {
+    await ensureDb();
+    return next();
+  } catch (err) {
+    return res.status(503).json({ message: `Database unavailable: ${err.message}` });
+  }
+});
 
 // Uploaded payment screenshots (and future uploads) are served from here.
 // On Vercel this path is routed to this service by the /uploads/(.*)
