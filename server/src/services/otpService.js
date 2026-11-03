@@ -1,8 +1,7 @@
 import crypto from "crypto";
 import OtpToken from "../models/OtpToken.js";
-import env from "../config/env.js";
 import { sendEmail } from "./emailService.js";
-import { sendWhatsApp } from "./whatsappService.js";
+import { sendWhatsAppOtp } from "./whatsappService.js";
 import { sendSms } from "./smsService.js";
 
 const OTP_TTL_MINUTES = 10;
@@ -13,8 +12,10 @@ function newCode() {
 }
 
 // Creates, stores (hashed) and dispatches an OTP on the chosen channel.
-// Channels: "email" | "whatsapp" | "sms". In demo mode the plain code is
-// returned as `demoCode` so the flow can be tested without a live provider.
+// Channels: "email" | "whatsapp" | "sms". Delivery is ALWAYS real — there
+// is no demo mode and the plain code is never returned to the client. If
+// the channel's provider is not configured, the sender throws a clear
+// not-configured error and the request fails honestly.
 // `pending` (sign-up only) carries the pending registration — name plus
 // the password's scrypt hash — on the token until verification creates
 // the account.
@@ -28,16 +29,24 @@ export async function requestOtp({ identifier, channel, purpose = "signup", phon
     expiresAt: new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000),
   });
   const text = `Your MALAC verification code is ${code}. It expires in ${OTP_TTL_MINUTES} minutes. Do not share it.`;
-  let result;
   if (channel === "email") {
-    result = await sendEmail({ to: identifier, subject: "Your MALAC verification code", text });
+    try {
+      await sendEmail({ to: identifier, subject: "Your MALAC verification code", text });
+    } catch (err) {
+      if (err.code === "EMAIL_NOT_CONFIGURED") throw new Error("Email OTP is not configured");
+      throw err;
+    }
   } else if (channel === "whatsapp") {
-    result = await sendWhatsApp({ to: phone || identifier, text });
+    await sendWhatsAppOtp({ to: phone || identifier, code });
   } else {
-    result = await sendSms({ to: phone || identifier, text });
+    try {
+      await sendSms({ to: phone || identifier, text });
+    } catch (err) {
+      if (err.code === "SMS_NOT_CONFIGURED") throw new Error("SMS OTP is not configured");
+      throw err;
+    }
   }
-  const demo = env.otpDemoMode || result.demo;
-  return { sent: true, channel, demo, ...(demo ? { demoCode: code } : {}) };
+  return { sent: true, channel };
 }
 
 export async function verifyOtp({ identifier, channel, purpose = "signup", code }) {

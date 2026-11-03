@@ -57,26 +57,16 @@ export function GoogleButton({ onDone }) {
     );
   }
 
-  // Demo mode (no client ID configured, e.g. local dev): prompt for an
-  // email and post a plain profile, which the server accepts only while
-  // its own GOOGLE_CLIENT_ID is also unset.
-  const demoLogin = async () => {
-    const email = window.prompt("Demo Google sign-in: enter your Google email");
-    if (!email) return;
-    try {
-      const r = await api.post("/auth/google", { profile: { email, name: email.split("@")[0], sub: `demo-${email}` } });
-      onDone(r.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Google sign-in failed");
-    }
-  };
+  // No client ID configured: Google sign-in is genuinely unavailable.
+  // There is no fallback or fake sign-in — the button is shown disabled
+  // with a note, and the server rejects profile-only sign-in anyway.
   return (
     <div>
-      <button onClick={demoLogin} type="button"
-        className="w-full border rounded py-2.5 text-sm font-medium flex items-center justify-center gap-2 bg-white hover:bg-gray-50">
-        <span className="font-extrabold text-[#4285F4]">G</span> Continue with Google
+      <button type="button" disabled aria-disabled="true"
+        className="w-full border rounded py-2.5 text-sm font-medium flex items-center justify-center gap-2 bg-gray-50 text-gray-400 cursor-not-allowed">
+        <span className="font-extrabold text-[#4285F4] opacity-50">G</span> Continue with Google
       </button>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      <p className="text-xs text-gray-400 text-center mt-2">Google sign-in is not available yet</p>
     </div>
   );
 }
@@ -95,7 +85,6 @@ export default function Login() {
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState(1);
-  const [demoCode, setDemoCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -112,8 +101,7 @@ export default function Login() {
   }, "Could not sign in");
 
   const request = run(async () => {
-    const r = await api.post("/auth/login/otp", { identifier, channel });
-    if (r.data.demoCode) setDemoCode(r.data.demoCode);
+    await api.post("/auth/login/otp", { identifier, channel });
     setStep(2);
   }, "Could not send OTP");
   const verify = run(async () => {
@@ -169,7 +157,6 @@ export default function Login() {
         ) : (
           <form onSubmit={verify} className="space-y-3 mt-4">
             <p className="text-sm text-gray-500">Enter the 6-digit code sent via {channel} to {identifier}.</p>
-            {demoCode && <p className="text-xs bg-amber-50 border border-amber-200 rounded p-2">Demo mode — your code is <b>{demoCode}</b> (live delivery needs provider credentials).</p>}
             <input required className={`${input} tracking-[.4em] text-center`} maxLength={6} placeholder="______"
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
             {error && <p className="text-red-500 text-sm">{error}</p>}

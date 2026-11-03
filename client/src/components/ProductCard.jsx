@@ -22,17 +22,17 @@ export default function ProductCard({ product }) {
           {pct > 0 && <span className="absolute top-2 left-2 bg-lux-amber text-white text-[11px] font-bold px-2 py-0.5 rounded-full">-{pct}%</span>}
           <button aria-label="Toggle wishlist"
             onClick={() => toggle(product)}
-            className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md">
+            className="absolute top-2 right-2 bg-white rounded-full p-2 sm:p-1.5 shadow-md">
             <Heart size={16} className={has(product._id) ? "fill-red-500 text-red-500" : "text-gray-500"} />
           </button>
         </div>
       </div>
-      <div className="p-3 flex flex-col flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lux-burnt">
+      <div className="p-2.5 sm:p-3 flex flex-col flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lux-burnt truncate">
           {product.category}{product.subCategory ? ` · ${product.subCategory}` : ""}
         </p>
         <Link to={`/product/${product.slug}`}
-          className="font-serif font-semibold text-[18px] leading-snug line-clamp-2 mt-0.5 hover:text-lux-burnt">
+          className="font-serif font-semibold text-[15px] sm:text-[18px] leading-snug line-clamp-2 mt-0.5 hover:text-lux-burnt">
           {product.title}
         </Link>
         <div className="flex items-center gap-1 mt-1">
@@ -45,11 +45,11 @@ export default function ProductCard({ product }) {
             ? <p className="text-[11px] font-medium text-red-500 mt-1">Only {product.stock} left{product.codAvailable ? " · COD" : ""}</p>
             : <p className="text-[11px] font-medium text-[#059669] mt-1">In Stock{product.codAvailable ? " · COD" : ""}</p>}
         <div className="mt-auto pt-2">
-          <p>
-            <span className="text-lux-amber font-extrabold">{rs(priceOf(product))}</span>
-            {product.salePrice > 0 && <span className="text-xs text-gray-400 line-through ml-1.5">{rs(product.basePrice)}</span>}
+          <p className="flex flex-wrap items-baseline gap-x-1.5">
+            <span className="text-lux-amber font-extrabold text-[15px] sm:text-base whitespace-nowrap">{rs(priceOf(product))}</span>
+            {product.salePrice > 0 && <span className="text-xs text-gray-400 line-through whitespace-nowrap">{rs(product.basePrice)}</span>}
           </p>
-          <button onClick={addToCart} disabled={out} className="btn-lux w-full mt-2 py-2 text-sm">
+          <button onClick={addToCart} disabled={out} className="btn-lux w-full mt-2 py-2 min-h-[40px] text-sm">
             {out ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>

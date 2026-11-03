@@ -75,7 +75,7 @@ export default function ProductDetails() {
 
   return (
     <main className="max-w-7xl mx-auto px-3 pt-3 pb-24 md:pb-6">
-      <p className="text-xs text-gray-400 mb-2"><Link to="/">Home</Link> / <Link to={`/shop?category=${encodeURIComponent(product.category)}`}>{product.category}</Link> / {product.title}</p>
+      <p className="text-xs text-gray-400 mb-2 break-words"><Link to="/">Home</Link> / <Link to={`/shop?category=${encodeURIComponent(product.category)}`}>{product.category}</Link> / {product.title}</p>
       <div className="bg-white rounded-md p-3 sm:p-5 grid md:grid-cols-[420px_1fr_260px] gap-6">
         {/* Gallery */}
         <div>
@@ -83,9 +83,9 @@ export default function ProductDetails() {
             <img src={product.images?.[img]} alt={product.title}
               className={`w-full aspect-square object-cover transition-transform duration-200 ${zoom ? "scale-150" : ""}`} />
           </div>
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1">
             {(product.images || []).map((src, i) => (
-              <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 ${i === img ? "border-brand" : ""}`}>
+              <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 shrink-0 ${i === img ? "border-brand" : ""}`}>
                 <img src={src} alt="" className="w-full h-full object-cover" />
               </button>
             ))}
@@ -96,7 +96,7 @@ export default function ProductDetails() {
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lux-burnt">{product.category}{product.subCategory ? ` · ${product.subCategory}` : ""}</p>
           <h1 className="font-serif text-2xl font-semibold leading-snug mt-0.5">{product.title}</h1>
-          <div className="flex items-center gap-2 mt-1.5 text-sm">
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm">
             <RatingStars value={product.ratingAvg} size={16} />
             <span className="text-sky-600">{product.ratingCount} ratings</span>
             <span className="text-gray-300">|</span><span className="text-gray-500">{product.sold} sold</span>
@@ -128,9 +128,9 @@ export default function ProductDetails() {
           <div className="flex items-center gap-3 mt-4">
             <span className="text-sm text-gray-500">Quantity</span>
             <div className="flex items-center border rounded">
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-2 py-1"><Minus size={14} /></button>
-              <span className="px-3">{qty}</span>
-              <button onClick={() => setQty(Math.min(variantStock, qty + 1))} className="px-2 py-1"><Plus size={14} /></button>
+              <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-3 py-2" aria-label="Decrease quantity"><Minus size={14} /></button>
+              <span className="px-2 min-w-[1.5rem] text-center">{qty}</span>
+              <button onClick={() => setQty(Math.min(variantStock, qty + 1))} className="px-3 py-2" aria-label="Increase quantity"><Plus size={14} /></button>
             </div>
             <span className={`text-sm ${variantStock <= 5 ? "text-red-500" : "text-gray-400"}`}>
               {variantStock > 0 ? `${variantStock} items in stock` : "Out of stock"}
@@ -162,12 +162,12 @@ export default function ProductDetails() {
       </div>
 
       {/* Sticky buy bar */}
-      <div className="sticky bottom-14 md:bottom-0 bg-white border-t mt-3 rounded-md p-3 z-30">
+      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 bg-white border-t mt-3 rounded-md p-3 z-30">
         <div className="flex gap-3">
           <button onClick={doAdd} disabled={variantStock === 0}
-            className="btn-lux flex-1 py-2.5">Add to Cart</button>
+            className="btn-lux flex-1 py-2.5 min-h-[44px]">Add to Cart</button>
           <button onClick={buyNow} disabled={variantStock === 0}
-            className="flex-1 bg-lux-ink text-white rounded-full py-2.5 font-semibold disabled:opacity-50 hover:bg-lux-deep transition-colors">Buy Now</button>
+            className="flex-1 bg-lux-ink text-white rounded-full py-2.5 min-h-[44px] font-semibold disabled:opacity-50 hover:bg-lux-deep transition-colors">Buy Now</button>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 mt-2.5 text-[12px] text-gray-500">
           <span className="flex items-center gap-1"><Lock size={13} className="text-[#059669]" /> SSL Secured Checkout</span>
@@ -224,8 +224,8 @@ export default function ProductDetails() {
           </div>
         ))}
         <form onSubmit={submitQuestion} className="flex gap-2 mt-3">
-          <input value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Ask a question about this product" className="border rounded px-3 py-2 text-sm flex-1" />
-          <button className="bg-brand text-white text-sm rounded px-4">Ask</button>
+          <input value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Ask a question about this product" className="border rounded px-3 py-2 text-sm flex-1 min-w-0" />
+          <button className="bg-brand text-white text-sm rounded px-4 shrink-0">Ask</button>
         </form>
       </section>
 

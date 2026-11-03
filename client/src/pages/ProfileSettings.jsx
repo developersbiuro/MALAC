@@ -165,7 +165,7 @@ export default function ProfileSettings() {
             <input value={profile.phone} readOnly className={`${input} mt-1 bg-cream-alt text-gray-500`} />
           </label>
           <div className="flex items-end">
-            <button className="btn-lux px-6 py-2.5 text-sm">Save Changes</button>
+            <button className="btn-lux px-6 py-2.5 text-sm w-full sm:w-auto">Save Changes</button>
           </div>
         </form>
         <p className="text-xs text-gray-400 mt-3">
@@ -192,8 +192,8 @@ export default function ProfileSettings() {
               <input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} required minLength={8} className={`${input} mt-1`} autoComplete="new-password" />
             </label>
             <div className="sm:col-span-3">
-              <button className="btn-lux px-6 py-2.5 text-sm">Update Password</button>
-              {pwMsg && <span className="text-sm text-gray-600 ml-3">{pwMsg}</span>}
+              <button className="btn-lux px-6 py-2.5 text-sm w-full sm:w-auto">Update Password</button>
+              {pwMsg && <span className="block sm:inline text-sm text-gray-600 mt-2 sm:mt-0 sm:ml-3">{pwMsg}</span>}
             </div>
           </form>
         ) : (
@@ -215,7 +215,7 @@ export default function ProfileSettings() {
                   {a.label || "Home"}
                   {a.isDefault && <span className="text-[10px] font-bold uppercase tracking-wider bg-lux-gradient text-white rounded-full px-2 py-0.5">Default</span>}
                 </p>
-                <p className="text-gray-600 mt-0.5">
+                <p className="text-gray-600 mt-0.5 break-words">
                   {a.fullName} · {a.phone}<br />
                   {a.street}, {a.area}, {a.city}{a.postalCode ? ` — ${a.postalCode}` : ""}
                 </p>
@@ -226,16 +226,16 @@ export default function ProfileSettings() {
                   </p>
                 )}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 {!a.isDefault && (
-                  <button onClick={() => makeDefault(a)} title="Set as default" className="border border-cream-line rounded-full px-3 py-1.5 text-xs flex items-center gap-1 hover:border-lux-amber">
+                  <button onClick={() => makeDefault(a)} title="Set as default" className="border border-cream-line rounded-full px-3 py-2 sm:py-1.5 text-xs flex items-center gap-1 hover:border-lux-amber">
                     <Star size={13} /> Default
                   </button>
                 )}
-                <button onClick={() => openEdit(a)} title="Edit address" className="border border-cream-line rounded-full px-3 py-1.5 text-xs flex items-center gap-1 hover:border-lux-amber">
+                <button onClick={() => openEdit(a)} title="Edit address" className="border border-cream-line rounded-full px-3 py-2 sm:py-1.5 text-xs flex items-center gap-1 hover:border-lux-amber">
                   <Pencil size={13} /> Edit
                 </button>
-                <button onClick={() => removeAddress(a)} title="Delete address" className="border border-red-200 text-red-500 rounded-full px-3 py-1.5 text-xs flex items-center gap-1 hover:bg-red-50">
+                <button onClick={() => removeAddress(a)} title="Delete address" className="border border-red-200 text-red-500 rounded-full px-3 py-2 sm:py-1.5 text-xs flex items-center gap-1 hover:bg-red-50">
                   <Trash2 size={13} /> Delete
                 </button>
               </div>
@@ -296,7 +296,7 @@ export default function ProfileSettings() {
               <input type="checkbox" checked={form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} className="accent-[#d97706]" />
               Set as my default delivery address
             </label>
-            <div className="sm:col-span-2 flex gap-2">
+            <div className="sm:col-span-2 flex flex-col sm:flex-row gap-2">
               <button className="btn-lux px-6 py-2.5 text-sm">{editingId ? "Save Address" : "Add Address"}</button>
               <button type="button" onClick={() => { setForm(null); setEditingId(null); }} className="border border-cream-line rounded-full px-6 py-2.5 text-sm">Cancel</button>
             </div>

@@ -74,9 +74,11 @@ See `.env.example` for the full list. Key groups:
 - **OTP sender identity** (public sender identities, not secrets):
   `OTP_SENDER_EMAIL` (default `developersbiuro@gmail.com`),
   `OTP_SENDER_PHONE` / `WHATSAPP_SENDER_NUMBER` (default `+923236016684`)
-- **OTP providers** (all optional — see Demo Mode below):
+- **OTP providers** (no demo mode — each channel needs its provider;
+  an unconfigured channel fails with a clear "not configured" error):
   SMTP (`SMTP_HOST/PORT/USER/PASS`), WhatsApp Cloud API
-  (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`),
+  (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
+  `WHATSAPP_OTP_TEMPLATE`, `WHATSAPP_OTP_TEMPLATE_LANG`),
   Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`)
 - **Google:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - **Manual payments:** `JAZZCASH_ACCOUNT_TITLE`, `JAZZCASH_ACCOUNT_NUMBER`,
@@ -114,22 +116,36 @@ Customer login offers three options on one screen:
   sign-up screens. Google accounts hold no password; Google verified
   their identity and email.
 
-### Demo OTP mode
-If provider credentials are not configured, OTP runs in **demo mode**:
-codes are logged on the server (`[DEMO EMAIL]`, `[DEMO WHATSAPP]`,
-`[DEMO SMS]`) and returned to the client as `demoCode`, which the UI shows
-in a clearly-marked demo box. This lets you test every flow end-to-end.
-Set the SMTP / WhatsApp Cloud API / Twilio variables to send real codes;
-set `OTP_DEMO_MODE=false` in production.
+### OTP delivery — production only, no demo mode
+There is **no demo mode**. Codes are never logged, never returned in an
+API response, and never shown on screen by the app — they only ever
+reach the customer through the delivery channel:
 
-### Login with Google — real credentials
-With `GOOGLE_CLIENT_ID` set, the server verifies Google ID tokens with
-`google-auth-library`. Without it, Google sign-in runs in a clearly
-labelled demo mode (the client sends a typed profile instead of a token).
-To go live: create an OAuth client in Google Cloud Console, set
-`GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`, and wire Google Identity
-Services on the client to obtain the `credential` token (see
-`server/src/services/googleAuthService.js` and `client/src/pages/Login.jsx`).
+- **Email** — real send via SMTP (`SMTP_*`). Unconfigured ⇒ the request
+  fails with `Email OTP is not configured`.
+- **WhatsApp** — real send via the Meta WhatsApp Cloud API
+  (`WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`) using an
+  approved **authentication template** (`WHATSAPP_OTP_TEMPLATE`, default
+  `malac_otp`; `WHATSAPP_OTP_TEMPLATE_LANG`, default `en`). A template
+  is required: plain text messages only reach a customer inside a
+  24-hour service window, so an OTP sent as text would never arrive for
+  a new customer. The code is passed as the template's body parameter
+  and its copy-code (URL) button parameter. Unconfigured ⇒ the request
+  fails with `WhatsApp OTP is not configured`.
+- **SMS** — real send via Twilio (`TWILIO_*`), only if that channel is
+  offered. Unconfigured ⇒ `SMS OTP is not configured`.
+
+### Login with Google — real credentials only
+The server verifies Google ID tokens with `google-auth-library`
+against `GOOGLE_CLIENT_ID`. A plain profile object is **always**
+rejected — profile-only sign-in does not exist. Without
+`GOOGLE_CLIENT_ID`, `POST /api/auth/google` returns `Google sign-in is
+not configured` and the client renders the Google button disabled with
+a "not available yet" note. To go live: create an OAuth client in
+Google Cloud Console, set `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`,
+and wire Google Identity Services on the client to obtain the
+`credential` token (see `server/src/services/googleAuthService.js` and
+`client/src/pages/Login.jsx`).
 
 ### Admin accounts & security — no public admin creation
 
@@ -152,8 +168,8 @@ screen, tab or API anywhere:
   **Admin → Roles & Users → Create a Vice-Admin** (`POST /api/admin/users`,
   Super-Admin-only route). The account starts as `pending_setup`; a
   one-time setup link is emailed to the new Vice-Admin so **they** choose
-  their own password — the Super Admin never sets or sees it (in demo
-  mode the link is shown to the Super Admin to hand over personally).
+  their own password — the Super Admin never sets or sees it, and the
+  link is never shown in the panel or returned by the API.
   Vice-Admin access is the standard vice-admin set: products and orders —
   explicitly **not** coupons, settings, roles or payment verification.
 - Role changes are hardened (`PATCH /api/admin/users/:id/role`,
@@ -169,7 +185,7 @@ The admin suite has its **own login screen**, separate from customer login:
    staff, the Admin Login screen appears at that URL.
 3. Sign in either way:
    - **OTP:** enter the staff email (or phone), choose Email / WhatsApp /
-     SMS, and enter the code (demo mode shows it on screen), or
+     SMS, and enter the code sent on that channel, or
    - **Password:** staff email/phone + the password set through the
      forgot-password flow below (`POST /api/auth/login/password`,
      staff accounts only; customers are refused).
@@ -200,9 +216,9 @@ For staff accounts, password resets are approval-gated end to end
    (`PATCH /api/admin/password-resets/:id/approve|reject`).
 3. **Only on approval** does the server generate a one-time reset token
    (SHA-256 hashed at rest, 1-hour expiry) and email the link
-   (`/reset-password?token=…`) via the existing email service. In demo
-   mode (no SMTP) the link is shown to the Super Admin in the panel to
-   hand over personally, mirroring the OTP demo pattern.
+   (`/reset-password?token=…`) via the existing email service. The plain
+   link only ever exists in that email — it is never returned by the
+   API or shown in the panel.
 4. The staff member opens the link and sets a new password
    (`POST /api/auth/password-reset/complete`); the token is then marked
    `used` and cleared. **Unapproved, rejected, expired or reused requests

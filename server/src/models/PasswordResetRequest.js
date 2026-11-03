@@ -20,8 +20,7 @@ const passwordResetRequestSchema = new mongoose.Schema({
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   approvedAt: { type: Date },
   // SHA-256 hash of the one-time reset token. The plain token only ever
-  // exists in the emailed link (or, in demo mode, in the approval response
-  // so the Super Admin can hand it to the staff member personally).
+  // exists in the emailed link — it is never returned in an API response.
   resetTokenHash: { type: String, index: true },
   resetTokenExpiresAt: { type: Date },
 }, { timestamps: true });

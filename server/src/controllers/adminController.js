@@ -23,8 +23,8 @@ export const listUsers = asyncHandler(async (req, res) => {
 // This is the ONLY way staff accounts are created — there is no public
 // admin registration. The Super Admin never sets the new staff member's
 // password: the account starts "pending_setup" and an approved setup/reset
-// link is emailed to the staff member (demo mode returns the link in the
-// response so the Super Admin can hand it over personally). A Vice-Admin
+// link is emailed to the staff member — the link only ever travels by
+// email and is never returned in an API response. A Vice-Admin
 // gets the standard vice-admin access (products + orders) and explicitly
 // NOT coupons, settings, roles or payment verification.
 export const createViceAdmin = asyncHandler(async (req, res) => {
@@ -45,14 +45,13 @@ export const createViceAdmin = asyncHandler(async (req, res) => {
   });
   const request = await createResetRequest(user, { approvedBy: req.user._id });
   const setup = await issueResetToken(request);
+  // issueResetToken throws when email cannot be sent (e.g. SMTP not
+  // configured), so reaching this line means the setup link was emailed.
   res.status(201).json({
     user,
     setup: {
       emailed: setup.delivered,
-      message: setup.delivered
-        ? "Setup link emailed to the new Vice-Admin."
-        : "Email is in demo mode — share the setup link with the new Vice-Admin yourself.",
-      ...(setup.demoResetLink ? { demoSetupLink: setup.demoResetLink } : {}),
+      message: "Setup link emailed to the new Vice-Admin.",
     },
   });
 });
@@ -99,11 +98,12 @@ export const approvePasswordReset = asyncHandler(async (req, res) => {
   }
   request.approvedBy = req.user._id;
   request.approvedAt = new Date();
+  // issueResetToken throws when email cannot be sent (e.g. SMTP not
+  // configured), so reaching this line means the reset link was emailed.
   const result = await issueResetToken(request);
   res.json({
     request,
     emailed: result.delivered,
-    ...(result.demoResetLink ? { demoResetLink: result.demoResetLink } : {}),
   });
 });
 

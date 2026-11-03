@@ -32,11 +32,11 @@ export default function Dashboard() {
   return (
     <div>
       <h1 className="text-xl font-bold">Analytics Dashboard</h1>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
         {cards.map(({ label, value, Icon }) => (
-          <div key={label} className="bg-white rounded-md p-4 flex items-center gap-3">
-            <span className="bg-brand-light text-brand rounded-full p-2.5"><Icon size={20} /></span>
-            <div><p className="text-lg font-bold leading-tight">{value}</p><p className="text-xs text-gray-400">{label}</p></div>
+          <div key={label} className="bg-white rounded-md p-4 flex items-center gap-3 min-w-0">
+            <span className="bg-brand-light text-brand rounded-full p-2.5 shrink-0"><Icon size={20} /></span>
+            <div className="min-w-0"><p className="text-lg font-bold leading-tight break-words">{value}</p><p className="text-xs text-gray-400">{label}</p></div>
           </div>
         ))}
       </div>

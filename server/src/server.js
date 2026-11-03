@@ -9,7 +9,7 @@ import { connectDB } from "./config/db.js";
 // the connect failure is logged with its real reason.
 app.listen(env.port, () => {
   console.log(`[MALAC] API running on http://localhost:${env.port}`);
-  console.log(`[MALAC] OTP demo mode: ${env.otpDemoMode} | Email sender: ${env.otpSenderEmail} | Phone/WhatsApp sender: ${env.otpSenderPhone}`);
+  console.log(`[MALAC] Email sender: ${env.otpSenderEmail} | Phone/WhatsApp sender: ${env.otpSenderPhone}`);
 });
 connectDB().catch((err) => {
   console.error(`[MALAC] MongoDB connection failed: ${err.message}`);

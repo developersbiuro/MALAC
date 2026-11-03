@@ -23,7 +23,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [step, setStep] = useState(1);
-  const [demoCode, setDemoCode] = useState("");
   const [forgotEmail, setForgotEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
@@ -46,8 +45,7 @@ export default function AdminLogin() {
   const request = async (e) => {
     e.preventDefault(); setBusy(true); setError("");
     try {
-      const r = await api.post("/auth/login/otp", { identifier, channel });
-      if (r.data.demoCode) setDemoCode(r.data.demoCode);
+      await api.post("/auth/login/otp", { identifier, channel });
       setStep(2);
     } catch (err) { setError(err.response?.data?.message || "Could not send OTP"); }
     finally { setBusy(false); }
@@ -76,7 +74,6 @@ export default function AdminLogin() {
     try {
       const r = await api.post("/auth/password-reset/request", { email: forgotEmail });
       if (r.data.flow === "owner-otp") {
-        if (r.data.demoCode) setDemoCode(r.data.demoCode);
         setNotice(r.data.message);
         setView("owner-reset");
       } else {
@@ -133,7 +130,6 @@ export default function AdminLogin() {
         ) : (
           <form onSubmit={verify} className="space-y-3 mt-5">
             <p className="text-sm text-gray-500">Enter the 6-digit code sent via {channel} to {identifier}.</p>
-            {demoCode && <p className="text-xs bg-amber-50 border border-amber-200 rounded p-2">Demo mode — your code is <b>{demoCode}</b>.</p>}
             <input required className={`${input} tracking-[.4em] text-center`} maxLength={6} placeholder="______"
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
             {errBox}
@@ -189,7 +185,6 @@ export default function AdminLogin() {
         {view === "owner-reset" && (
           <form onSubmit={ownerResetSubmit} className="space-y-3 mt-5">
             {noticeBox}
-            {demoCode && <p className="text-xs bg-amber-50 border border-amber-200 rounded p-2">Demo mode — your code is <b>{demoCode}</b>.</p>}
             <input required className={`${input} tracking-[.4em] text-center`} maxLength={6} placeholder="______"
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
             <input required type="password" className={input} placeholder="New password (min 8 characters)" minLength={8}

@@ -16,8 +16,6 @@ export default function AdminRoles() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
-  const [setupLink, setSetupLink] = useState("");
-  const [resetLink, setResetLink] = useState("");
   const [busy, setBusy] = useState(false);
   const input = "border rounded px-3 py-2 text-sm w-full";
 
@@ -35,11 +33,10 @@ export default function AdminRoles() {
   };
 
   const createViceAdmin = async (e) => {
-    e.preventDefault(); setBusy(true); setError(""); setMsg(""); setSetupLink("");
+    e.preventDefault(); setBusy(true); setError(""); setMsg("");
     try {
       const r = await api.post("/admin/users", form);
       setMsg(`Vice-Admin created for ${r.data.user.email}. ${r.data.setup.message}`);
-      if (r.data.setup.demoSetupLink) setSetupLink(r.data.setup.demoSetupLink);
       setForm({ name: "", email: "", phone: "" });
       loadUsers();
     } catch (err) { setError(err.response?.data?.message || "Could not create the Vice-Admin"); }
@@ -47,12 +44,11 @@ export default function AdminRoles() {
   };
 
   const decideReset = async (id, action) => {
-    setError(""); setMsg(""); setResetLink("");
+    setError(""); setMsg("");
     try {
       const r = await api.patch(`/admin/password-resets/${id}/${action}`);
       if (action === "approve") {
-        setMsg(r.data.emailed ? "Approved — reset link emailed to the staff member." : "Approved — email is in demo mode, share the reset link below with the staff member.");
-        if (r.data.demoResetLink) setResetLink(r.data.demoResetLink);
+        setMsg("Approved — reset link emailed to the staff member.");
       } else {
         setMsg("Reset request rejected. No reset link was sent.");
       }
@@ -89,11 +85,6 @@ export default function AdminRoles() {
         <button disabled={busy} className="bg-brand text-white rounded px-4 py-2 text-sm font-medium mt-3 disabled:opacity-60">
           {busy ? "Creating..." : "Create Vice-Admin"}
         </button>
-        {setupLink && (
-          <p className="text-xs bg-amber-50 border border-amber-200 rounded p-2 mt-3 break-all">
-            Demo mode setup link (share it with the new Vice-Admin): <b>{setupLink}</b>
-          </p>
-        )}
       </form>
 
       {/* Staff password-reset approvals */}
@@ -103,15 +94,11 @@ export default function AdminRoles() {
           A reset link is generated and emailed ONLY when you approve. Rejected or
           unapproved requests can never change a password.
         </p>
-        {resetLink && (
-          <p className="text-xs bg-amber-50 border border-amber-200 rounded p-2 mt-3 break-all">
-            Demo mode reset link (share it with the staff member): <b>{resetLink}</b>
-          </p>
-        )}
         {pendingResets.length === 0 ? (
           <p className="text-sm text-gray-400 mt-3">No pending requests.</p>
         ) : (
-          <table className="w-full text-sm mt-2">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm mt-2 min-w-[480px]">
             <thead><tr className="text-left text-gray-400 border-b"><th className="py-2">Staff</th><th>Requested</th><th></th></tr></thead>
             <tbody>
               {pendingResets.map((r) => (
@@ -129,6 +116,7 @@ export default function AdminRoles() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
         {pastResets.length > 0 && (
           <p className="text-xs text-gray-400 mt-3">

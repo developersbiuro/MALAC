@@ -15,7 +15,7 @@ export default function MobileBottomNav() {
   const { pathname } = useLocation();
   if (pathname.startsWith("/admin")) return null;
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t z-40 flex">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t z-40 flex pb-[env(safe-area-inset-bottom)]">
       {items.map(({ to, label, Icon, badge }) => (
         <Link key={to} to={to}
           className={`flex-1 py-1.5 flex flex-col items-center text-[10px] relative ${pathname === to ? "text-brand" : "text-gray-500"}`}>

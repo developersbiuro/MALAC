@@ -44,11 +44,11 @@ export default function Shop() {
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
       <p className="eyebrow">The Collection</p>
-      <h1 className="font-display text-3xl font-bold mt-1">{title}</h1>
+      <h1 className="font-display text-2xl sm:text-3xl font-bold mt-1 break-words">{title}</h1>
       {sub && <p className="text-sm text-gray-500 mt-1">{category} / {sub}</p>}
-      <div className="bg-white rounded-2xl border border-cream-line shadow-sm p-3 mt-3 flex flex-wrap gap-3 items-center text-sm">
-        <label>Sort
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="border border-cream-line rounded-full ml-2 px-3 py-1.5 bg-white">
+      <div className="bg-white rounded-2xl border border-cream-line shadow-sm p-3 mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center text-sm">
+        <label className="flex items-center gap-2 sm:gap-0">Sort
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="border border-cream-line rounded-full sm:ml-2 px-3 py-2 sm:py-1.5 bg-white flex-1 sm:flex-none min-w-0">
             <option value="">Featured</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -57,9 +57,11 @@ export default function Shop() {
             <option value="popular">Most Sold</option>
           </select>
         </label>
-        <label>Min <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" className="border border-cream-line rounded-full ml-1 px-3 py-1.5 w-24" /></label>
-        <label>Max <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" className="border border-cream-line rounded-full ml-1 px-3 py-1.5 w-24" /></label>
-        <span className="ml-auto text-gray-400">Showing {products.length} products</span>
+        <div className="flex gap-3 sm:contents">
+          <label className="flex items-center gap-2 sm:gap-0 flex-1 sm:flex-none">Min <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" inputMode="numeric" className="border border-cream-line rounded-full sm:ml-1 px-3 py-2 sm:py-1.5 w-full sm:w-24 min-w-0" /></label>
+          <label className="flex items-center gap-2 sm:gap-0 flex-1 sm:flex-none">Max <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" inputMode="numeric" className="border border-cream-line rounded-full sm:ml-1 px-3 py-2 sm:py-1.5 w-full sm:w-24 min-w-0" /></label>
+        </div>
+        <span className="sm:ml-auto text-gray-400">Showing {products.length} products</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
         {products.map((p) => <ProductCard key={p._id} product={p} />)}

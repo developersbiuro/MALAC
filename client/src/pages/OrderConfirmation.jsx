@@ -34,7 +34,7 @@ export default function OrderConfirmation() {
         <div className="text-left text-sm mt-6 space-y-1.5">
           {order.items.map((i) => (
             <div key={i._id} className="flex justify-between gap-2">
-              <span>{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""} × {i.qty}</span><span>{rs(i.price * i.qty)}</span>
+              <span className="min-w-0 break-words">{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""} × {i.qty}</span><span className="shrink-0">{rs(i.price * i.qty)}</span>
             </div>
           ))}
           <div className="flex justify-between"><span>Discount</span><span>-{rs(order.discount)}</span></div>

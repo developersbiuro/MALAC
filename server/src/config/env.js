@@ -16,7 +16,6 @@ export const env = {
   // There is no public admin registration anywhere in the app.
   superAdminEmail: (process.env.SUPER_ADMIN_EMAIL || "developersbiuro@gmail.com").toLowerCase(),
   superAdminPhone: process.env.SUPER_ADMIN_PHONE || "+923236016684",
-  otpDemoMode: process.env.OTP_DEMO_MODE !== "false",
   otpSenderEmail: process.env.OTP_SENDER_EMAIL || "developersbiuro@gmail.com",
   otpSenderPhone: process.env.OTP_SENDER_PHONE || "+923236016684",
   otpSenderName: process.env.OTP_SENDER_NAME || "MALAC",
@@ -30,6 +29,11 @@ export const env = {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
     senderNumber: process.env.WHATSAPP_SENDER_NUMBER || "+923236016684",
+    // Approved Meta AUTHENTICATION template used for OTP delivery.
+    // Template messages are required: plain text only reaches users
+    // inside a 24-hour service window opened by the user messaging first.
+    otpTemplate: process.env.WHATSAPP_OTP_TEMPLATE || "malac_otp",
+    otpTemplateLang: process.env.WHATSAPP_OTP_TEMPLATE_LANG || "en",
   },
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID || "",

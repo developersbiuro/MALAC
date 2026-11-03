@@ -86,9 +86,9 @@ export default function AdminCategories() {
           <div key={c._id} className="p-3 flex items-center gap-3 text-sm">
             <span className="text-gray-300 font-mono">{i + 1}</span>
             {c.image && <img src={c.image} alt="" className="h-10 w-10 rounded border object-cover shrink-0 bg-gray-50" />}
-            <div className="flex-1">
-              <p className="font-medium">{c.name} <span className="text-gray-400 text-xs">({c.icon})</span></p>
-              <p className="text-xs text-gray-400">{(c.subCategories || []).map((s) => s.name).join(" · ") || "No sub-categories"}</p>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium break-words">{c.name} <span className="text-gray-400 text-xs">({c.icon})</span></p>
+              <p className="text-xs text-gray-400 break-words">{(c.subCategories || []).map((s) => s.name).join(" · ") || "No sub-categories"}</p>
             </div>
             <button onClick={() => startEdit(c)} className="text-gray-400 hover:text-brand p-1" aria-label="Edit category"><Pencil size={16} /></button>
             {isSuperAdmin && <button onClick={() => remove(c._id)} className="text-red-400 p-1" aria-label="Delete category"><Trash2 size={16} /></button>}

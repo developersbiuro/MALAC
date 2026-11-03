@@ -50,7 +50,7 @@ export default function Home() {
       <HeroCarousel />
       <div className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-4 py-3 flex flex-wrap justify-center gap-x-7 gap-y-2">
         {TRUST.map(({ Icon, label }) => (
-          <span key={label} className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700">
+          <span key={label} className="flex items-center gap-1.5 text-xs sm:text-[13px] font-medium text-gray-700">
             <Icon size={16} className="text-[#059669]" /> {label}
           </span>
         ))}

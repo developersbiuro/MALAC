@@ -25,9 +25,10 @@ export async function createResetRequest(user, { autoApproved = false, approvedB
 }
 
 // Generates the one-time reset token for an approved request and emails the
-// link. The plain token is stored ONLY as a SHA-256 hash. In demo mode
-// (no SMTP configured, mirroring the OTP demo pattern) the link is also
-// returned so the Super Admin can hand it to the staff member directly.
+// link. The plain token is stored ONLY as a SHA-256 hash and only ever
+// leaves the server inside the emailed link — it is never returned in an
+// API response. If SMTP is not configured the email sender throws and the
+// approval fails honestly instead of leaking the link.
 export async function issueResetToken(request) {
   const token = crypto.randomBytes(32).toString("hex");
   request.resetTokenHash = PasswordResetRequest.hashToken(token);
@@ -46,8 +47,7 @@ export async function issueResetToken(request) {
       `Set your new password within ${RESET_TOKEN_TTL_MINUTES} minutes using this link:\n${link}\n` +
       `If you did not request this, ignore this email — your password will not change.`,
   });
-  const demo = env.otpDemoMode || result.demo;
-  return { link, delivered: result.delivered, demo, ...(demo ? { demoResetLink: link } : {}) };
+  return { link, delivered: result.delivered };
 }
 
 export default createResetRequest;

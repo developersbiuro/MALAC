@@ -38,22 +38,22 @@ export default function CartDrawer() {
           {items.length === 0 && <p className="text-sm text-gray-400 text-center py-10">Your bag is feeling light — explore the collection and add something beautiful.</p>}
           {items.map((i) => (
             <div key={i.key} className="flex gap-2">
-              <img src={i.image} alt="" className="w-16 h-16 object-cover rounded-lg" />
-              <div className="flex-1 text-sm">
+              <img src={i.image} alt="" className="w-16 h-16 object-cover rounded-lg shrink-0" />
+              <div className="flex-1 min-w-0 text-sm">
                 <p className="line-clamp-2 leading-snug">{i.title}</p>
-                {i.variantLabel && <p className="text-xs text-gray-400">{i.variantLabel}</p>}
+                {i.variantLabel && <p className="text-xs text-gray-400 truncate">{i.variantLabel}</p>}
                 <p className="text-lux-amber font-semibold">{rs(i.price)}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <button onClick={() => updateQty(i.key, i.qty - 1)} className="border rounded-full px-2">-</button>
-                  <span>{i.qty}</span>
-                  <button onClick={() => updateQty(i.key, i.qty + 1)} className="border rounded-full px-2">+</button>
-                  <button onClick={() => remove(i.key)} className="text-red-400 ml-auto" aria-label="Remove"><Trash2 size={15} /></button>
+                  <button onClick={() => updateQty(i.key, i.qty - 1)} className="border rounded-full px-2.5 py-1 min-w-[30px]" aria-label="Decrease quantity">-</button>
+                  <span className="min-w-[1.25rem] text-center">{i.qty}</span>
+                  <button onClick={() => updateQty(i.key, i.qty + 1)} className="border rounded-full px-2.5 py-1 min-w-[30px]" aria-label="Increase quantity">+</button>
+                  <button onClick={() => remove(i.key)} className="text-red-400 ml-auto p-1.5" aria-label="Remove"><Trash2 size={15} /></button>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        <div className="p-3 border-t">
+        <div className="p-3 pb-[max(12px,env(safe-area-inset-bottom))] border-t">
           <div className="flex justify-between text-sm mb-2"><span>Subtotal</span><b>{rs(subtotal)}</b></div>
           <Link to="/cart" onClick={() => setDrawerOpen(false)}
             className="block text-center border border-lux-amber text-lux-burnt rounded-full py-2 text-sm mb-2 font-medium">View Cart</Link>

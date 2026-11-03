@@ -58,7 +58,7 @@ export default function AdminOrders() {
             className={`text-sm px-3 py-1.5 rounded-full ${filter === f ? "bg-brand text-white" : "bg-white"}`}>{f}</button>
         ))}
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search order ID"
-          className="border rounded px-3 py-1.5 text-sm ml-auto bg-white" />
+          className="border rounded px-3 py-2 sm:py-1.5 text-sm sm:ml-auto bg-white flex-1 sm:flex-none min-w-[150px]" />
       </div>
       {msg && <p className="text-sm text-gray-600 mt-2">{msg}</p>}
 

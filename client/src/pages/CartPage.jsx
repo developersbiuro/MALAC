@@ -50,23 +50,23 @@ export default function CartPage() {
         </div>
         {items.map((i) => (
           <div key={i.key} className="flex gap-3 border-b py-3">
-            <img src={i.image} alt="" className="w-20 h-20 object-cover rounded" />
-            <div className="flex-1 text-sm">
-              <p>{i.title}</p>
-              {i.variantLabel && <p className="text-xs text-gray-400">{i.variantLabel}</p>}
+            <img src={i.image} alt="" className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded shrink-0" />
+            <div className="flex-1 min-w-0 text-sm">
+              <p className="break-words">{i.title}</p>
+              {i.variantLabel && <p className="text-xs text-gray-400 truncate">{i.variantLabel}</p>}
               <p className="text-brand font-semibold mt-1">{rs(i.price)}</p>
               <div className="flex items-center gap-2 mt-1.5">
-                <button onClick={() => updateQty(i.key, i.qty - 1)} className="border rounded px-2">-</button>
-                <span>{i.qty}</span>
-                <button onClick={() => updateQty(i.key, i.qty + 1)} className="border rounded px-2">+</button>
-                <button onClick={() => remove(i.key)} className="text-red-400 ml-2" aria-label="Remove item"><Trash2 size={15} /></button>
+                <button onClick={() => updateQty(i.key, i.qty - 1)} className="border rounded px-2.5 py-1 min-w-[30px]" aria-label="Decrease quantity">-</button>
+                <span className="min-w-[1.25rem] text-center">{i.qty}</span>
+                <button onClick={() => updateQty(i.key, i.qty + 1)} className="border rounded px-2.5 py-1 min-w-[30px]" aria-label="Increase quantity">+</button>
+                <button onClick={() => remove(i.key)} className="text-red-400 ml-1 p-1.5" aria-label="Remove item"><Trash2 size={15} /></button>
               </div>
             </div>
-            <b className="text-sm">{rs(i.price * i.qty)}</b>
+            <b className="text-sm shrink-0">{rs(i.price * i.qty)}</b>
           </div>
         ))}
       </section>
-      <aside className="bg-white rounded-md p-4 text-sm space-y-2 sticky top-32">
+      <aside className="bg-white rounded-md p-4 text-sm space-y-2 lg:sticky lg:top-32">
         <p className="font-semibold">Order Summary</p>
         <div className="flex gap-2">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Voucher code (try WELCOME10)" className="border rounded px-2 py-1.5 flex-1 min-w-0" />

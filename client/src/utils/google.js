@@ -2,8 +2,9 @@
 //
 // The client ID comes from the Vite build env: VITE_GOOGLE_CLIENT_ID in
 // client/.env — it MUST match the server's GOOGLE_CLIENT_ID. When it is
-// empty the Google button falls back to demo mode (see GoogleButton in
-// pages/Login.jsx), so nothing here is loaded in that case.
+// empty the Google button shows as unavailable (see GoogleButton in
+// pages/Login.jsx) and nothing here is loaded — there is no fallback
+// sign-in.
 
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 

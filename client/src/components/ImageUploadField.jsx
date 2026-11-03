@@ -36,7 +36,7 @@ export default function ImageUploadField({ value, onChange, label }) {
         {value
           ? <img src={value} alt="" className="h-11 w-11 rounded border object-cover shrink-0 bg-gray-50" />
           : <span className="h-11 w-11 rounded border bg-gray-50 shrink-0" aria-hidden="true" />}
-        <input className="border rounded px-3 py-2 text-sm w-full" placeholder="https://... image URL"
+        <input className="border rounded px-3 py-2 text-sm w-full min-w-0" placeholder="https://... image URL"
           value={value || ""} onChange={(e) => onChange(e.target.value)} />
         <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={pick} />
         <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()}

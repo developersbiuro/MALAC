@@ -114,9 +114,9 @@ export default function TrackOrder() {
           {history.length > 0 && (
             <ul className="mt-4 border-t border-cream-line pt-3 space-y-1 text-xs text-gray-500">
               {history.map((h, i) => (
-                <li key={i} className="flex justify-between">
-                  <span>{h.status}</span>
-                  <span>{new Date(h.at).toLocaleString("en-PK")}</span>
+                <li key={i} className="flex justify-between gap-3">
+                  <span className="shrink-0">{h.status}</span>
+                  <span className="text-right">{new Date(h.at).toLocaleString("en-PK")}</span>
                 </li>
               ))}
             </ul>
@@ -126,9 +126,9 @@ export default function TrackOrder() {
           <div className="mt-5 border-t border-cream-line pt-4 space-y-2">
             {order.items.map((item, i) => (
               <div key={i} className="flex gap-3 items-center text-sm">
-                {item.image && <img src={item.image} alt="" className="w-11 h-11 rounded-lg object-cover" />}
-                <span className="flex-1 line-clamp-1">{item.title}{item.variantLabel ? ` (${item.variantLabel})` : ""} × {item.qty}</span>
-                <span>{rs(item.price * item.qty)}</span>
+                {item.image && <img src={item.image} alt="" className="w-11 h-11 rounded-lg object-cover shrink-0" />}
+                <span className="flex-1 min-w-0 line-clamp-1">{item.title}{item.variantLabel ? ` (${item.variantLabel})` : ""} × {item.qty}</span>
+                <span className="shrink-0">{rs(item.price * item.qty)}</span>
               </div>
             ))}
           </div>

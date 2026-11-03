@@ -308,8 +308,8 @@ export const completePasswordReset = asyncHandler(async (req, res) => {
 // -- Login with Google --
 // SECURITY: Google sign-in is for CUSTOMERS only. A Google identity whose
 // email matches a staff account is refused here — staff must use the Admin
-// Login (OTP or password). This also closes the demo-mode hole where an
-// unverified typed profile could claim the owner's email.
+// Login (OTP or password). Only a verified Google ID token is accepted —
+// an unverified typed profile can never claim the owner's email.
 export const googleLogin = asyncHandler(async (req, res) => {
   const profile = await verifyGoogleCredential(req.body);
   let user = await User.findOne({ $or: [{ googleId: profile.googleId }, { email: profile.email }] });
@@ -326,7 +326,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
   } else if (!user.googleId) {
     user.googleId = profile.googleId; user.emailVerified = true; await user.save();
   }
-  res.json({ user: publicUser(user), token: generateToken(user), demo: profile.demo });
+  res.json({ user: publicUser(user), token: generateToken(user) });
 });
 
 export const me = asyncHandler(async (req, res) => {

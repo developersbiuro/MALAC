@@ -7,7 +7,7 @@ export default function CategoryGrid({ categories }) {
     <section className="bg-white rounded-2xl border border-cream-line shadow-sm mt-4 p-4">
       <p className="eyebrow">Browse the Collection</p>
       <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-3">Shop by Category</h2>
-      <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2">
         {categories.map((c) => {
           const Icon = icons[c.icon] || icons.ShoppingBag;
           return (

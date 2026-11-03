@@ -7,7 +7,7 @@ const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Faisalabad"];
 
 export default function Footer() {
   return (
-    <footer className="bg-cream-soft mt-12 border-t border-cream-line pb-20 md:pb-0">
+    <footer className="bg-cream-soft mt-12 border-t border-cream-line pb-24 md:pb-0">
       <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
         <div className="col-span-2 md:col-span-1">
           <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-24 w-auto" />

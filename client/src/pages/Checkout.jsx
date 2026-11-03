@@ -145,11 +145,12 @@ export default function Checkout() {
   return (
     <main className="max-w-6xl mx-auto px-3 pt-4 grid lg:grid-cols-[1fr_320px] gap-4 items-start pb-10">
       <section className="bg-white rounded-md p-4">
-        <div className="flex gap-2 mb-5">
+        <div className="flex flex-wrap gap-x-2 gap-y-1 mb-5">
           {steps.map((s, i) => (
-            <div key={s} className={`flex items-center gap-1.5 text-sm ${i <= step ? "text-brand font-medium" : "text-gray-400"}`}>
-              <CheckCircle2 size={16} className={i < step ? "text-green-500" : ""} /> {s}
-              {i < steps.length - 1 && <span className="w-6 border-t mx-1" />}
+            <div key={s} className={`flex items-center gap-1.5 text-xs sm:text-sm ${i <= step ? "text-brand font-medium" : "text-gray-400"}`}>
+              <CheckCircle2 size={16} className={`shrink-0 ${i < step ? "text-green-500" : ""}`} />
+              <span className={i === step ? "" : "hidden min-[420px]:inline"}>{s}</span>
+              {i < steps.length - 1 && <span className="w-3 sm:w-6 border-t mx-0.5 sm:mx-1" />}
             </div>
           ))}
         </div>
@@ -189,7 +190,7 @@ export default function Checkout() {
                 <p className="text-xs text-gray-400 mt-1.5">Ya apni live location se order karein — rider seedha aap ki location par ayega (optional).</p>
               )}
             </div>
-            <div className="sm:col-span-2"><button className="bg-brand text-white rounded px-6 py-2 text-sm font-medium">Continue to Delivery</button></div>
+            <div className="sm:col-span-2"><button className="bg-brand text-white rounded px-6 py-2.5 sm:py-2 text-sm font-medium w-full sm:w-auto">Continue to Delivery</button></div>
           </form>
         )}
 
@@ -204,9 +205,9 @@ export default function Checkout() {
                 <b>{o.fee === 0 ? "Free" : rs(o.fee)}</b>
               </label>
             ))}
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setStep(0)} className="border rounded px-5 py-2">Back</button>
-              <button onClick={() => setStep(2)} className="bg-brand text-white rounded px-6 py-2 font-medium">Continue to Payment</button>
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+              <button onClick={() => setStep(0)} className="border rounded px-5 py-2.5 sm:py-2">Back</button>
+              <button onClick={() => setStep(2)} className="bg-brand text-white rounded px-6 py-2.5 sm:py-2 font-medium flex-1 sm:flex-none">Continue to Payment</button>
             </div>
           </div>
         )}
@@ -251,8 +252,8 @@ export default function Checkout() {
                       Your order stays <b>Pending Verification</b> until the MALAC team verifies the payment.
                     </p>
                     <label className="flex items-center gap-2 border border-dashed rounded p-3 bg-white cursor-pointer">
-                      <UploadCloud size={18} className="text-brand" />
-                      <span className="flex-1">{manual.screenshotPath ? "Screenshot uploaded ✓" : uploading ? "Uploading..." : "Upload payment screenshot (PNG/JPG, max 5 MB)"}</span>
+                      <UploadCloud size={18} className="text-brand shrink-0" />
+                      <span className="flex-1 min-w-0 break-words">{manual.screenshotPath ? "Screenshot uploaded ✓" : uploading ? "Uploading..." : "Upload payment screenshot (PNG/JPG, max 5 MB)"}</span>
                       <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden"
                         onChange={(e) => uploadScreenshot(e.target.files?.[0])} />
                     </label>
@@ -271,9 +272,9 @@ export default function Checkout() {
             )}
 
             {error && <p className="text-red-500">{error}</p>}
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setStep(1)} className="border rounded px-5 py-2">Back</button>
-              <button onClick={placeOrder} disabled={placing || uploading} className="bg-brand text-white rounded px-6 py-2 font-medium disabled:opacity-60">
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+              <button onClick={() => setStep(1)} className="border rounded px-5 py-2.5 sm:py-2">Back</button>
+              <button onClick={placeOrder} disabled={placing || uploading} className="bg-brand text-white rounded px-6 py-2.5 sm:py-2 font-medium disabled:opacity-60 flex-1 sm:flex-none">
                 {placing ? "Placing order..." : `Place Order · ${rs(total)}`}
               </button>
             </div>
@@ -281,11 +282,11 @@ export default function Checkout() {
         )}
       </section>
 
-      <aside className="bg-white rounded-md p-4 text-sm space-y-2 sticky top-32">
+      <aside className="bg-white rounded-md p-4 text-sm space-y-2 lg:sticky lg:top-32">
         <p className="font-semibold">Order Summary</p>
         {items.map((i) => (
           <div key={i.key} className="flex justify-between gap-2">
-            <span className="line-clamp-1">{i.title} × {i.qty}</span><span>{rs(i.price * i.qty)}</span>
+            <span className="line-clamp-1 min-w-0">{i.title} × {i.qty}</span><span className="shrink-0">{rs(i.price * i.qty)}</span>
           </div>
         ))}
         <div className="flex gap-2 pt-1">

@@ -55,14 +55,14 @@ export default function MyOrders() {
             <div className="mt-2 space-y-1">
               {o.items.map((i) => (
                 <div key={i._id} className="flex gap-2 items-center">
-                  {i.image && <img src={i.image} alt="" className="w-10 h-10 rounded object-cover" />}
-                  <span className="flex-1 line-clamp-1">{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""} × {i.qty}</span>
-                  <span>{rs(i.price * i.qty)}</span>
+                  {i.image && <img src={i.image} alt="" className="w-10 h-10 rounded object-cover shrink-0" />}
+                  <span className="flex-1 min-w-0 line-clamp-1">{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""} × {i.qty}</span>
+                  <span className="shrink-0">{rs(i.price * i.qty)}</span>
                 </div>
               ))}
             </div>
-            <div className="flex flex-wrap justify-between items-center border-t mt-2 pt-2">
-              <span className="text-gray-500">{o.paymentMethod} · {o.deliveryMethod} delivery
+            <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-1 border-t mt-2 pt-2">
+              <span className="text-gray-500 min-w-0">{o.paymentMethod} · {o.deliveryMethod} delivery
               {["JazzCash", "Easypaisa"].includes(o.paymentMethod) && (
                 <> · Payment: {o.paymentVerificationStatus === "pending_verification" ? "Pending verification"
                   : o.paymentVerificationStatus === "verified" ? "Verified"
@@ -77,7 +77,7 @@ export default function MyOrders() {
               ))}
             </ol>
             {["Pending", "Processing"].includes(o.status) && (
-              <button onClick={() => cancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-1.5 text-xs">
+              <button onClick={() => cancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-2 sm:py-1.5 text-xs">
                 Cancel Order
               </button>
             )}

@@ -32,8 +32,8 @@ export default function HeroCarousel() {
           <span className="btn-lux mt-4 px-6 py-2.5 text-xs sm:text-sm w-max">{slide.cta}</span>
         </div>
       </Link>
-      <button onClick={() => go(-1)} aria-label="Previous" className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 shadow rounded-full p-1.5"><ChevronLeft size={18} /></button>
-      <button onClick={() => go(1)} aria-label="Next" className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 shadow rounded-full p-1.5"><ChevronRight size={18} /></button>
+      <button onClick={() => go(-1)} aria-label="Previous" className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 shadow rounded-full p-2 sm:p-1.5"><ChevronLeft size={18} /></button>
+      <button onClick={() => go(1)} aria-label="Next" className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 shadow rounded-full p-2 sm:p-1.5"><ChevronRight size={18} /></button>
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
         {slides.map((_, i) => <span key={i} className={`h-1.5 rounded-full ${i === idx ? "w-5 bg-lux-gold" : "w-1.5 bg-white/50"}`} />)}
       </div>

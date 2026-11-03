@@ -2,7 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile fundamentals: never allow a stray wide element to push the page
+   sideways on phones, and remove tap delay / grey flash so taps feel
+   instant on touch devices. */
+html, body { overflow-x: clip; }
 body { @apply bg-[#fdfbf7] text-[#0f172a] antialiased; }
+a, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+img, video { max-width: 100%; }
+
+/* iOS Safari auto-zooms when a focused form field renders below 16px,
+   which makes checkout/auth forms feel jumpy on iPhones. Force 16px on
+   small screens only — desktop typography is untouched. */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

@@ -37,7 +37,7 @@ export default function AdminSettings() {
             <label className="text-sm">Sender phone / SMS<input className={input} value={form.otpSenderPhone} onChange={(e) => set("otpSenderPhone", e.target.value)} /></label>
             <label className="text-sm">WhatsApp sender number<input className={input} value={form.whatsappSenderNumber} onChange={(e) => set("whatsappSenderNumber", e.target.value)} /></label>
           </div>
-          <p className="text-[11px] text-gray-400 mt-2">Live delivery still needs provider credentials in the server .env (SMTP / WhatsApp Cloud API / Twilio). Without them, OTP runs in demo mode.</p>
+          <p className="text-[11px] text-gray-400 mt-2">OTP codes are delivered via the configured providers — email via SMTP, WhatsApp via the Meta WhatsApp Cloud API (authentication template), and SMS via Twilio. Provider credentials live in the server .env; a channel whose provider is not configured cannot send codes.</p>
         </fieldset>
 
         <fieldset className="border rounded p-3">

@@ -24,7 +24,6 @@ export default function Signup() {
   const [channel, setChannel] = useState("whatsapp"); // channel the code was sent on
   const [step, setStep] = useState("details"); // details | otp
   const [code, setCode] = useState("");
-  const [demoCode, setDemoCode] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const input = "border rounded-lg px-3 py-2.5 text-sm w-full bg-white";
@@ -45,7 +44,6 @@ export default function Signup() {
       : { name: form.name, method, phone: form.phone, password: form.password };
     const r = await api.post("/auth/signup/start", body);
     setChannel(r.data.channel || (method === "email" ? "email" : "whatsapp"));
-    if (r.data.demoCode) setDemoCode(r.data.demoCode); else setDemoCode("");
     setStep("otp");
   });
   const verify = wrap(async () => {
@@ -121,7 +119,6 @@ export default function Signup() {
                 ? <>Enter the WhatsApp code sent to <b>{form.phone}</b>.</>
                 : <>Enter the verification code sent to <b>{form.email}</b>.</>}
             </p>
-            {demoCode && <p className="text-xs bg-amber-50 border border-amber-200 rounded p-2">Demo mode — your code is <b>{demoCode}</b>.</p>}
             <input required className={`${input} tracking-[.4em] text-center`} maxLength={6} placeholder="______"
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
             {error && <p className="text-red-500 text-sm">{error}</p>}
