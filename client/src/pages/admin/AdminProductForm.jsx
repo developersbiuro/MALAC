@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/client.js";
+import ImageUploadField from "../../components/ImageUploadField.jsx";
 
 const empty = {
   title: "", description: "", images: [""], category: "", subCategory: "",
@@ -49,12 +50,21 @@ export default function AdminProductForm() {
       <form onSubmit={submit} className="bg-white rounded-md p-4 mt-3 grid sm:grid-cols-2 gap-3">
         <label className="sm:col-span-2 text-sm">Title<input required className={input} value={form.title} onChange={(e) => set("title", e.target.value)} /></label>
         <label className="sm:col-span-2 text-sm">Description<textarea className={input} rows={4} value={form.description} onChange={(e) => set("description", e.target.value)} /></label>
-        <div className="sm:col-span-2 text-sm">Image URLs
+        <div className="sm:col-span-2 text-sm">Images
           {form.images.map((src, i) => (
-            <input key={i} className={`${input} mt-1`} placeholder={`https://... image ${i + 1}`} value={src}
-              onChange={(e) => { const next = [...form.images]; next[i] = e.target.value; set("images", next); }} />
+            <div key={i} className="mt-1 flex items-start gap-2">
+              <div className="flex-1">
+                <ImageUploadField value={src}
+                  onChange={(v) => { const next = [...form.images]; next[i] = v; set("images", next); }} />
+              </div>
+              {form.images.length > 1 && (
+                <button type="button" aria-label={`Remove image ${i + 1}`}
+                  onClick={() => set("images", form.images.filter((_, j) => j !== i))}
+                  className="text-red-400 hover:text-red-600 text-xs mt-3 shrink-0">Remove</button>
+              )}
+            </div>
           ))}
-          <button type="button" onClick={() => set("images", [...form.images, ""])} className="text-brand text-xs mt-1">+ Add another image URL</button>
+          <button type="button" onClick={() => set("images", [...form.images, ""])} className="text-brand text-xs mt-1">+ Add another image</button>
         </div>
         <label className="text-sm">Category
           <select required className={input} value={form.category} onChange={(e) => set("category", e.target.value)}>

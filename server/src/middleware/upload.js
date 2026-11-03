@@ -29,21 +29,45 @@ function pickUploadsDir() {
 }
 export const uploadsDir = pickUploadsDir();
 export const screenshotsDir = path.join(uploadsDir, "payment-screenshots");
+// Catalog images (product/category photos uploaded from the admin panel)
+// live in their own subfolder, created with the same never-crash guard.
+// NOTE: on Vercel uploadsDir is the OS temp dir, so — exactly like payment
+// screenshots — these files sit in EPHEMERAL storage and can vanish when
+// the function instance is recycled. Durable object storage (e.g. S3 /
+// Vercel Blob) is the future upgrade for both kinds of uploads.
+export const catalogDir = path.join(uploadsDir, "catalog");
+try {
+  fs.mkdirSync(catalogDir, { recursive: true });
+} catch (err) {
+  console.error(`[MALAC] Could not create catalog uploads dir ${catalogDir}: ${err.message}`);
+}
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, screenshotsDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, "");
-    cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext || ".png"}`);
-  },
-});
+function makeStorage(dir) {
+  return multer.diskStorage({
+    destination: (req, file, cb) => cb(null, dir),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, "");
+      cb(null, `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext || ".png"}`);
+    },
+  });
+}
+
+function imageFileFilter(req, file, cb) {
+  if (/^image\/(png|jpe?g|webp)$/.test(file.mimetype)) cb(null, true);
+  else cb(new Error("Only PNG, JPG or WEBP images are allowed"));
+}
 
 export const uploadPaymentScreenshot = multer({
-  storage,
+  storage: makeStorage(screenshotsDir),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (req, file, cb) => {
-    if (/^image\/(png|jpe?g|webp)$/.test(file.mimetype)) cb(null, true);
-    else cb(new Error("Only PNG, JPG or WEBP images are allowed"));
-  },
+  fileFilter: imageFileFilter,
+});
+
+// Catalog image upload (staff only — enforced in the route). Same 5 MB
+// limit and PNG/JPG/WEBP filter as payment screenshots.
+export const uploadCatalogImage = multer({
+  storage: makeStorage(catalogDir),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  fileFilter: imageFileFilter,
 });
 export default uploadPaymentScreenshot;
