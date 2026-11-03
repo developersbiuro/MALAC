@@ -1,3 +1,4 @@
+import { LOGO_MARK } from "../assets/logo.js";
 import { NavLink, Link } from "react-router-dom";
 import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings as SettingsIcon, LogOut, Store } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -18,8 +19,13 @@ export default function AdminLayout({ children }) {
     <div className="min-h-screen flex bg-[#f4f6f8]">
       <aside className="w-14 sm:w-56 bg-[#0f1b29] text-white shrink-0 flex flex-col">
         <div className="p-3 sm:p-4 border-b border-white/10">
-          <p className="font-extrabold text-brand text-lg hidden sm:block">MALAC Admin</p>
-          <p className="font-extrabold text-brand sm:hidden">M</p>
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="bg-white rounded-md px-1.5 py-1 shrink-0"><img src={LOGO_MARK} alt="MALAC" className="h-8 w-auto" /></span>
+            <p className="font-extrabold text-lg">MALAC Admin</p>
+          </div>
+          <div className="sm:hidden flex justify-center">
+            <span className="bg-white rounded px-1 py-0.5"><img src={LOGO_MARK} alt="MALAC" className="h-7 w-auto" /></span>
+          </div>
           <p className="text-[11px] text-white/60 hidden sm:block mt-1">
             {user?.name} · {user?.role === "admin" ? "Super Admin" : "Vice-Admin"}
           </p>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, ShieldCheck } from "lucide-react";
 import api from "../api/client.js";
+import { LOGO_FULL } from "../assets/logo.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
@@ -48,7 +49,9 @@ export default function Header() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto px-3 py-2.5 flex items-center gap-3">
-        <Link to="/" className="text-2xl font-extrabold text-brand tracking-tight shrink-0">MALAC</Link>
+        <Link to="/" className="shrink-0" aria-label="MALAC — home">
+          <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-12 w-auto" />
+        </Link>
 
         {/* Category mega-menu (hover on desktop) */}
         <div className="relative hidden lg:block" onMouseEnter={() => setMenuOpen(true)} onMouseLeave={() => setMenuOpen(false)}>

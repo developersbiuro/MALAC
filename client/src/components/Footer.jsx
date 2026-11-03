@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import { LOGO_FULL } from "../assets/logo.js";
 
 export default function Footer() {
   return (
     <footer className="bg-white mt-10 border-t pb-20 md:pb-0">
       <div className="max-w-7xl mx-auto px-3 py-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
         <div>
-          <p className="text-xl font-extrabold text-brand">MALAC</p>
+          <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-24 w-auto" />
           <p className="text-gray-500 mt-2">Online shopping in Pakistan — mobiles, fashion, electronics, groceries and more, with Cash on Delivery nationwide.</p>
         </div>
         <div><p className="font-semibold mb-2">Customer Care</p>
