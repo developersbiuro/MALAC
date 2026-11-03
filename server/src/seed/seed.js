@@ -53,6 +53,8 @@ const products = [
   { title: "Baby Diapers Size 4 (9-14kg) - 50 Count", sku: "TOY-BAB-DIA4", category: "Toys & Baby", subCategory: "Diapers", basePrice: 3299, salePrice: 2899, stock: 90, tags: ["diapers", "baby"], desc: "12-hour absorbency, soft breathable material, leak guard protection." },
 ];
 
+export const seedProductCount = products.length;
+
 export async function runSeed({ clear = true } = {}) {
   if (clear) {
     console.log("[MALAC seed] Clearing demo collections...");
@@ -63,23 +65,41 @@ export async function runSeed({ clear = true } = {}) {
     ]);
   }
 
-  await User.create([
-    // The ONLY staff account: the store owner as Super Admin. No password
-    // is seeded (passwordHash stays empty, accountStatus "pending_setup") —
-    // the owner sets it via the Forgot password flow (email OTP), or signs
-    // in with an OTP. No other admin/vice-admin is ever seeded.
+  // The ONLY staff account: the store owner as Super Admin. No password
+  // is seeded (passwordHash stays empty, accountStatus "pending_setup") —
+  // the owner sets it via the Forgot password flow (email OTP), or signs
+  // in with an OTP. No other admin/vice-admin is ever seeded.
+  const seedUsers = [
     { name: "Muhammad Abdullah (Store Owner)", email: env.superAdminEmail, phone: env.superAdminPhone, role: "admin", emailVerified: true, phoneVerified: true, accountStatus: "pending_setup", passwordHash: "" },
     { name: "Demo Customer", email: "customer@malac.pk", phone: "+923000000003", role: "customer", emailVerified: true, phoneVerified: true },
-  ]);
+  ];
+  if (clear) {
+    await User.create(seedUsers);
+  } else {
+    // Resume mode (one-time endpoint): insert only what is missing, so a
+    // seeding run interrupted mid-way (e.g. a serverless timeout) can be
+    // safely completed by calling it again — never duplicates.
+    for (const u of seedUsers) {
+      if (!(await User.exists({ email: u.email }))) await User.create(u);
+    }
+  }
 
-  await Category.insertMany(categories.map((c, i) => ({
+  const categoryDocs = categories.map((c, i) => ({
     name: c.name, slug: slugify(c.name), icon: c.icon, sortOrder: i,
     image: img(slugify(c.name)),
     subCategories: c.subCategories.map((s) => ({ name: s, slug: slugify(s) })),
-  })));
+  }));
+  if (clear) {
+    await Category.insertMany(categoryDocs);
+  } else {
+    const existingSlugs = new Set((await Category.find({}, "slug")).map((c) => c.slug));
+    const missing = categoryDocs.filter((c) => !existingSlugs.has(c.slug));
+    if (missing.length) await Category.insertMany(missing);
+  }
 
   const created = [];
   for (const p of products) {
+    if (!clear && (await Product.exists({ sku: p.sku }))) continue; // resume mode
     const doc = await Product.create({
       title: p.title, slug: slugify(`${p.title}-${p.sku}`), description: p.desc,
       images: [img(p.sku.toLowerCase()), img(`${p.sku.toLowerCase()}-b`)],
@@ -97,14 +117,19 @@ export async function runSeed({ clear = true } = {}) {
     ]);
   }
 
-  await Coupon.create({
-    code: "WELCOME10", type: "percentage", value: 10, minSpend: 0,
-    maxDiscount: 2000, expiresAt: new Date(Date.now() + 90 * 86400000), active: true,
-  });
-  await Coupon.create({
-    code: "MALAC500", type: "fixed", value: 500, minSpend: 5000,
-    expiresAt: new Date(Date.now() + 60 * 86400000), active: true,
-  });
+  const seedCoupons = [
+    {
+      code: "WELCOME10", type: "percentage", value: 10, minSpend: 0,
+      maxDiscount: 2000, expiresAt: new Date(Date.now() + 90 * 86400000), active: true,
+    },
+    {
+      code: "MALAC500", type: "fixed", value: 500, minSpend: 5000,
+      expiresAt: new Date(Date.now() + 60 * 86400000), active: true,
+    },
+  ];
+  for (const c of seedCoupons) {
+    if (clear || !(await Coupon.exists({ code: c.code }))) await Coupon.create(c);
+  }
 
   const settings = await Settings.getStore();
   settings.otpSenderEmail = env.otpSenderEmail;
