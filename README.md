@@ -87,25 +87,23 @@ this repository.
 
 ## Authentication
 
-### Customers — sign-up: email + password, verified by BOTH OTPs
-1. On the sign-up screen the customer enters name, email, phone and a
-   **password** (min 8 characters), and chooses how to receive the phone
-   code: **WhatsApp OTP** or **SMS OTP** — the same verification-code
-   mechanism on both channels.
-2. A verification code is emailed to them (`POST /api/auth/signup/email-otp`)
-   and must be entered to register the email
-   (`POST /api/auth/signup/verify-email`).
-3. A code is then sent to their phone on the chosen channel
-   (`POST /api/auth/signup/phone-otp`) and verified
-   (`POST /api/auth/signup/verify-phone`) — **only then is the account
-   created**, with the password stored as a scrypt hash (never plain text,
-   never returned by the API) and both `emailVerified` and `phoneVerified`
-   set. An account whose OTPs are not both verified does not exist yet, so
-   it cannot sign in or place orders; the sign-in and order endpoints
-   enforce the same rule for any partial/legacy row.
+### Customers — sign-up: ONE method, ONE verification (Daraz-style)
+Sign-up verifies by exactly **one** method — the customer picks one of
+three ways: **phone** (name + phone number + password → the code arrives
+on **WhatsApp**), **email** (name + email + password → the code arrives
+by email), or **Continue with Google** (profile fetched by Google, the
+account is created instantly, no code at all). `POST /api/auth/signup/start`
+sends the single code on the chosen channel and parks the registration —
+name plus the password's scrypt hash, never plain text — on the OTP record;
+`POST /api/auth/signup/verify` checks the code and **only then creates the
+account**, with just that one channel verified (`emailVerified` XOR
+`phoneVerified`). An abandoned sign-up therefore leaves no account behind,
+and everywhere a "verified customer" is required (password sign-in, OTP
+sign-in, placing an order) the rule is the single predicate
+`emailVerified || phoneVerified || googleId` — never both channels.
 
 Customer login offers three options on one screen:
-- **Email + password** — `POST /api/auth/login/customer-password`
+- **Email or phone + password** — `POST /api/auth/login/customer-password`
   (customers only: staff accounts are refused and must use the Admin
   Login; the staff endpoint `/api/auth/login/password` likewise refuses
   customers — the two stay strictly separate).
@@ -341,7 +339,7 @@ as *not configured / unavailable* instead of showing a wrong account.
 
 | Area | Endpoints |
 |---|---|
-| Auth | `POST /api/auth/signup/email-otp`, `/signup/verify-email`, `/signup/phone-otp`, `/signup/verify-phone`, `POST /api/auth/login/otp`, `/login/verify`, `POST /api/auth/login/customer-password` (customers), `POST /api/auth/login/password` (staff), `POST /api/auth/password-reset/request`, `/password-reset/owner/verify` (Super Admin OTP), `/password-reset/complete` (approved token), `POST /api/auth/google`, `GET /api/auth/me`, `POST /api/auth/addresses` |
+| Auth | `POST /api/auth/signup/start`, `/signup/verify` (one-method sign-up), `POST /api/auth/login/otp`, `/login/verify`, `POST /api/auth/login/customer-password` (customers), `POST /api/auth/login/password` (staff), `POST /api/auth/password-reset/request`, `/password-reset/owner/verify` (Super Admin OTP), `/password-reset/complete` (approved token), `POST /api/auth/google`, `GET /api/auth/me`, `POST /api/auth/addresses` |
 | Products | `GET /api/products` (search/filter/sort/page), `GET /api/products/suggest?q=`, `GET /api/products/:slug`, `POST/PUT/PATCH/DELETE` (staff), reviews + Q&A under `/api/products/:id/...` |
 | Categories | `GET /api/categories`, `POST/PUT` (staff), `DELETE` (Super Admin) |
 | Orders | `POST /api/orders` (login required), `GET /api/orders/my`, `GET /api/orders/:orderId`, `PATCH /api/orders/:orderId/cancel` |

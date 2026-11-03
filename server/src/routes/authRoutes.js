@@ -3,10 +3,10 @@ import { protect } from "../middleware/auth.js";
 import * as auth from "../controllers/authController.js";
 
 const router = Router();
-router.post("/signup/email-otp", auth.signupEmailOtp);
-router.post("/signup/verify-email", auth.signupVerifyEmail);
-router.post("/signup/phone-otp", auth.signupPhoneOtp);
-router.post("/signup/verify-phone", auth.signupVerifyPhone);
+// Sign-up is ONE-method (Daraz-style): start sends a single OTP on the
+// chosen channel (email, or WhatsApp for phone); verify creates the account.
+router.post("/signup/start", auth.signupStart);
+router.post("/signup/verify", auth.signupVerify);
 router.post("/login/otp", auth.loginOtp);
 router.post("/login/verify", auth.loginVerify);
 router.post("/login/password", auth.loginPassword); // staff only (controller-enforced)

@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { GOOGLE_CLIENT_ID, loadGoogleIdentity } from "../utils/google.js";
 
 // Customer login — three ways in:
-//  1) email + password (the password chosen at sign-up),
+//  1) email OR phone + password (whichever the customer signed up with),
 //  2) one-time code by email / WhatsApp / SMS (no password needed),
 //  3) Continue with Google.
 // Supports ?redirect=/checkout so shoppers return to checkout after login.
@@ -87,8 +87,8 @@ export default function Login() {
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "/";
   const [method, setMethod] = useState("password"); // password | otp
-  // email + password state
-  const [email, setEmail] = useState("");
+  // email-or-phone + password state
+  const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   // OTP state
   const [channel, setChannel] = useState("email"); // email | whatsapp | sms
@@ -107,7 +107,7 @@ export default function Login() {
   };
 
   const passwordLogin = run(async () => {
-    const r = await api.post("/auth/login/customer-password", { identifier: email, password });
+    const r = await api.post("/auth/login/customer-password", { identifier: loginId, password });
     finish(r.data);
   }, "Could not sign in");
 
@@ -133,14 +133,14 @@ export default function Login() {
         <p className="text-sm text-gray-500 mt-1">Log in with your password, a one-time code, or Google.</p>
 
         <div className="flex gap-2 text-sm mt-4">
-          {tab("password", "Email + Password")}
+          {tab("password", "Password")}
           {tab("otp", "OTP Code")}
         </div>
 
         {method === "password" && (
           <form onSubmit={passwordLogin} className="space-y-3 mt-4">
-            <input required type="email" className={input} placeholder="Email address"
-              value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input required type="text" className={input} placeholder="Email or Phone Number"
+              value={loginId} onChange={(e) => setLoginId(e.target.value)} />
             <input required type="password" className={input} placeholder="Password"
               value={password} onChange={(e) => setPassword(e.target.value)} />
             {error && <p className="text-red-500 text-sm">{error}</p>}

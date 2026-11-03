@@ -1,9 +1,13 @@
+import crypto from "crypto";
 import User from "../models/User.js";
+import OtpToken from "../models/OtpToken.js";
 import PasswordResetRequest from "../models/PasswordResetRequest.js";
 import env from "../config/env.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateToken } from "../utils/generateToken.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
+import { normalizePhone, phoneLast10 } from "../utils/phone.js";
+import { isVerifiedCustomer } from "../utils/verification.js";
 import { requestOtp, verifyOtp } from "../services/otpService.js";
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
 import { createResetRequest } from "../services/passwordResetService.js";
@@ -28,67 +32,95 @@ const passwordError = (password) =>
     ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
     : null;
 
-// A customer account counts as fully verified only when BOTH sign-up OTPs
-// were completed. Google accounts are exempt from the phone half: their
-// identity (and email) was verified by Google, and they hold no real phone.
-const isFullyVerified = (u) =>
-  Boolean(u.googleId) || (u.emailVerified && u.phoneVerified);
+// Customer verification is ONE-method (see utils/verification.js): the
+// single channel chosen at sign-up — email OTP or WhatsApp OTP — or a
+// Google identity. The shared predicate is isVerifiedCustomer.
 
-// -- Sign-up: step 1, email OTP --
-// The customer registers with email + password (owner-specified flow): the
-// password is chosen here, validated up front, and re-sent at the final
-// step — it is only hashed and stored when the account is created, after
-// BOTH OTP verifications (see signupVerifyPhone).
+// -- Sign-up (Daraz-style, ONE method) --
+// The customer picks exactly ONE way to register and verifies ONLY that
+// one channel:
+//   method "email": name + email + password      -> code emailed to them
+//   method "phone": name + phone + password      -> code sent on WhatsApp
+// ("Continue with Google" is the third way — see googleLogin; it creates
+// the account instantly with no OTP at all.)
 // NOTE: any "role" sent in a sign-up request body is deliberately IGNORED.
-// Public sign-up can only ever produce a customer — see signupVerifyPhone.
-export const signupEmailOtp = asyncHandler(async (req, res) => {
-  const { name, email, phone, password } = req.body;
-  if (!name || !email || !phone) return res.status(400).json({ message: "name, email and phone are required" });
+// Public sign-up can only ever produce a customer — see signupVerify.
+export const signupStart = asyncHandler(async (req, res) => {
+  const { method, password } = req.body;
+  const name = String(req.body.name || "").trim();
+  if (!name) return res.status(400).json({ message: "name is required" });
+  if (!["email", "phone"].includes(method)) {
+    return res.status(400).json({ message: "method must be 'email' or 'phone'" });
+  }
   const pwErr = passwordError(password);
   if (pwErr) return res.status(400).json({ message: pwErr });
-  const existing = await User.findOne({ $or: [{ email }, { phone }] });
-  if (existing) return res.status(409).json({ message: "An account with this email or phone already exists" });
-  const result = await requestOtp({ identifier: email, channel: "email", purpose: "signup" });
-  res.json({ step: "verify-email", ...result });
+  // The pending registration rides on the OTP record (models/OtpToken):
+  // the password is stored there ONLY as its scrypt hash, and the record
+  // TTL-expires if the code is never verified — no account exists yet.
+  const pending = { name, passwordHash: hashPassword(password) };
+
+  if (method === "email") {
+    const email = String(req.body.email || "").toLowerCase().trim();
+    if (!email) return res.status(400).json({ message: "email is required" });
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(409).json({ message: "An account with this email already exists. Please log in." });
+    const result = await requestOtp({ identifier: email, channel: "email", purpose: "signup", pending });
+    return res.json({ step: "verify", method, channel: "email", identifier: email, ...result });
+  }
+
+  const phone = normalizePhone(req.body.phone);
+  if (phoneLast10(phone).length < 10) {
+    return res.status(400).json({ message: "Please enter a valid phone number" });
+  }
+  const channel = req.body.channel === "sms" ? "sms" : "whatsapp";
+  const existing = await User.findOne({ phone });
+  if (existing) return res.status(409).json({ message: "An account with this phone number already exists. Please log in." });
+  const result = await requestOtp({ identifier: phone, channel, purpose: "signup", phone, pending });
+  res.json({ step: "verify", method, channel, identifier: phone, ...result });
 });
 
-// -- Sign-up: step 2, verify email OTP, then request phone OTP --
-export const signupVerifyEmail = asyncHandler(async (req, res) => {
-  const { email, code, channel } = req.body; // channel: "whatsapp" | "sms"
-  const check = await verifyOtp({ identifier: email, channel: "email", purpose: "signup", code });
+// -- Sign-up: verify the ONE code -> create the account --
+// ROLE RULE (the only place a public flow can yield a staff role): the
+// role is "admin" ONLY when the verified EMAIL is exactly the configured
+// SUPER_ADMIN_EMAIL allowlist entry — elevation is possible solely via
+// the email method, where the owner proves ownership of that mailbox.
+// Phone-method sign-ups are always customers. The account is created
+// ONLY NOW, after the single chosen OTP verifies, with ONLY that
+// channel marked verified — so an abandoned sign-up never leaves behind
+// an account that could sign in or order. The User schema requires both
+// an email and a phone, so the identifier the customer did NOT register
+// with is a clearly synthetic placeholder, exactly like Google accounts
+// already store "google-<id>" as their phone.
+export const signupVerify = asyncHandler(async (req, res) => {
+  const { method, code } = req.body;
+  if (!["email", "phone"].includes(method)) {
+    return res.status(400).json({ message: "method must be 'email' or 'phone'" });
+  }
+  const isEmail = method === "email";
+  const identifier = isEmail
+    ? String(req.body.email || "").toLowerCase().trim()
+    : normalizePhone(req.body.phone);
+  const channel = isEmail ? "email" : req.body.channel === "sms" ? "sms" : "whatsapp";
+  if (!identifier) return res.status(400).json({ message: `${method} is required` });
+
+  const check = await verifyOtp({ identifier, channel, purpose: "signup", code });
   if (!check.ok) return res.status(400).json({ message: check.reason });
-  res.json({ step: "phone-otp-required", message: "Email verified. Now verify your phone.", channel: channel || "whatsapp" });
-});
-
-export const signupPhoneOtp = asyncHandler(async (req, res) => {
-  const { phone, channel = "whatsapp" } = req.body;
-  if (!["whatsapp", "sms"].includes(channel)) return res.status(400).json({ message: "channel must be whatsapp or sms" });
-  const result = await requestOtp({ identifier: phone, channel, purpose: "signup", phone });
-  res.json({ step: "verify-phone", ...result });
-});
-
-// -- Sign-up: step 3, verify phone OTP -> create the account --
-// ROLE RULE (the only place a public flow can yield a staff role): the role
-// is "admin" ONLY when the verified email is exactly the configured
-// SUPER_ADMIN_EMAIL allowlist entry — i.e. the store owner proving ownership
-// of that email AND phone via both OTPs. Every other sign-up is a customer.
-export const signupVerifyPhone = asyncHandler(async (req, res) => {
-  const { name, email, phone, password, code, channel = "whatsapp" } = req.body;
-  const pwErr = passwordError(password);
-  if (pwErr) return res.status(400).json({ message: pwErr });
-  const check = await verifyOtp({ identifier: phone, channel, purpose: "signup", code });
-  if (!check.ok) return res.status(400).json({ message: check.reason });
-  const existing = await User.findOne({ $or: [{ email }, { phone }] });
+  // The token verifyOtp just consumed carries the pending registration.
+  const token = await OtpToken.findOne({ identifier, channel, purpose: "signup" }).sort({ createdAt: -1 });
+  if (!token?.pendingName || !token?.pendingPasswordHash) {
+    return res.status(400).json({ message: "Sign-up session expired. Please start sign-up again." });
+  }
+  const existing = await User.findOne(isEmail ? { email: identifier } : { phone: identifier });
   if (existing) return res.status(409).json({ message: "An account with this email or phone already exists" });
-  const isOwnerAllowlist = String(email).toLowerCase() === env.superAdminEmail;
-  // The account is created ONLY NOW — after email OTP (step 2) and phone
-  // OTP (this step) have both verified — so an unverified sign-up never
-  // leaves behind an account that could sign in or order. The password
-  // chosen at step 1 is stored as a scrypt hash, never in plain text.
-  // The allowlist account gets its password exactly the same way.
+
+  const isOwnerAllowlist = isEmail && identifier === env.superAdminEmail;
   const user = await User.create({
-    name, email, phone, emailVerified: true, phoneVerified: true,
-    passwordHash: hashPassword(password),
+    name: token.pendingName,
+    email: isEmail ? identifier : `phone-${identifier.replace(/\D/g, "")}@malac.local`,
+    phone: isEmail ? `email-${crypto.randomBytes(8).toString("hex")}` : identifier,
+    emailVerified: isEmail,
+    phoneVerified: !isEmail,
+    passwordHash: token.pendingPasswordHash,
     role: isOwnerAllowlist ? "admin" : "customer",
   });
   res.status(201).json({ user: publicUser(user), token: generateToken(user) });
@@ -112,11 +144,11 @@ export const loginVerify = asyncHandler(async (req, res) => {
   if (!check.ok) return res.status(400).json({ message: check.reason });
   const user = await User.findOne(channel === "email" ? { email: identifier } : { phone: identifier });
   if (!user) return res.status(404).json({ message: "No account found. Please sign up first." });
-  // Defense in depth: a non-Google customer whose sign-up OTPs were never
-  // both verified must not be able to sign in. (Accounts are only created
-  // after both verifications, so this can only trip on partial/legacy rows.)
-  if (!isStaffUser(user) && !isFullyVerified(user)) {
-    return res.status(403).json({ message: "Please complete sign-up verification (email and phone) before signing in." });
+  // Defense in depth: a customer whose one sign-up verification was never
+  // completed must not be able to sign in. (Accounts are only created
+  // after that verification, so this can only trip on partial/legacy rows.)
+  if (!isStaffUser(user) && !isVerifiedCustomer(user)) {
+    return res.status(403).json({ message: "Please complete sign-up verification before signing in." });
   }
   res.json({ user: publicUser(user), token: generateToken(user) });
 });
@@ -125,21 +157,27 @@ export const loginVerify = asyncHandler(async (req, res) => {
 // The customer counterpart of the staff endpoint below, kept strictly
 // separate: this one REFUSES staff accounts (staff must use the Admin
 // Login), and the staff one refuses customers. A customer signs in with
-// the password chosen at sign-up — but only once the account is fully
-// verified (email OTP + phone OTP). Customers who signed up via Google
-// have no password and keep using Google / OTP sign-in.
+// the password chosen at sign-up, using EITHER identifier they registered
+// with — their email or their phone number ({ identifier, password };
+// { email, password } is also accepted for older clients). Customers who
+// signed up via Google have no password and keep using Google / OTP.
 export const loginCustomerPassword = asyncHandler(async (req, res) => {
-  const { identifier, password } = req.body;
-  if (!identifier || !password) return res.status(400).json({ message: "identifier and password are required" });
-  const user = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] }).select("+passwordHash");
+  const rawIdentifier = String(req.body.identifier || req.body.email || "").trim();
+  const { password } = req.body;
+  if (!rawIdentifier || !password) return res.status(400).json({ message: "identifier and password are required" });
+  const isEmailId = rawIdentifier.includes("@");
+  const lookup = isEmailId
+    ? { email: rawIdentifier.toLowerCase() }
+    : { $or: [{ phone: rawIdentifier }, { phone: normalizePhone(rawIdentifier) }] };
+  const user = await User.findOne(lookup).select("+passwordHash");
   if (user && isStaffUser(user)) {
     return res.status(403).json({ message: "Staff accounts must sign in from the Admin Login." });
   }
   if (!user || !user.passwordHash) {
     return res.status(401).json({ message: "No password is set for this account. Sign in with OTP or Google instead." });
   }
-  if (!isFullyVerified(user)) {
-    return res.status(403).json({ message: "Please complete sign-up verification (email and phone) before signing in." });
+  if (!isVerifiedCustomer(user)) {
+    return res.status(403).json({ message: "Please complete sign-up verification before signing in." });
   }
   if (!verifyPassword(password, user.passwordHash)) {
     return res.status(401).json({ message: "Incorrect password" });

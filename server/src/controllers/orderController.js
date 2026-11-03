@@ -1,15 +1,16 @@
 import Order, { ORDER_STATUSES } from "../models/Order.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
+import { isVerifiedCustomer } from "../utils/verification.js";
 
 export const placeOrder = asyncHandler(async (req, res) => {
-  // Only fully verified customers may order: sign-up completes BOTH the
-  // email OTP and the phone OTP before an account even exists, so this
-  // guard only trips on partial/legacy rows. Google accounts are exempt
-  // from the phone half — Google verified their identity and email.
+  // Only verified customers may order. Sign-up is ONE-method — the
+  // account is created only after its single email or WhatsApp OTP
+  // verifies (or instantly by Google) — so this guard only trips on
+  // partial/legacy rows. One verified channel is enough.
   const u = req.user;
-  if (u.role === "customer" && !u.googleId && !(u.emailVerified && u.phoneVerified)) {
-    return res.status(403).json({ message: "Please complete sign-up verification (email and phone) before placing an order." });
+  if (u.role === "customer" && !isVerifiedCustomer(u)) {
+    return res.status(403).json({ message: "Please complete sign-up verification before placing an order." });
   }
   const order = await createOrder({ user: req.user, ...req.body });
   res.status(201).json({ order });

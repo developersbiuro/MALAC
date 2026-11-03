@@ -23,13 +23,15 @@ const userSchema = new mongoose.Schema({
   // admin = Super Admin, vice-admin = Vice-Admin, customer = Customer.
   // SECURITY: a role is NEVER taken from a sign-up request. Public sign-up
   // always creates "customer"; the single exception is the SUPER_ADMIN_EMAIL
-  // allowlist (see authController.signupVerifyPhone). Vice-Admin accounts
-  // are created only by the Super Admin inside the admin panel.
+  // allowlist (see authController.signupVerify — email-method sign-ups only).
+  // Vice-Admin accounts are created only by the Super Admin inside the
+  // admin panel.
   role: { type: String, enum: ["admin", "vice-admin", "customer"], default: "customer" },
   // Password credential (scrypt hash, see utils/password.js; select:false
   // so it is never returned by the API). Customers choose a password at
   // sign-up; it is stored (hashed) only when the account is created, i.e.
-  // after BOTH email and phone OTP verification. Staff never get a password
+  // after the ONE chosen sign-up OTP (email or WhatsApp) verifies — while
+  // pending, only the hash rides on the OTP record. Staff never get a password
   // from a public form: theirs is set through the approval-gated reset flow
   // (models/PasswordResetRequest.js). An empty hash means "no password set"
   // (e.g. Google accounts, or staff still in pending_setup).
