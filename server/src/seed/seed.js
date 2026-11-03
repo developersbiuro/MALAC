@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import env from "../config/env.js";
 import User from "../models/User.js";
+import PasswordResetRequest from "../models/PasswordResetRequest.js";
+import OtpToken from "../models/OtpToken.js";
 import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import Coupon from "../models/Coupon.js";
@@ -9,8 +11,14 @@ import Settings from "../models/Settings.js";
 import { slugify } from "../utils/slugify.js";
 
 // Run: npm --prefix server run seed
-// Demo staff accounts are passwordless (OTP login). In OTP demo mode the
-// code is printed on the server / returned as demoCode by the API.
+// SECURITY: the seed creates exactly ONE staff account — the store owner
+// as Super Admin (SUPER_ADMIN_EMAIL / SUPER_ADMIN_PHONE). There are NO
+// demo staff accounts and NO known/shared passwords: the owner account
+// starts as accountStatus "pending_setup" with an empty passwordHash, and
+// the owner sets his password the first time via Admin Login ->
+// "Forgot password" (verified email OTP to SUPER_ADMIN_EMAIL). Staff can
+// also sign in with OTP. Vice-Admins are created later by the Super Admin
+// inside Admin -> Roles & Users — never by the seed or any public form.
 const categories = [
   { name: "Mobiles & Tablets", icon: "Smartphone", subCategories: ["Smartphones", "Tablets", "Mobile Accessories"] },
   { name: "Electronics", icon: "Tv", subCategories: ["LED TVs", "Audio", "Cameras"] },
@@ -50,14 +58,15 @@ async function run() {
   await Promise.all([
     User.deleteMany({}), Category.deleteMany({}), Product.deleteMany({}),
     Coupon.deleteMany({}), Review.deleteMany({}),
+    PasswordResetRequest.deleteMany({}), OtpToken.deleteMany({}),
   ]);
 
   await User.create([
-    // First Super Admin: the store owner. Logs in at /admin with an OTP sent
-    // to this email/phone (demo mode shows the code). No password exists.
-    { name: "Abdullah (Store Owner)", email: "developersbiuro@gmail.com", phone: "+923236016684", role: "admin", emailVerified: true, phoneVerified: true },
-    { name: "MALAC Super Admin", email: "admin@malac.pk", phone: "+923000000001", role: "admin", emailVerified: true, phoneVerified: true },
-    { name: "MALAC Vice Admin", email: "vice@malac.pk", phone: "+923000000002", role: "vice-admin", emailVerified: true, phoneVerified: true },
+    // The ONLY staff account: the store owner as Super Admin. No password
+    // is seeded (passwordHash stays empty, accountStatus "pending_setup") —
+    // the owner sets it via the Forgot password flow (email OTP), or signs
+    // in with an OTP. No other admin/vice-admin is ever seeded.
+    { name: "Muhammad Abdullah (Store Owner)", email: env.superAdminEmail, phone: env.superAdminPhone, role: "admin", emailVerified: true, phoneVerified: true, accountStatus: "pending_setup", passwordHash: "" },
     { name: "Demo Customer", email: "customer@malac.pk", phone: "+923000000003", role: "customer", emailVerified: true, phoneVerified: true },
   ]);
 
@@ -104,8 +113,8 @@ async function run() {
   settings.easypaisaAccountNumber = env.easypaisa.accountNumber;
   await settings.save();
 
-  console.log(`[MALAC seed] Done: ${categories.length} categories, ${created.length} products, 2 coupons, 3 users.`);
-  console.log("[MALAC seed] Admin login at /admin (OTP demo mode): owner developersbiuro@gmail.com / +923236016684, plus admin@malac.pk and vice@malac.pk");
+  console.log(`[MALAC seed] Done: ${categories.length} categories, ${created.length} products, 2 coupons, 2 users (1 Super Admin owner + 1 demo customer).`);
+  console.log(`[MALAC seed] Super Admin (only staff account): ${env.superAdminEmail} / ${env.superAdminPhone} — pending password setup via Admin Login -> Forgot password (email OTP). No demo staff accounts exist.`);
   await mongoose.disconnect();
 }
 

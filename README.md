@@ -54,7 +54,7 @@ cp .env.example .env        # then edit .env (at least MONGO_URI + JWT_SECRET)
 # 2. Install dependencies
 npm run install:all
 
-# 3. Seed demo data (categories, 15 products, WELCOME10 coupon, staff users)
+# 3. Seed demo data (categories, 15 products, WELCOME10 coupon, the one owner Super Admin)
 npm run seed
 
 # 4. Run (two terminals, or use `npm run dev` to start both)
@@ -67,6 +67,10 @@ npm run dev:client          # Store on http://localhost:5173
 See `.env.example` for the full list. Key groups:
 
 - **Core:** `MONGO_URI`, `JWT_SECRET`, `PORT`, `CLIENT_URL`
+- **Super Admin allowlist:** `SUPER_ADMIN_EMAIL` (default
+  `developersbiuro@gmail.com`), `SUPER_ADMIN_PHONE` (default
+  `+923236016684`) — the only identity that may hold the Super Admin
+  role; see "Admin accounts & security" below
 - **OTP sender identity** (public sender identities, not secrets):
   `OTP_SENDER_EMAIL` (default `developersbiuro@gmail.com`),
   `OTP_SENDER_PHONE` / `WHATSAPP_SENDER_NUMBER` (default `+923236016684`)
@@ -114,26 +118,90 @@ To go live: create an OAuth client in Google Cloud Console, set
 Services on the client to obtain the `credential` token (see
 `server/src/services/googleAuthService.js` and `client/src/pages/Login.jsx`).
 
+### Admin accounts & security — no public admin creation
+
+**Nobody can register as an admin.** There is no "Create Admin Account"
+screen, tab or API anywhere:
+
+- Public sign-up **always** creates a `customer`. Any `role` sent in a
+  sign-up request is ignored by the server. The **single exception** is
+  the `SUPER_ADMIN_EMAIL` allowlist (env var, default
+  `developersbiuro@gmail.com`): if a sign-up verifies **both** OTPs with
+  exactly that email, that account is the owner and carries role `admin`.
+  Every other route to a staff role goes through the Super Admin, inside
+  the panel.
+- The seed creates **exactly one staff account**: the store owner
+  (`SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PHONE`) as Super Admin. It has **no
+  password** (`accountStatus: "pending_setup"`, empty `passwordHash`) —
+  there is no known or shared credential to leak. No demo staff accounts
+  (`admin@malac.pk`, `vice@malac.pk`) exist anymore.
+- **Vice-Admins are created by the Super Admin only**, in
+  **Admin → Roles & Users → Create a Vice-Admin** (`POST /api/admin/users`,
+  Super-Admin-only route). The account starts as `pending_setup`; a
+  one-time setup link is emailed to the new Vice-Admin so **they** choose
+  their own password — the Super Admin never sets or sees it (in demo
+  mode the link is shown to the Super Admin to hand over personally).
+  Vice-Admin access is the standard vice-admin set: products and orders —
+  explicitly **not** coupons, settings, roles or payment verification.
+- Role changes are hardened (`PATCH /api/admin/users/:id/role`,
+  Super Admin only): the owner account's role is locked, and **nobody can
+  be promoted to `admin`** — there is exactly one Super Admin.
+
 ### Admin login — dedicated, at `/admin`
 The admin suite has its **own login screen**, separate from customer login:
 
-1. Seed the database (`npm run seed`). The seed creates the **first Super
-   Admin**: the store owner account with email
-   **`developersbiuro@gmail.com`** and phone **`+923236016684`**
-   (plus demo staff `admin@malac.pk` / `vice@malac.pk`).
+1. Seed the database (`npm run seed`) — see above for the single seeded
+   Super Admin it creates.
 2. Visit **`http://localhost:5173/admin`**. If you are not signed in as
    staff, the Admin Login screen appears at that URL.
-3. Enter the admin email (or phone), choose Email / WhatsApp / SMS, and
-   enter the OTP. In demo mode the code is shown on screen; in live mode
-   it is sent via the configured OTP senders.
+3. Sign in either way:
+   - **OTP:** enter the staff email (or phone), choose Email / WhatsApp /
+     SMS, and enter the code (demo mode shows it on screen), or
+   - **Password:** staff email/phone + the password set through the
+     forgot-password flow below (`POST /api/auth/login/password`,
+     staff accounts only; customers are refused).
 4. Only users with role `admin` (Super Admin) or `vice-admin` can enter.
    A customer account is rejected on this screen and signed out. Every
    `/admin/*` page is guarded the same way, and the server enforces RBAC
-   on every `/api/admin/*` route.
+   on every `/api/admin/*` route. Google sign-in is customers-only: a
+   Google identity matching a staff email is refused.
 
-There are no admin passwords anywhere — admin access is the same OTP flow,
-gated by role. To make another user an admin, a Super Admin changes their
-role in **Admin → Roles & Users**.
+**First-time owner password setup:** on the Admin Login screen use
+**Forgot password** with the owner email — as the Super Admin you verify
+with an email OTP sent to `SUPER_ADMIN_EMAIL` and set your password right
+there (step 2 under "Forgot password" below). Until then you can always
+sign in with OTP.
+
+### Forgot password — Super Admin approval required (staff)
+
+Passwords exist only for staff accounts. The reset flow is approval-gated
+end to end (`PasswordResetRequest` model: `user`, `email`, `status`,
+`approvedBy`, hashed token, 1-hour expiry):
+
+1. On the Admin Login screen, **Forgot password** → staff member submits
+   their email (`POST /api/auth/password-reset/request`). For a Vice-Admin
+   this only creates a request with status **`pending`** — *nothing* about
+   their password can change yet.
+2. The request appears in **Admin → Roles & Users → Password Reset
+   Requests**. Only the **Super Admin** can **Approve** or **Reject** it
+   (`PATCH /api/admin/password-resets/:id/approve|reject`).
+3. **Only on approval** does the server generate a one-time reset token
+   (SHA-256 hashed at rest, 1-hour expiry) and email the link
+   (`/reset-password?token=…`) via the existing email service. In demo
+   mode (no SMTP) the link is shown to the Super Admin in the panel to
+   hand over personally, mirroring the OTP demo pattern.
+4. The staff member opens the link and sets a new password
+   (`POST /api/auth/password-reset/complete`); the token is then marked
+   `used` and cleared. **Unapproved, rejected, expired or reused requests
+   can never change a password.**
+
+**Super Admin exception:** the owner cannot wait for his own approval —
+his request is auto-approved and he proves ownership with a **verified
+email OTP sent to `SUPER_ADMIN_EMAIL`**, then sets the new password in
+the same screen (`POST /api/auth/password-reset/owner/verify`). This is
+also how the seeded owner sets his very first password.
+Customers are not part of this flow: they have no password (OTP / Google
+login only), so there is nothing for them to reset.
 
 ### Roles (RBAC)
 | Capability | Super Admin (`admin`) | Vice-Admin (`vice-admin`) | Customer |
@@ -145,6 +213,8 @@ role in **Admin → Roles & Users**.
 | Coupons | ✓ | — | — |
 | Settings & OTP/payment accounts | ✓ | — | — |
 | Role assignment | ✓ | — | — |
+| Create staff (Vice-Admin) accounts | ✓ | — | — |
+| Approve staff password resets | ✓ | — | — |
 
 ## Ordering — No Guest Ordering (Daraz-style)
 
@@ -254,19 +324,25 @@ as *not configured / unavailable* instead of showing a wrong account.
 
 | Area | Endpoints |
 |---|---|
-| Auth | `POST /api/auth/signup/email-otp`, `/signup/verify-email`, `/signup/phone-otp`, `/signup/verify-phone`, `POST /api/auth/login/otp`, `/login/verify`, `POST /api/auth/google`, `GET /api/auth/me`, `POST /api/auth/addresses` |
+| Auth | `POST /api/auth/signup/email-otp`, `/signup/verify-email`, `/signup/phone-otp`, `/signup/verify-phone`, `POST /api/auth/login/otp`, `/login/verify`, `POST /api/auth/login/password` (staff), `POST /api/auth/password-reset/request`, `/password-reset/owner/verify` (Super Admin OTP), `/password-reset/complete` (approved token), `POST /api/auth/google`, `GET /api/auth/me`, `POST /api/auth/addresses` |
 | Products | `GET /api/products` (search/filter/sort/page), `GET /api/products/suggest?q=`, `GET /api/products/:slug`, `POST/PUT/PATCH/DELETE` (staff), reviews + Q&A under `/api/products/:id/...` |
 | Categories | `GET /api/categories`, `POST/PUT` (staff), `DELETE` (Super Admin) |
 | Orders | `POST /api/orders` (login required), `GET /api/orders/my`, `GET /api/orders/:orderId`, `PATCH /api/orders/:orderId/cancel` |
 | Coupons | `GET /api/coupons/validate/:code?subtotal=`, CRUD under `/api/coupons` (Super Admin) |
-| Admin | `GET /api/admin/analytics`, `GET /api/admin/orders`, `PATCH /api/admin/orders/:id/status`, `PATCH /api/admin/orders/:id/payment-verification` (Super Admin), `GET /api/admin/users`, `PATCH /api/admin/users/:id/role`, `GET/PUT /api/admin/settings` |
+| Admin | `GET /api/admin/analytics`, `GET /api/admin/orders`, `PATCH /api/admin/orders/:id/status`, `PATCH /api/admin/orders/:id/payment-verification` (Super Admin), `GET /api/admin/users`, `POST /api/admin/users` (Super Admin — create Vice-Admin), `PATCH /api/admin/users/:id/role`, `GET /api/admin/password-resets`, `PATCH /api/admin/password-resets/:id/approve` / `/reject` (Super Admin), `GET/PUT /api/admin/settings` |
 | Uploads | `POST /api/uploads/payment-screenshot` (login required, multipart field `screenshot`) |
 | Settings | `GET /api/settings/public` — safe payment subset for checkout |
 
 ## Data Models (Mongoose)
 
 - **User** — name, email, phone, `role: admin | vice-admin | customer`,
-  addresses[], `emailVerified`, `phoneVerified`, `googleId`, avatar
+  addresses[], `emailVerified`, `phoneVerified`, `googleId`, avatar,
+  `passwordHash` (staff only, scrypt, never returned by the API),
+  `accountStatus: active | pending_setup`
+- **PasswordResetRequest** — user, email,
+  `status: pending | approved | rejected | used | superseded`,
+  `autoApproved` (Super Admin only), `approvedBy`, SHA-256 hashed reset
+  token + 1-hour expiry (token exists only after approval)
 - **Product** — title, slug, description, images[], category, subCategory,
   basePrice, salePrice, stock, sku (unique, indexed), variants[] (price
   deltas + variant stock), tags, status, flashSale, ratings breakdown, Q&A

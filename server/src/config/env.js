@@ -9,6 +9,12 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || "dev-only-secret-change-me",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "30d",
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
+  // Super Admin allowlist: the ONLY email/phone that may ever hold the
+  // "admin" (Super Admin) role. Public sign-up can never grant staff roles;
+  // a fully verified sign-up with exactly this email is the owner account.
+  // There is no public admin registration anywhere in the app.
+  superAdminEmail: (process.env.SUPER_ADMIN_EMAIL || "developersbiuro@gmail.com").toLowerCase(),
+  superAdminPhone: process.env.SUPER_ADMIN_PHONE || "+923236016684",
   otpDemoMode: process.env.OTP_DEMO_MODE !== "false",
   otpSenderEmail: process.env.OTP_SENDER_EMAIL || "developersbiuro@gmail.com",
   otpSenderPhone: process.env.OTP_SENDER_PHONE || "+923236016684",

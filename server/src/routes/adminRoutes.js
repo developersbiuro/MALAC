@@ -13,8 +13,15 @@ router.patch("/orders/:id/status", orders.adminUpdateStatus);
 // (Vice-Admin can update fulfillment status but cannot verify/reject payments.)
 router.patch("/orders/:id/payment-verification", isSuperAdmin, orders.adminVerifyPayment);
 router.get("/users", admin.listUsers);
-// Super Admin only: role assignment + settings (Vice-Admin is blocked here)
+// Super Admin only: staff creation + role assignment + reset approvals.
+// Creating staff (Vice-Admins) exists ONLY here, inside the panel —
+// there is no public admin registration. (Vice-Admin is blocked from all
+// of these by isSuperAdmin.)
+router.post("/users", isSuperAdmin, admin.createViceAdmin);
 router.patch("/users/:id/role", isSuperAdmin, admin.updateUserRole);
+router.get("/password-resets", isSuperAdmin, admin.listPasswordResets);
+router.patch("/password-resets/:id/approve", isSuperAdmin, admin.approvePasswordReset);
+router.patch("/password-resets/:id/reject", isSuperAdmin, admin.rejectPasswordReset);
 router.get("/settings", isSuperAdmin, admin.getSettings);
 router.put("/settings", isSuperAdmin, admin.updateSettings);
 export default router;

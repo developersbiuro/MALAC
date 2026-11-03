@@ -17,6 +17,7 @@ import MyOrders from "./pages/MyOrders.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
 import Dashboard from "./pages/admin/Dashboard.jsx";
@@ -72,6 +73,8 @@ export default function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        {/* Staff password reset: emailed link target (post Super-Admin approval) */}
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/admin/*" element={<AdminShell />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
