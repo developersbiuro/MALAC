@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Settings2 } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
+import { useSeo } from "../utils/seo.js";
 
 const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
 const badge = {
@@ -12,6 +13,7 @@ const badge = {
 };
 
 export default function MyOrders() {
+  useSeo({ title: "My Orders — MALAC", robots: "noindex" });
   const [tab, setTab] = useState("All");
   const [orders, setOrders] = useState([]);
   const [msg, setMsg] = useState("");

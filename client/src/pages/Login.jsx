@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { GOOGLE_CLIENT_ID, loadGoogleIdentity } from "../utils/google.js";
+import { useSeo } from "../utils/seo.js";
 
 // Customer login — three ways in:
 //  1) email OR phone + password (whichever the customer signed up with),
@@ -72,6 +73,7 @@ export function GoogleButton({ onDone }) {
 }
 
 export default function Login() {
+  useSeo({ title: "Login — MALAC", robots: "noindex" });
   const { saveSession } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();

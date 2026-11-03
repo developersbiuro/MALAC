@@ -25,9 +25,9 @@ export default function HeroCarousel() {
         <img src={slide.img} alt={`${slide.pre}${slide.italic}`} className="w-full h-[210px] sm:h-[300px] lg:h-[380px] object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-lux-deep/75 via-lux-deep/35 to-transparent flex flex-col justify-center px-5 sm:px-12">
           <p className="eyebrow !text-lux-pale">{slide.eyebrow}</p>
-          <p className="font-display text-white text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight mt-2 max-w-xl">
+          <h1 className="font-display text-white text-2xl sm:text-4xl lg:text-5xl font-bold leading-tight mt-2 max-w-xl">
             {slide.pre}<span className="font-serif italic font-semibold normal-case tracking-normal">{slide.italic}</span>
-          </p>
+          </h1>
           <p className="text-white/85 text-xs sm:text-base mt-2.5 max-w-md">{slide.sub}</p>
           <span className="btn-lux mt-4 px-6 py-2.5 text-xs sm:text-sm w-max">{slide.cta}</span>
         </div>

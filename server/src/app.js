@@ -13,6 +13,7 @@ import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import sitemapRoutes from "./routes/sitemapRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
@@ -90,6 +91,12 @@ app.use(async (req, res, next) => {
 // NOTE: in production, restrict this to staff or signed URLs if screenshots
 // are considered sensitive in your deployment.
 app.use("/uploads", express.static(uploadsDir));
+
+// SEO: dynamic sitemap at the site root (routed here by the /sitemap.xml
+// rewrite in vercel.json). Deliberately mounted outside the /api DB gate
+// above — the handler itself tolerates a down database and always answers
+// 200 (see routes/sitemapRoutes.js).
+app.use(sitemapRoutes);
 
 // Public API — mounted under /api, matching the /api/(.*) rewrite to this
 // service in vercel.json and the client's baseURL ("/api").

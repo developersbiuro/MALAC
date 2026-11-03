@@ -1,7 +1,12 @@
 import { Link } from "react-router-dom";
 import LegalPage, { LegalSection } from "../components/LegalPage.jsx";
+import { useSeo } from "../utils/seo.js";
 
 export default function Policy() {
+  useSeo({
+    title: "Privacy Policy — MALAC",
+    description: "How MALAC collects, uses and protects your personal information when you shop with us.",
+  });
   return (
     <LegalPage
       eyebrow="Your Privacy"

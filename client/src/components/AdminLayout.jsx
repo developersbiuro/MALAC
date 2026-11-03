@@ -2,6 +2,7 @@ import { LOGO_MARK } from "../assets/logo.js";
 import { NavLink, Link } from "react-router-dom";
 import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings as SettingsIcon, LogOut, Store } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useSeo } from "../utils/seo.js";
 
 const links = [
   { to: "/admin", label: "Dashboard", Icon: LayoutDashboard, end: true },
@@ -14,6 +15,7 @@ const links = [
 ];
 
 export default function AdminLayout({ children }) {
+  useSeo({ title: "Admin — MALAC", robots: "noindex, nofollow" });
   const { user, logout, isSuperAdmin } = useAuth();
   return (
     <div className="min-h-screen flex bg-[#f4f6f8]">

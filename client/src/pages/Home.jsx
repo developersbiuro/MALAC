@@ -6,6 +6,7 @@ import HeroCarousel from "../components/HeroCarousel.jsx";
 import FlashSale from "../components/FlashSale.jsx";
 import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import { useSeo } from "../utils/seo.js";
 
 const TRUST = [
   { Icon: BadgeCheck, label: "Cash on Delivery Available" },
@@ -15,6 +16,10 @@ const TRUST = [
 ];
 
 export default function Home() {
+  useSeo({
+    title: "MALAC - M.A Luxury Apparel Collection",
+    description: "MALAC — M.A Luxury Apparel Collection. Shop fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+  });
   const navigate = useNavigate();
   const [trackId, setTrackId] = useState("");
   const [trackPhone, setTrackPhone] = useState("");

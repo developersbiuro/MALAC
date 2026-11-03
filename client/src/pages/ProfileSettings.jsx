@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Star, Pencil, Trash2, Plus } from "lucide-react";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
+import { useSeo } from "../utils/seo.js";
 
 // Profile Settings (/account/settings, login required — see
 // ProtectedRoute in App.jsx). Three sections:
@@ -30,6 +31,7 @@ function Section({ eyebrow, title, children }) {
 }
 
 export default function ProfileSettings() {
+  useSeo({ title: "Profile Settings — MALAC", robots: "noindex" });
   const { saveSession } = useAuth();
   const [profile, setProfile] = useState(null);
   const [name, setName] = useState("");

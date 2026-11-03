@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import api from "../../api/client.js";
 import { useAuth } from "../../context/AuthContext.jsx";
+import { useSeo } from "../../utils/seo.js";
 
 // Dedicated Admin Login — shown at /admin when the visitor is not signed in
 // as staff. There is deliberately NO "create admin account" option here:
@@ -15,6 +16,7 @@ import { useAuth } from "../../context/AuthContext.jsx";
 // The Super Admin's own reset is verified by an email OTP sent to
 // SUPER_ADMIN_EMAIL and completed right here.
 export default function AdminLogin() {
+  useSeo({ title: "Admin Login — MALAC", robots: "noindex, nofollow" });
   const { saveSession, logout } = useAuth();
   // view: "otp" | "password" | "forgot" | "forgot-done" | "owner-reset" | "reset-done"
   const [view, setView] = useState("otp");

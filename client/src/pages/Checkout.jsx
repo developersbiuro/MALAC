@@ -6,6 +6,7 @@ import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs, deliveryWindow } from "../utils/format.js";
+import { useSeo } from "../utils/seo.js";
 
 // NOTE: This page is wrapped in <ProtectedRoute> — guests are redirected to
 // /login?redirect=/checkout and return here after login. The server also
@@ -15,6 +16,7 @@ const MANUAL = ["JazzCash", "Easypaisa"];
 const CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Sialkot"];
 
 export default function Checkout() {
+  useSeo({ title: "Checkout — MALAC", robots: "noindex" });
   const { items, subtotal, clear } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import ProductCard from "../components/ProductCard.jsx";
+import { useSeo } from "../utils/seo.js";
 
 // API-supported sort values are sent to the server. "rating" is not one of
 // them (server sortMap has price-asc / price-desc / newest / popular), so
@@ -41,6 +42,12 @@ export default function Shop() {
   }, [search, category, sub, flash, sort, minPrice, maxPrice]);
 
   const title = search ? `Results for "${search}"` : category || (flash ? "Flash Sale" : "All Products");
+  useSeo({
+    title: `${title} — MALAC`,
+    description: category
+      ? `Shop ${category} online in Pakistan at MALAC — M.A Luxury Apparel Collection, with Cash on Delivery and free shipping on orders over Rs. 5,000.`
+      : "Shop all products at MALAC — M.A Luxury Apparel Collection. Fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+  });
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
       <p className="eyebrow">The Collection</p>

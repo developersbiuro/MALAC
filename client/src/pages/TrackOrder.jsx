@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { PackageSearch, ArrowLeft, CheckCircle2, Circle, Truck } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
+import { useSeo } from "../utils/seo.js";
 
 // Public order tracking (no login): the buyer enters the order ID from
 // their confirmation plus the phone number used for the order. The
@@ -17,6 +18,10 @@ const badge = {
 const inputCls = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
 
 export default function TrackOrder() {
+  useSeo({
+    title: "Track Your Order — MALAC",
+    description: "Track your MALAC order with your order ID and phone number — see live delivery status, items and totals.",
+  });
   const [params] = useSearchParams();
   const [orderId, setOrderId] = useState(params.get("orderId") || "");
   const [phone, setPhone] = useState(params.get("phone") || "");

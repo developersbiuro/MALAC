@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { GoogleButton } from "./Login.jsx";
+import { useSeo } from "../utils/seo.js";
 
 // Sign-up, Daraz-style: the customer picks exactly ONE way and verifies
 // ONLY that one channel:
@@ -12,6 +13,7 @@ import { GoogleButton } from "./Login.jsx";
 //  3) Continue with Google — account created instantly, no code at all
 // The server creates the account only when the chosen code verifies.
 export default function Signup() {
+  useSeo({ title: "Create Account — MALAC", robots: "noindex" });
   const { saveSession } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();

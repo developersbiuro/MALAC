@@ -38,6 +38,12 @@
       }
     },
     {
+      "source": "/sitemap.xml",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/(.*)",
       "destination": {
         "service": "client"

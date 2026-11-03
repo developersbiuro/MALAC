@@ -8,6 +8,7 @@ import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs, priceOf, discountPct, deliveryWindow, FREE_SHIPPING_THRESHOLD } from "../utils/format.js";
+import { useSeo } from "../utils/seo.js";
 
 export default function ProductDetails() {
   const { slug } = useParams();
@@ -43,6 +44,29 @@ export default function ProductDetails() {
     (product?.variants || []).forEach((v) => { (g[v.name] = g[v.name] || []).push(v); });
     return g;
   }, [product]);
+
+  const seoDescription = product?.description ? product.description.trim().slice(0, 155) : undefined;
+  useSeo({
+    title: product ? `${product.title} — MALAC` : undefined,
+    description: seoDescription,
+    jsonLd: product
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: product.title,
+          image: product.images?.[0] ? [product.images[0]] : undefined,
+          description: seoDescription,
+          sku: product.sku || undefined,
+          offers: {
+            "@type": "Offer",
+            url: `https://malac1.vercel.app/product/${product.slug}`,
+            priceCurrency: "PKR",
+            price: priceOf(product),
+            availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          },
+        }
+      : undefined,
+  });
 
   if (!product) return <p className="p-8 text-center text-gray-400">Loading product...</p>;
 
@@ -86,7 +110,7 @@ export default function ProductDetails() {
           <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1">
             {(product.images || []).map((src, i) => (
               <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 shrink-0 ${i === img ? "border-brand" : ""}`}>
-                <img src={src} alt="" className="w-full h-full object-cover" />
+                <img src={src} alt={product.title} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>

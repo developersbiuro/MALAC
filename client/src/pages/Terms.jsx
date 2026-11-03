@@ -1,7 +1,12 @@
 import { Link } from "react-router-dom";
 import LegalPage, { LegalSection } from "../components/LegalPage.jsx";
+import { useSeo } from "../utils/seo.js";
 
 export default function Terms() {
+  useSeo({
+    title: "Terms of Service — MALAC",
+    description: "MALAC's terms of service: ordering, Cash on Delivery and JazzCash/Easypaisa payments, delivery, returns and cancellations.",
+  });
   return (
     <LegalPage
       eyebrow="Customer Care"
