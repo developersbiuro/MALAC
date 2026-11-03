@@ -2,6 +2,7 @@ import crypto from "crypto";
 import User from "../models/User.js";
 import OtpToken from "../models/OtpToken.js";
 import PasswordResetRequest from "../models/PasswordResetRequest.js";
+import CustomerPasswordReset from "../models/CustomerPasswordReset.js";
 import env from "../config/env.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { generateToken } from "../utils/generateToken.js";
@@ -10,7 +11,8 @@ import { normalizePhone, phoneLast10 } from "../utils/phone.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
 import { requestOtp, verifyOtp } from "../services/otpService.js";
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
-import { createResetRequest } from "../services/passwordResetService.js";
+import { createResetRequest, RESET_TOKEN_TTL_MINUTES } from "../services/passwordResetService.js";
+import { sendEmail } from "../services/emailService.js";
 
 const publicUser = (u) => ({
   id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role,
@@ -303,6 +305,91 @@ export const completePasswordReset = asyncHandler(async (req, res) => {
   request.resetTokenExpiresAt = undefined;
   await request.save();
   res.json({ message: "Password updated. You can now sign in to the Admin Panel with your new password." });
+});
+
+// -- Forgot password (CUSTOMERS): emailed reset link, self-service --
+// The customer counterpart of the staff flow above, deliberately separate:
+// staff resets stay approval-gated (Super Admin approves before any token
+// exists), while a customer proves account ownership by controlling the
+// email inbox, so their link is issued immediately — no approval, and no
+// staff record is ever created here (tokens live in CustomerPasswordReset,
+// never in the staff PasswordResetRequest queue).
+// Step 1: accept an email and ALWAYS answer with the same generic message
+// so the endpoint cannot be used to probe which emails have accounts. A
+// link is emailed only when a CUSTOMER account with that exact email
+// exists. Google-only customers (no password yet) also get the link —
+// the token itself proves email ownership, and setting a first password
+// with it is safe. Phone-method customers have a synthetic
+// "phone-<digits>@malac.local" mailbox that can never receive mail; those
+// addresses are skipped (they sign in with a one-time code instead).
+export const forgotCustomerPassword = asyncHandler(async (req, res) => {
+  const email = String(req.body.email || "").toLowerCase().trim();
+  if (!email) return res.status(400).json({ message: "email is required" });
+  const generic = {
+    message: "If an account exists for this email, a password reset link has been sent.",
+  };
+  if (email.endsWith("@malac.local")) return res.json(generic);
+  const user = await User.findOne({ email });
+  if (!user || isStaffUser(user)) return res.json(generic);
+
+  // Only the newest link may live: drop any earlier unused tokens.
+  await CustomerPasswordReset.deleteMany({ user: user._id, usedAt: null });
+  const token = crypto.randomBytes(32).toString("hex");
+  await CustomerPasswordReset.create({
+    user: user._id,
+    email,
+    tokenHash: CustomerPasswordReset.hashToken(token),
+    expiresAt: new Date(Date.now() + RESET_TOKEN_TTL_MINUTES * 60 * 1000),
+  });
+  const link = `${env.clientUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}&type=customer`;
+  try {
+    await sendEmail({
+      to: email,
+      subject: "Reset your MALAC password",
+      text:
+        `You requested a password reset for your MALAC account.\n` +
+        `Set a new password within ${RESET_TOKEN_TTL_MINUTES} minutes using this link:\n${link}\n` +
+        `If you did not request this, ignore this email — your password will not change.`,
+    });
+  } catch (err) {
+    // Email not configured / send failed: log honestly server-side, but
+    // the response stays generic so it never reveals account existence.
+    console.error(`Customer password reset email to ${email} failed: ${err.message}`);
+  }
+  res.json(generic);
+});
+
+// Step 2: consume the emailed one-time token and set the new password.
+// Mirrors completePasswordReset (hash lookup, expiry check, single-use,
+// scrypt via hashPassword). Sessions here are stateless JWTs with no
+// revocation list — the existing password flows do not revoke them
+// either, so neither does this one; the old password simply stops working.
+export const resetCustomerPassword = asyncHandler(async (req, res) => {
+  const { token, password } = req.body;
+  if (!token) return res.status(400).json({ message: "Reset token is required" });
+  const pwErr = passwordError(password);
+  if (pwErr) return res.status(400).json({ message: pwErr });
+  const record = await CustomerPasswordReset.findOne({
+    tokenHash: CustomerPasswordReset.hashToken(token),
+  });
+  if (!record || record.usedAt) {
+    return res.status(400).json({ message: "This reset link is invalid or has already been used" });
+  }
+  if (!record.expiresAt || record.expiresAt < new Date()) {
+    return res.status(400).json({ message: "This reset link has expired. Please request a new one." });
+  }
+  const user = await User.findById(record.user);
+  if (!user) return res.status(404).json({ message: "Account not found" });
+  // Defense in depth: this endpoint can never reset a staff password —
+  // staff resets stay on the approval-gated flow above.
+  if (isStaffUser(user)) {
+    return res.status(400).json({ message: "This reset link is invalid or has already been used" });
+  }
+  user.passwordHash = hashPassword(password);
+  await user.save();
+  record.usedAt = new Date();
+  await record.save();
+  res.json({ message: "Password updated. You can now log in with your new password." });
 });
 
 // -- Login with Google --

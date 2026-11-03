@@ -134,11 +134,14 @@ export default function Login() {
               value={loginId} onChange={(e) => setLoginId(e.target.value)} />
             <input required type="password" autoComplete="current-password" className={input} placeholder="Password"
               value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-xs text-brand font-medium">Forgot password?</Link>
+            </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">
               {busy ? "Signing in..." : "Log In"}
             </button>
-            <p className="text-xs text-gray-400">Forgot your password? Use the OTP Code tab above — the code signs you in without a password.</p>
+            <p className="text-xs text-gray-400">You can also use the OTP Code tab above — the code signs you in without a password.</p>
           </form>
         )}
 

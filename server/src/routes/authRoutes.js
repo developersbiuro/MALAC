@@ -16,6 +16,10 @@ router.post("/login/customer-password", auth.loginCustomerPassword); // customer
 router.post("/password-reset/request", auth.requestPasswordReset);
 router.post("/password-reset/owner/verify", auth.verifyOwnerPasswordReset);
 router.post("/password-reset/complete", auth.completePasswordReset);
+// Forgot password (customers): self-service emailed reset link — no
+// approval gate (inbox ownership is the proof). Generic responses only.
+router.post("/password/forgot", auth.forgotCustomerPassword);
+router.post("/password/reset", auth.resetCustomerPassword);
 router.post("/google", auth.googleLogin);
 router.get("/me", protect, auth.me);
 router.put("/me", protect, auth.updateProfile);

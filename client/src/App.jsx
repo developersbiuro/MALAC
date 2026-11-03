@@ -20,6 +20,7 @@ import WishlistPage from "./pages/WishlistPage.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Terms from "./pages/Terms.jsx";
 import Policy from "./pages/Policy.jsx";
 
@@ -80,7 +81,10 @@ export default function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        {/* Staff password reset: emailed link target (post Super-Admin approval) */}
+        {/* Customer forgot password: request a reset link by email */}
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        {/* Password reset: emailed link target — staff (post Super-Admin
+            approval) and customers (?type=customer, self-service) */}
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/policy" element={<Policy />} />
