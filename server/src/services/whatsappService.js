@@ -9,6 +9,11 @@ import env from "../config/env.js";
 // There is NO demo/log-only fallback: without credentials this throws a
 // NOT_CONFIGURED error so sign-up/login fail honestly instead of
 // pretending a code was sent.
+//
+// The access token must be a System User token for this app whose system
+// user has the WhatsApp account that owns WHATSAPP_PHONE_NUMBER_ID
+// assigned — a token without that asset is rejected by Meta with
+// 401 / code 190 even when the token itself is valid.
 export async function sendWhatsAppOtp({ to, code }) {
   const { accessToken, phoneNumberId, otpTemplate, otpTemplateLang } = env.whatsapp;
   if (!accessToken || !phoneNumberId) {
