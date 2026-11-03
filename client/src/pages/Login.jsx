@@ -3,8 +3,12 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 
-// Customer login: passwordless OTP (email or WhatsApp/SMS) + Google.
+// Customer login — three ways in:
+//  1) email + password (the password chosen at sign-up),
+//  2) one-time code by email / WhatsApp / SMS (no password needed),
+//  3) Continue with Google.
 // Supports ?redirect=/checkout so shoppers return to checkout after login.
+// (Staff do NOT sign in here — they use the Admin Login at /admin.)
 export function GoogleButton({ onDone }) {
   const demoLogin = async () => {
     // Demo mode: in production load Google Identity Services, get the ID
@@ -27,6 +31,11 @@ export default function Login() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "/";
+  const [method, setMethod] = useState("password"); // password | otp
+  // email + password state
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  // OTP state
   const [channel, setChannel] = useState("email"); // email | whatsapp | sms
   const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
@@ -36,32 +45,58 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
 
   const finish = (data) => { saveSession(data); navigate(redirect, { replace: true }); };
+  const run = (fn, fallback) => async (e) => {
+    e.preventDefault(); setBusy(true); setError("");
+    try { await fn(); } catch (err) { setError(err.response?.data?.message || fallback); }
+    finally { setBusy(false); }
+  };
 
-  const request = async (e) => {
-    e.preventDefault(); setBusy(true); setError("");
-    try {
-      const r = await api.post("/auth/login/otp", { identifier, channel });
-      if (r.data.demoCode) setDemoCode(r.data.demoCode);
-      setStep(2);
-    } catch (err) { setError(err.response?.data?.message || "Could not send OTP"); }
-    finally { setBusy(false); }
-  };
-  const verify = async (e) => {
-    e.preventDefault(); setBusy(true); setError("");
-    try {
-      const r = await api.post("/auth/login/verify", { identifier, channel, code });
-      finish(r.data);
-    } catch (err) { setError(err.response?.data?.message || "Invalid OTP"); }
-    finally { setBusy(false); }
-  };
+  const passwordLogin = run(async () => {
+    const r = await api.post("/auth/login/customer-password", { identifier: email, password });
+    finish(r.data);
+  }, "Could not sign in");
+
+  const request = run(async () => {
+    const r = await api.post("/auth/login/otp", { identifier, channel });
+    if (r.data.demoCode) setDemoCode(r.data.demoCode);
+    setStep(2);
+  }, "Could not send OTP");
+  const verify = run(async () => {
+    const r = await api.post("/auth/login/verify", { identifier, channel, code });
+    finish(r.data);
+  }, "Invalid OTP");
 
   const input = "border rounded px-3 py-2.5 text-sm w-full";
+  const tab = (v, label) => (
+    <button type="button" key={v} onClick={() => { setMethod(v); setError(""); }}
+      className={`flex-1 border rounded py-2 ${method === v ? "border-brand text-brand bg-brand-light" : ""}`}>{label}</button>
+  );
   return (
     <main className="max-w-md mx-auto px-3 pt-8 pb-10">
       <div className="bg-white rounded-md p-6 fade-up">
         <h1 className="text-xl font-bold">Welcome to MALAC</h1>
-        <p className="text-sm text-gray-500 mt-1">Log in with a one-time code — no password needed.</p>
-        {step === 1 ? (
+        <p className="text-sm text-gray-500 mt-1">Log in with your password, a one-time code, or Google.</p>
+
+        <div className="flex gap-2 text-sm mt-4">
+          {tab("password", "Email + Password")}
+          {tab("otp", "OTP Code")}
+        </div>
+
+        {method === "password" && (
+          <form onSubmit={passwordLogin} className="space-y-3 mt-4">
+            <input required type="email" className={input} placeholder="Email address"
+              value={email} onChange={(e) => setEmail(e.target.value)} />
+            <input required type="password" className={input} placeholder="Password"
+              value={password} onChange={(e) => setPassword(e.target.value)} />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">
+              {busy ? "Signing in..." : "Log In"}
+            </button>
+            <p className="text-xs text-gray-400">Forgot your password? Use the OTP Code tab above — the code signs you in without a password.</p>
+          </form>
+        )}
+
+        {method === "otp" && (step === 1 ? (
           <form onSubmit={request} className="space-y-3 mt-4">
             <div className="flex gap-2 text-sm">
               {[["email", "Email"], ["whatsapp", "WhatsApp"], ["sms", "SMS"]].map(([v, label]) => (
@@ -88,7 +123,7 @@ export default function Login() {
             </button>
             <button type="button" onClick={() => setStep(1)} className="w-full text-sm text-gray-400">Back</button>
           </form>
-        )}
+        ))}
         <div className="flex items-center gap-3 my-4"><span className="flex-1 border-t" /><span className="text-xs text-gray-400">OR</span><span className="flex-1 border-t" /></div>
         <GoogleButton onDone={finish} />
         <p className="text-sm text-center mt-4">New to MALAC? <Link to={`/signup${redirect !== "/" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`} className="text-brand font-medium">Sign up</Link></p>

@@ -3,6 +3,14 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
 
 export const placeOrder = asyncHandler(async (req, res) => {
+  // Only fully verified customers may order: sign-up completes BOTH the
+  // email OTP and the phone OTP before an account even exists, so this
+  // guard only trips on partial/legacy rows. Google accounts are exempt
+  // from the phone half — Google verified their identity and email.
+  const u = req.user;
+  if (u.role === "customer" && !u.googleId && !(u.emailVerified && u.phoneVerified)) {
+    return res.status(403).json({ message: "Please complete sign-up verification (email and phone) before placing an order." });
+  }
   const order = await createOrder({ user: req.user, ...req.body });
   res.status(201).json({ order });
 });

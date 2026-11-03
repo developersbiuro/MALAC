@@ -1,8 +1,10 @@
 import crypto from "crypto";
 
-// Password hashing for STAFF accounts, using Node's built-in scrypt so the
-// project needs no extra dependency. Stored format: "scrypt:<salt>:<hash>".
-// Customers never get passwords — they sign in with OTP / Google.
+// Password hashing using Node's built-in scrypt so the project needs no
+// extra dependency. Stored format: "scrypt:<salt>:<hash>". Used for BOTH
+// customer passwords (chosen at sign-up, activated only after email + phone
+// OTP verification) and staff passwords (set through the approval-gated
+// reset flow). Plain-text passwords are never stored or returned.
 export function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto.scryptSync(String(password), salt, 64).toString("hex");

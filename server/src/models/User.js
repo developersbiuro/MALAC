@@ -21,10 +21,13 @@ const userSchema = new mongoose.Schema({
   // allowlist (see authController.signupVerifyPhone). Vice-Admin accounts
   // are created only by the Super Admin inside the admin panel.
   role: { type: String, enum: ["admin", "vice-admin", "customer"], default: "customer" },
-  // Staff-only password credential (scrypt hash, see utils/password.js).
-  // Customers have no password — they use OTP / Google. An empty hash means
-  // "no password set": staff set theirs through the approval-gated reset
-  // flow (models/PasswordResetRequest.js), never through a public form.
+  // Password credential (scrypt hash, see utils/password.js; select:false
+  // so it is never returned by the API). Customers choose a password at
+  // sign-up; it is stored (hashed) only when the account is created, i.e.
+  // after BOTH email and phone OTP verification. Staff never get a password
+  // from a public form: theirs is set through the approval-gated reset flow
+  // (models/PasswordResetRequest.js). An empty hash means "no password set"
+  // (e.g. Google accounts, or staff still in pending_setup).
   passwordHash: { type: String, default: "", select: false },
   // "pending_setup" = staff account created (seed / Super Admin) whose
   // owner has not set a password yet; "active" = normal account.

@@ -4,14 +4,18 @@ import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { GoogleButton } from "./Login.jsx";
 
-// Sign-up requires BOTH verifications, in order:
+// Sign-up: create the account with email + password, then verify with
+// codes, in order:
 //  1) email OTP   2) phone OTP via WhatsApp or SMS (customer chooses)
+// The account (and its password) takes effect only after BOTH codes are
+// verified — the server creates the account at the final step.
 export default function Signup() {
   const { saveSession } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "/";
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [phoneChannel, setPhoneChannel] = useState("whatsapp");
   const [step, setStep] = useState(1); // 1 details, 2 email code, 3 phone code
   const [emailCode, setEmailCode] = useState("");
@@ -27,6 +31,8 @@ export default function Signup() {
   };
 
   const requestEmail = wrap(async () => {
+    if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (form.password !== confirmPassword) { setError("Passwords do not match"); return; }
     const r = await api.post("/auth/signup/email-otp", form);
     if (r.data.demoCode) setDemoCode(r.data.demoCode);
     setStep(2);
@@ -63,6 +69,9 @@ export default function Signup() {
             <input required placeholder="Full name" className={input} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <input required type="email" placeholder="Email address" className={input} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             <input required placeholder="Phone (+923xx...)" className={input} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <input required type="password" placeholder="Create a password (min 8 characters)" className={input} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <input required type="password" placeholder="Confirm password" className={input} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            <p className="text-xs text-gray-500">You'll sign in with this password after verifying your email and phone with the codes we send.</p>
             <p className="text-xs text-gray-500">Verify my phone by:</p>
             <div className="flex gap-2 text-sm">
               {[["whatsapp", "WhatsApp OTP"], ["sms", "SMS OTP"]].map(([v, label]) => (

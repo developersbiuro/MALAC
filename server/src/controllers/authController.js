@@ -18,12 +18,30 @@ const publicUser = (u) => ({
 const STAFF_ROLES = ["admin", "vice-admin"];
 const isStaffUser = (u) => u && STAFF_ROLES.includes(u.role);
 
+const MIN_PASSWORD_LENGTH = 8;
+const passwordError = (password) =>
+  !password || String(password).length < MIN_PASSWORD_LENGTH
+    ? `Password must be at least ${MIN_PASSWORD_LENGTH} characters`
+    : null;
+
+// A customer account counts as fully verified only when BOTH sign-up OTPs
+// were completed. Google accounts are exempt from the phone half: their
+// identity (and email) was verified by Google, and they hold no real phone.
+const isFullyVerified = (u) =>
+  Boolean(u.googleId) || (u.emailVerified && u.phoneVerified);
+
 // -- Sign-up: step 1, email OTP --
+// The customer registers with email + password (owner-specified flow): the
+// password is chosen here, validated up front, and re-sent at the final
+// step — it is only hashed and stored when the account is created, after
+// BOTH OTP verifications (see signupVerifyPhone).
 // NOTE: any "role" sent in a sign-up request body is deliberately IGNORED.
 // Public sign-up can only ever produce a customer — see signupVerifyPhone.
 export const signupEmailOtp = asyncHandler(async (req, res) => {
-  const { name, email, phone } = req.body;
+  const { name, email, phone, password } = req.body;
   if (!name || !email || !phone) return res.status(400).json({ message: "name, email and phone are required" });
+  const pwErr = passwordError(password);
+  if (pwErr) return res.status(400).json({ message: pwErr });
   const existing = await User.findOne({ $or: [{ email }, { phone }] });
   if (existing) return res.status(409).json({ message: "An account with this email or phone already exists" });
   const result = await requestOtp({ identifier: email, channel: "email", purpose: "signup" });
@@ -51,20 +69,29 @@ export const signupPhoneOtp = asyncHandler(async (req, res) => {
 // SUPER_ADMIN_EMAIL allowlist entry — i.e. the store owner proving ownership
 // of that email AND phone via both OTPs. Every other sign-up is a customer.
 export const signupVerifyPhone = asyncHandler(async (req, res) => {
-  const { name, email, phone, code, channel = "whatsapp" } = req.body;
+  const { name, email, phone, password, code, channel = "whatsapp" } = req.body;
+  const pwErr = passwordError(password);
+  if (pwErr) return res.status(400).json({ message: pwErr });
   const check = await verifyOtp({ identifier: phone, channel, purpose: "signup", code });
   if (!check.ok) return res.status(400).json({ message: check.reason });
   const existing = await User.findOne({ $or: [{ email }, { phone }] });
   if (existing) return res.status(409).json({ message: "An account with this email or phone already exists" });
   const isOwnerAllowlist = String(email).toLowerCase() === env.superAdminEmail;
+  // The account is created ONLY NOW — after email OTP (step 2) and phone
+  // OTP (this step) have both verified — so an unverified sign-up never
+  // leaves behind an account that could sign in or order. The password
+  // chosen at step 1 is stored as a scrypt hash, never in plain text.
+  // The allowlist account gets its password exactly the same way.
   const user = await User.create({
     name, email, phone, emailVerified: true, phoneVerified: true,
+    passwordHash: hashPassword(password),
     role: isOwnerAllowlist ? "admin" : "customer",
   });
   res.status(201).json({ user: publicUser(user), token: generateToken(user) });
 });
 
-// -- Login: passwordless OTP (email or phone) --
+// -- Login: one-time code (email or phone) — the passwordless alternative
+// to email+password sign-in, kept working alongside it. --
 export const loginOtp = asyncHandler(async (req, res) => {
   const { identifier, channel = "email" } = req.body;
   const user = await User.findOne(channel === "email" ? { email: identifier } : { phone: identifier });
@@ -80,19 +107,53 @@ export const loginVerify = asyncHandler(async (req, res) => {
   const check = await verifyOtp({ identifier, channel, purpose: "login", code });
   if (!check.ok) return res.status(400).json({ message: check.reason });
   const user = await User.findOne(channel === "email" ? { email: identifier } : { phone: identifier });
+  if (!user) return res.status(404).json({ message: "No account found. Please sign up first." });
+  // Defense in depth: a non-Google customer whose sign-up OTPs were never
+  // both verified must not be able to sign in. (Accounts are only created
+  // after both verifications, so this can only trip on partial/legacy rows.)
+  if (!isStaffUser(user) && !isFullyVerified(user)) {
+    return res.status(403).json({ message: "Please complete sign-up verification (email and phone) before signing in." });
+  }
+  res.json({ user: publicUser(user), token: generateToken(user) });
+});
+
+// -- Login: password (CUSTOMERS only) --
+// The customer counterpart of the staff endpoint below, kept strictly
+// separate: this one REFUSES staff accounts (staff must use the Admin
+// Login), and the staff one refuses customers. A customer signs in with
+// the password chosen at sign-up — but only once the account is fully
+// verified (email OTP + phone OTP). Customers who signed up via Google
+// have no password and keep using Google / OTP sign-in.
+export const loginCustomerPassword = asyncHandler(async (req, res) => {
+  const { identifier, password } = req.body;
+  if (!identifier || !password) return res.status(400).json({ message: "identifier and password are required" });
+  const user = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] }).select("+passwordHash");
+  if (user && isStaffUser(user)) {
+    return res.status(403).json({ message: "Staff accounts must sign in from the Admin Login." });
+  }
+  if (!user || !user.passwordHash) {
+    return res.status(401).json({ message: "No password is set for this account. Sign in with OTP or Google instead." });
+  }
+  if (!isFullyVerified(user)) {
+    return res.status(403).json({ message: "Please complete sign-up verification (email and phone) before signing in." });
+  }
+  if (!verifyPassword(password, user.passwordHash)) {
+    return res.status(401).json({ message: "Incorrect password" });
+  }
   res.json({ user: publicUser(user), token: generateToken(user) });
 });
 
 // -- Login: password (STAFF accounts only) --
-// Passwords exist only for staff (see User.passwordHash). They are set
-// exclusively through the approval-gated reset flow below — there is no
-// public "set password" or admin-registration endpoint.
+// Staff passwords are set exclusively through the approval-gated reset
+// flow below — there is no public "set password" or admin-registration
+// endpoint for staff. Customers use /login/customer-password instead;
+// this endpoint keeps refusing them.
 export const loginPassword = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
   if (!identifier || !password) return res.status(400).json({ message: "identifier and password are required" });
   const user = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] }).select("+passwordHash");
   if (!user || !isStaffUser(user)) {
-    return res.status(401).json({ message: "Password sign-in is for MALAC staff accounts. Customers sign in with OTP or Google." });
+    return res.status(401).json({ message: "Password sign-in here is for MALAC staff accounts. Customers sign in from the customer Login page." });
   }
   if (!user.passwordHash) {
     return res.status(401).json({ message: "No password is set for this account yet. Use OTP sign-in, or use Forgot password to set one." });
@@ -109,9 +170,11 @@ export const loginPassword = asyncHandler(async (req, res) => {
 // Super Admin approves it in Admin -> Roles & Users (the token is generated
 // at approval time and emailed). For the Super Admin himself there is no
 // other approver: his request is auto-approved and completed with a
-// verified email OTP sent to SUPER_ADMIN_EMAIL (step 2a). Customers have
-// no password, so nothing is created for them. The response is generic so
-// it does not reveal whether an account exists.
+// verified email OTP sent to SUPER_ADMIN_EMAIL (step 2a). This
+// approval-gated flow stays STAFF-only: nothing is created for customer
+// emails (a customer who forgets their password can always sign in with
+// OTP instead — no approval gate applies to customers). The response is
+// generic so it does not reveal whether an account exists.
 export const requestPasswordReset = asyncHandler(async (req, res) => {
   const email = String(req.body.email || "").toLowerCase().trim();
   if (!email) return res.status(400).json({ message: "email is required" });

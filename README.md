@@ -15,7 +15,7 @@ fulfillment, coupons, roles, settings).
 | Frontend | Vite + React SPA, React Router, Tailwind CSS, lucide-react icons, axios |
 | Backend  | Node.js + Express REST API (controller → service → model separation) |
 | Database | MongoDB + Mongoose (indexes on SKU, product title/text, category) |
-| Auth     | Passwordless OTP (email + WhatsApp/SMS), JWT, RBAC, Login with Google |
+| Auth     | Email + password with email & phone OTP verification, OTP sign-in, JWT, RBAC, Login with Google |
 | Uploads  | multer (payment screenshots), stored under `server/uploads/` |
 
 ## Architecture
@@ -87,19 +87,34 @@ this repository.
 
 ## Authentication
 
-### Customers — sign-up requires BOTH OTPs
-1. Customer enters name, email and phone, and chooses how to receive the
-   phone code: **WhatsApp OTP** or **SMS OTP**.
-2. An OTP is emailed to them (`POST /api/auth/signup/email-otp`) and must
-   be verified (`POST /api/auth/signup/verify-email`).
-3. An OTP is then sent to their phone on the chosen channel
+### Customers — sign-up: email + password, verified by BOTH OTPs
+1. On the sign-up screen the customer enters name, email, phone and a
+   **password** (min 8 characters), and chooses how to receive the phone
+   code: **WhatsApp OTP** or **SMS OTP** — the same verification-code
+   mechanism on both channels.
+2. A verification code is emailed to them (`POST /api/auth/signup/email-otp`)
+   and must be entered to register the email
+   (`POST /api/auth/signup/verify-email`).
+3. A code is then sent to their phone on the chosen channel
    (`POST /api/auth/signup/phone-otp`) and verified
-   (`POST /api/auth/signup/verify-phone`) — only then is the account
-   created. Both `emailVerified` and `phoneVerified` are set.
+   (`POST /api/auth/signup/verify-phone`) — **only then is the account
+   created**, with the password stored as a scrypt hash (never plain text,
+   never returned by the API) and both `emailVerified` and `phoneVerified`
+   set. An account whose OTPs are not both verified does not exist yet, so
+   it cannot sign in or place orders; the sign-in and order endpoints
+   enforce the same rule for any partial/legacy row.
 
-Login is passwordless too (`/api/auth/login/otp` → `/api/auth/login/verify`,
-via email, WhatsApp or SMS), and **Login with Google** is available on the
-login and sign-up screens (`POST /api/auth/google`).
+Customer login offers three options on one screen:
+- **Email + password** — `POST /api/auth/login/customer-password`
+  (customers only: staff accounts are refused and must use the Admin
+  Login; the staff endpoint `/api/auth/login/password` likewise refuses
+  customers — the two stay strictly separate).
+- **One-time code** — `/api/auth/login/otp` → `/api/auth/login/verify`
+  via email, WhatsApp or SMS (kept as the passwordless alternative; also
+  how a customer who forgot their password gets back in).
+- **Continue with Google** — `POST /api/auth/google`, on the login and
+  sign-up screens. Google accounts hold no password; Google verified
+  their identity and email.
 
 ### Demo OTP mode
 If provider credentials are not configured, OTP runs in **demo mode**:
@@ -174,8 +189,8 @@ sign in with OTP.
 
 ### Forgot password — Super Admin approval required (staff)
 
-Passwords exist only for staff accounts. The reset flow is approval-gated
-end to end (`PasswordResetRequest` model: `user`, `email`, `status`,
+For staff accounts, password resets are approval-gated end to end
+(`PasswordResetRequest` model: `user`, `email`, `status`,
 `approvedBy`, hashed token, 1-hour expiry):
 
 1. On the Admin Login screen, **Forgot password** → staff member submits
@@ -200,8 +215,10 @@ his request is auto-approved and he proves ownership with a **verified
 email OTP sent to `SUPER_ADMIN_EMAIL`**, then sets the new password in
 the same screen (`POST /api/auth/password-reset/owner/verify`). This is
 also how the seeded owner sets his very first password.
-Customers are not part of this flow: they have no password (OTP / Google
-login only), so there is nothing for them to reset.
+This approval-gated flow is for **staff only**. Customers are not part of
+it: a customer who forgets the password they set at sign-up simply signs
+in with the OTP-code option (or Google) — no approval gate applies to
+customers.
 
 ### Roles (RBAC)
 | Capability | Super Admin (`admin`) | Vice-Admin (`vice-admin`) | Customer |
@@ -324,7 +341,7 @@ as *not configured / unavailable* instead of showing a wrong account.
 
 | Area | Endpoints |
 |---|---|
-| Auth | `POST /api/auth/signup/email-otp`, `/signup/verify-email`, `/signup/phone-otp`, `/signup/verify-phone`, `POST /api/auth/login/otp`, `/login/verify`, `POST /api/auth/login/password` (staff), `POST /api/auth/password-reset/request`, `/password-reset/owner/verify` (Super Admin OTP), `/password-reset/complete` (approved token), `POST /api/auth/google`, `GET /api/auth/me`, `POST /api/auth/addresses` |
+| Auth | `POST /api/auth/signup/email-otp`, `/signup/verify-email`, `/signup/phone-otp`, `/signup/verify-phone`, `POST /api/auth/login/otp`, `/login/verify`, `POST /api/auth/login/customer-password` (customers), `POST /api/auth/login/password` (staff), `POST /api/auth/password-reset/request`, `/password-reset/owner/verify` (Super Admin OTP), `/password-reset/complete` (approved token), `POST /api/auth/google`, `GET /api/auth/me`, `POST /api/auth/addresses` |
 | Products | `GET /api/products` (search/filter/sort/page), `GET /api/products/suggest?q=`, `GET /api/products/:slug`, `POST/PUT/PATCH/DELETE` (staff), reviews + Q&A under `/api/products/:id/...` |
 | Categories | `GET /api/categories`, `POST/PUT` (staff), `DELETE` (Super Admin) |
 | Orders | `POST /api/orders` (login required), `GET /api/orders/my`, `GET /api/orders/:orderId`, `PATCH /api/orders/:orderId/cancel` |
@@ -337,7 +354,8 @@ as *not configured / unavailable* instead of showing a wrong account.
 
 - **User** — name, email, phone, `role: admin | vice-admin | customer`,
   addresses[], `emailVerified`, `phoneVerified`, `googleId`, avatar,
-  `passwordHash` (staff only, scrypt, never returned by the API),
+  `passwordHash` (scrypt; customers set it at verified sign-up, staff via
+  the approval-gated reset flow; never returned by the API),
   `accountStatus: active | pending_setup`
 - **PasswordResetRequest** — user, email,
   `status: pending | approved | rejected | used | superseded`,
