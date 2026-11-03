@@ -284,6 +284,48 @@ as *not configured / unavailable* instead of showing a wrong account.
 - **Settings** — single store document: fees, toggles, OTP senders,
   JazzCash/Easypaisa accounts
 
+## Deploying on Vercel (services)
+
+The repo root contains a `vercel.json` that deploys this repository as ONE
+Vercel project with two services:
+
+| Service  | Root      | Framework | Reachable at                     |
+| -------- | --------- | --------- | -------------------------------- |
+| `client` | `client/` | Vite      | `/(.*)` — the storefront SPA     |
+| `server` | `server/` | Express   | `/api/(.*)` and `/uploads/(.*)`  |
+
+Routing is defined by the top-level `rewrites` (most specific first, the
+client catch-all last). Both services share one domain and the project's
+environment variables. The server keeps its `/api/...` route mounting, and
+the client calls the relative path `/api`, so no absolute API URL is baked
+into the browser bundle.
+
+**Binding:** `client` declares one service binding to `server`
+(`env: SERVER_URL`). Important: bindings resolve at runtime in functions
+only — the browser bundle cannot (and must not) use the internal service
+URL, so browser traffic uses the public `/api` rewrite above. The binding
+documents the client→server dependency and is available to any future
+server-side runtime in the client service. The server calls no internal
+service; its dependencies (MongoDB, Google, SMTP, WhatsApp, Twilio) are
+external and configured via environment variables.
+
+**Set these environment variables on the Vercel project** (do NOT rely on
+the local defaults): `MONGO_URI` (e.g. MongoDB Atlas — a local
+`127.0.0.1` database is unreachable from Vercel), `JWT_SECRET`,
+`CLIENT_URL` (your deployment domain; same-host origins are also accepted
+by the API's CORS middleware), plus any provider credentials you use
+(`SMTP_*`, `WHATSAPP_*`, `TWILIO_*`, `GOOGLE_CLIENT_ID/SECRET`) and the
+OTP/JazzCash/Easypaisa settings from `.env.example`. Do not set
+`SERVER_URL` yourself — Vercel injects it from the binding.
+
+Run everything locally the Vercel way with `vercel dev` from the repo root,
+or use the classic two-terminal flow from Quick Start.
+
+> ⚠️ Uploads on Vercel: payment screenshots are written to the server's
+> local `uploads/` directory. Serverless filesystems are ephemeral, so on
+> Vercel those files are not durable storage — move screenshots to object
+> storage (e.g. Vercel Blob / S3) for a production deployment.
+
 ## Notes & Limitations
 
 - Cart and wishlist are stored client-side (localStorage) so guests can
