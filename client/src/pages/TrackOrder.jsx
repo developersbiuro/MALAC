@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PackageSearch, ArrowLeft, CheckCircle2, Circle, Truck } from "lucide-react";
 import api from "../api/client.js";
+import PhoneInput from "../components/PhoneInput.jsx";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
 
@@ -71,7 +72,7 @@ export default function TrackOrder() {
         className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 p-4 sm:p-5 grid sm:grid-cols-[1fr_1fr_auto] gap-3"
       >
         <input value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="Order ID (MLC-...)" className={inputCls} />
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number (03xx-xxxxxxx)" className={inputCls} inputMode="tel" />
+        <PhoneInput value={phone} onChange={setPhone} className="w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus-within:border-lux-amber" />
         <button disabled={loading} className="btn-lux px-6 py-2.5 text-sm">
           <PackageSearch size={16} /> {loading ? "Tracking..." : "Track Order"}
         </button>

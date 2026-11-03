@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { GoogleButton } from "./Login.jsx";
+import PhoneInput, { isValidPkMobile } from "../components/PhoneInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 // Sign-up, Daraz-style: the customer picks exactly ONE way and verifies
@@ -36,7 +37,10 @@ export default function Signup() {
   };
 
   const mismatch = confirmPassword.length > 0 && form.password !== confirmPassword;
-  const canSubmit = !mismatch && form.password.length >= 8 && confirmPassword.length > 0;
+  const phoneValid = isValidPkMobile(form.phone);
+  const phoneError = method === "phone" && form.phone !== "" && !phoneValid;
+  const canSubmit = !mismatch && form.password.length >= 8 && confirmPassword.length > 0
+    && (method !== "phone" || phoneValid);
 
   const start = wrap(async () => {
     if (form.password.length < 8) { setError("Password must be at least 8 characters"); return; }
@@ -59,7 +63,7 @@ export default function Signup() {
 
   const passwordField = (value, onChange, show, setShow, placeholder) => (
     <div className="relative">
-      <input required type={show ? "text" : "password"} placeholder={placeholder} className={`${input} pr-10`}
+      <input required type={show ? "text" : "password"} placeholder={placeholder} autoComplete="new-password" className={`${input} pr-10`}
         value={value} onChange={onChange} />
       <button type="button" tabIndex={-1} aria-label={show ? "Hide password" : "Show password"}
         onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
@@ -93,11 +97,14 @@ export default function Signup() {
               {tabBtn("phone", "Phone")}
               {tabBtn("email", "Email")}
             </div>
-            <input required placeholder="Full name" className={input} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input required placeholder="Full name" autoComplete="name" className={input} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             {method === "phone" ? (
-              <input required type="tel" placeholder="Phone number (03xx-xxxxxxx)" className={input} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <>
+                <PhoneInput required className={input} invalid={phoneError} value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+                {phoneError && <p className="text-red-500 text-xs -mt-1">Sahi Pakistani mobile number likhein — maslan 0300 1234567</p>}
+              </>
             ) : (
-              <input required type="email" placeholder="Email address" className={input} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input required type="email" placeholder="Email address" autoComplete="email" className={input} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             )}
             {passwordField(form.password, (e) => setForm({ ...form, password: e.target.value }), showPassword, setShowPassword, "Create a password (min 8 characters)")}
             {passwordField(confirmPassword, (e) => setConfirmPassword(e.target.value), showConfirm, setShowConfirm, "Confirm password")}

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Truck, CreditCard, Banknote, Smartphone, UploadCloud } from "lucide-react";
 import api from "../api/client.js";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
+import PhoneInput from "../components/PhoneInput.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs, deliveryWindow } from "../utils/format.js";
@@ -173,7 +174,7 @@ export default function Checkout() {
               </label>
             )}
             <input required placeholder="Full name" className={input} value={address.fullName} onChange={(e) => setAddress({ ...address, fullName: e.target.value })} />
-            <input required placeholder="Phone (03xx-xxxxxxx)" className={input} value={address.phone} onChange={(e) => setAddress({ ...address, phone: e.target.value })} />
+            <PhoneInput required className={input} value={address.phone} onChange={(v) => setAddress({ ...address, phone: v })} />
             <select className={input} value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })}>
               {(address.city && !CITIES.includes(address.city) ? [address.city, ...CITIES] : CITIES).map((c) => <option key={c}>{c}</option>)}
             </select>

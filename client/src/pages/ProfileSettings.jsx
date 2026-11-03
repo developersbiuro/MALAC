@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Star, Pencil, Trash2, Plus } from "lucide-react";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
+import PhoneInput from "../components/PhoneInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 // Profile Settings (/account/settings, login required — see
@@ -262,7 +263,7 @@ export default function ProfileSettings() {
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-500">Phone</span>
-              <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required placeholder="03xx-xxxxxxx" className={`${input} mt-1`} />
+              <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required className={`${input.replace("focus:border-lux-amber", "focus-within:border-lux-amber")} mt-1`} />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-500">City</span>

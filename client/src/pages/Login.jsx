@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { GOOGLE_CLIENT_ID, loadGoogleIdentity } from "../utils/google.js";
+import PhoneInput from "../components/PhoneInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 // Customer login — three ways in:
@@ -129,9 +130,9 @@ export default function Login() {
 
         {method === "password" && (
           <form onSubmit={passwordLogin} className="space-y-3 mt-4">
-            <input required type="text" className={input} placeholder="Email or Phone Number"
+            <input required type="text" autoComplete="username" className={input} placeholder="Email or Phone Number"
               value={loginId} onChange={(e) => setLoginId(e.target.value)} />
-            <input required type="password" className={input} placeholder="Password"
+            <input required type="password" autoComplete="current-password" className={input} placeholder="Password"
               value={password} onChange={(e) => setPassword(e.target.value)} />
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">
@@ -145,12 +146,22 @@ export default function Login() {
           <form onSubmit={request} className="space-y-3 mt-4">
             <div className="flex gap-2 text-sm">
               {[["email", "Email"], ["whatsapp", "WhatsApp"], ["sms", "SMS"]].map(([v, label]) => (
-                <button type="button" key={v} onClick={() => setChannel(v)}
+                <button type="button" key={v} onClick={() => {
+                  setChannel(v); setError("");
+                  // The identifier box is shared across channels: drop a
+                  // value typed for the other kind so an email never lands
+                  // in the phone field (or a number in the email field).
+                  if (v === "email" ? /^\+?[\d\s()-]+$/.test(identifier) : identifier.includes("@")) setIdentifier("");
+                }}
                   className={`flex-1 border rounded py-2 ${channel === v ? "border-brand text-brand bg-brand-light" : ""}`}>{label}</button>
               ))}
             </div>
-            <input required className={input} placeholder={channel === "email" ? "Email address" : "Phone (+923xx...)"}
-              value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
+            {channel === "email" ? (
+              <input required type="email" autoComplete="email" className={input} placeholder="Email address"
+                value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
+            ) : (
+              <PhoneInput required className={input} value={identifier} onChange={setIdentifier} />
+            )}
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">
               {busy ? "Sending..." : "Send OTP"}

@@ -6,6 +6,7 @@ import HeroCarousel from "../components/HeroCarousel.jsx";
 import FlashSale from "../components/FlashSale.jsx";
 import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import PhoneInput from "../components/PhoneInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 const TRUST = [
@@ -77,8 +78,8 @@ export default function Home() {
         >
           <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required placeholder="Order ID (MLC-...)"
             className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
-          <input value={trackPhone} onChange={(e) => setTrackPhone(e.target.value)} required placeholder="Phone number (03xx-xxxxxxx)" inputMode="tel"
-            className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
+          <PhoneInput required value={trackPhone} onChange={setTrackPhone}
+            className="flex-1 min-w-0 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white" />
           <button className="btn-lux px-6 py-2.5 text-sm shrink-0"><PackageSearch size={16} /> Track Order</button>
         </form>
       </section>
