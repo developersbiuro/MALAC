@@ -1,0 +1,14 @@
+{
+  "name": "malac",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MALAC - Daraz-style e-commerce platform (Vite + React client, Express + MongoDB server)",
+  "scripts": {
+    "install:all": "npm install && npm --prefix server install && npm --prefix client install",
+    "dev": "npm --prefix server run dev & npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "seed": "npm --prefix server run seed"
+  },
+  "license": "MIT"
+}
