@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
+import PasswordInput from "../components/PasswordInput.jsx";
 
 // Password reset — the destination of the emailed one-time link, shared
 // by two flows that the ?type parameter keeps apart:
@@ -67,9 +68,9 @@ export default function ResetPassword() {
         ) : (
           <form onSubmit={submit} className="space-y-3 mt-4">
             {email && <p className="text-sm text-gray-500">For {isCustomer ? "account" : "staff account"}: <b>{email}</b></p>}
-            <input required type="password" className={input} placeholder="New password (min 8 characters)" minLength={8}
+            <PasswordInput required className={input} placeholder="New password (min 8 characters)" minLength={8}
               value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-            <input required type="password" className={input} placeholder="Confirm new password"
+            <PasswordInput required className={input} placeholder="Confirm new password"
               value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             {error && <p className="text-red-500 text-sm">{error}</p>}
             <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">

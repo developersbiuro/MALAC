@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ShieldCheck } from "lucide-react";
 import api from "../../api/client.js";
+import PasswordInput from "../../components/PasswordInput.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useSeo } from "../../utils/seo.js";
 
@@ -146,7 +147,7 @@ export default function AdminLogin() {
           <form onSubmit={passwordLogin} className="space-y-3 mt-5">
             <input required className={input} placeholder="Staff email or phone"
               value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
-            <input required type="password" className={input} placeholder="Password"
+            <PasswordInput required className={input} placeholder="Password"
               value={password} onChange={(e) => setPassword(e.target.value)} />
             {errBox}
             <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">
@@ -189,7 +190,7 @@ export default function AdminLogin() {
             {noticeBox}
             <input required className={`${input} tracking-[.4em] text-center`} maxLength={6} placeholder="______"
               value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))} />
-            <input required type="password" className={input} placeholder="New password (min 8 characters)" minLength={8}
+            <PasswordInput required className={input} placeholder="New password (min 8 characters)" minLength={8}
               value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
             {errBox}
             <button disabled={busy} className="w-full bg-brand text-white rounded py-2.5 font-medium disabled:opacity-60">

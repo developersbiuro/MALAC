@@ -4,6 +4,7 @@ import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { GOOGLE_CLIENT_ID, loadGoogleIdentity } from "../utils/google.js";
 import PhoneInput from "../components/PhoneInput.jsx";
+import PasswordInput from "../components/PasswordInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 // Customer login — three ways in:
@@ -132,7 +133,7 @@ export default function Login() {
           <form onSubmit={passwordLogin} className="space-y-3 mt-4">
             <input required type="text" autoComplete="username" className={input} placeholder="Email or Phone Number"
               value={loginId} onChange={(e) => setLoginId(e.target.value)} />
-            <input required type="password" autoComplete="current-password" className={input} placeholder="Password"
+            <PasswordInput required autoComplete="current-password" className={input} placeholder="Password"
               value={password} onChange={(e) => setPassword(e.target.value)} />
             <div className="text-right">
               <Link to="/forgot-password" className="text-xs text-brand font-medium">Forgot password?</Link>

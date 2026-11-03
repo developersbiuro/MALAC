@@ -5,6 +5,7 @@ import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import PhoneInput from "../components/PhoneInput.jsx";
+import PasswordInput from "../components/PasswordInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 // Profile Settings (/account/settings, login required — see
@@ -184,15 +185,15 @@ export default function ProfileSettings() {
           <form onSubmit={savePassword} className="grid sm:grid-cols-3 gap-3">
             <label className="block">
               <span className="text-xs font-medium text-gray-500">Current password</span>
-              <input type="password" value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} required className={`${input} mt-1`} autoComplete="current-password" />
+              <PasswordInput value={pw.current} onChange={(e) => setPw({ ...pw, current: e.target.value })} required className={`${input} mt-1`} autoComplete="current-password" />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-500">New password (min 8 characters)</span>
-              <input type="password" value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} required minLength={8} className={`${input} mt-1`} autoComplete="new-password" />
+              <PasswordInput value={pw.next} onChange={(e) => setPw({ ...pw, next: e.target.value })} required minLength={8} className={`${input} mt-1`} autoComplete="new-password" />
             </label>
             <label className="block">
               <span className="text-xs font-medium text-gray-500">Confirm new password</span>
-              <input type="password" value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} required minLength={8} className={`${input} mt-1`} autoComplete="new-password" />
+              <PasswordInput value={pw.confirm} onChange={(e) => setPw({ ...pw, confirm: e.target.value })} required minLength={8} className={`${input} mt-1`} autoComplete="new-password" />
             </label>
             <div className="sm:col-span-3">
               <button className="btn-lux px-6 py-2.5 text-sm w-full sm:w-auto">Update Password</button>
