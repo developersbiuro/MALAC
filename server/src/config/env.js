@@ -7,6 +7,7 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   mongoUri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/malac",
   jwtSecret: process.env.JWT_SECRET || "dev-only-secret-change-me",
+  seedToken: process.env.SEED_TOKEN || "",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "30d",
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   // Super Admin allowlist: the ONLY email/phone that may ever hold the

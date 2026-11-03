@@ -11,6 +11,7 @@ import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import seedRoutes from "./routes/seedRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
@@ -71,6 +72,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/internal", seedRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

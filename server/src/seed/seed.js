@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { pathToFileURL } from "url";
 import env from "../config/env.js";
 import User from "../models/User.js";
 import PasswordResetRequest from "../models/PasswordResetRequest.js";
@@ -52,14 +53,15 @@ const products = [
   { title: "Baby Diapers Size 4 (9-14kg) - 50 Count", sku: "TOY-BAB-DIA4", category: "Toys & Baby", subCategory: "Diapers", basePrice: 3299, salePrice: 2899, stock: 90, tags: ["diapers", "baby"], desc: "12-hour absorbency, soft breathable material, leak guard protection." },
 ];
 
-async function run() {
-  await mongoose.connect(env.mongoUri);
-  console.log("[MALAC seed] Connected. Clearing demo collections...");
-  await Promise.all([
-    User.deleteMany({}), Category.deleteMany({}), Product.deleteMany({}),
-    Coupon.deleteMany({}), Review.deleteMany({}),
-    PasswordResetRequest.deleteMany({}), OtpToken.deleteMany({}),
-  ]);
+export async function runSeed({ clear = true } = {}) {
+  if (clear) {
+    console.log("[MALAC seed] Clearing demo collections...");
+    await Promise.all([
+      User.deleteMany({}), Category.deleteMany({}), Product.deleteMany({}),
+      Coupon.deleteMany({}), Review.deleteMany({}),
+      PasswordResetRequest.deleteMany({}), OtpToken.deleteMany({}),
+    ]);
+  }
 
   await User.create([
     // The ONLY staff account: the store owner as Super Admin. No password
@@ -115,7 +117,17 @@ async function run() {
 
   console.log(`[MALAC seed] Done: ${categories.length} categories, ${created.length} products, 2 coupons, 2 users (1 Super Admin owner + 1 demo customer).`);
   console.log(`[MALAC seed] Super Admin (only staff account): ${env.superAdminEmail} / ${env.superAdminPhone} — pending password setup via Admin Login -> Forgot password (email OTP). No demo staff accounts exist.`);
-  await mongoose.disconnect();
+  return { categories: categories.length, products: created.length, coupons: 2 };
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+// Script entry point only — importing this module (e.g. from the one-time
+// seed route) must not run anything.
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) {
+  (async () => {
+    await mongoose.connect(env.mongoUri);
+    console.log("[MALAC seed] Connected.");
+    await runSeed({ clear: true });
+    await mongoose.disconnect();
+  })().catch((e) => { console.error(e); process.exit(1); });
+}
