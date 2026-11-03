@@ -35,8 +35,15 @@ export async function sendWhatsAppOtp({ to, code }) {
     }),
   });
   if (!res.ok) {
-    // Status only — never log or surface the access token.
-    throw new Error(`WhatsApp API error: ${res.status}`);
+    // Surface Meta's own error message/code (never the access token) so a
+    // failure is diagnosable instead of a bare status number.
+    let detail = "";
+    try {
+      const body = await res.json();
+      const e = body && body.error;
+      if (e) detail = ` — ${e.message || "unknown error"} (code ${e.code}${e.error_subcode ? `/${e.error_subcode}` : ""})`;
+    } catch { /* body unreadable; status alone will have to do */ }
+    throw new Error(`WhatsApp API error: ${res.status}${detail}`);
   }
   return { delivered: true };
 }
