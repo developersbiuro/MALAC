@@ -9,6 +9,7 @@ import { generateToken } from "../utils/generateToken.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
 import { normalizePhone, phoneLast10 } from "../utils/phone.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
+import { effectivePermissions } from "../utils/permissions.js";
 import { requestOtp, verifyOtp } from "../services/otpService.js";
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
 import { createResetRequest, RESET_TOKEN_TTL_MINUTES } from "../services/passwordResetService.js";
@@ -16,6 +17,14 @@ import { sendEmail } from "../services/emailService.js";
 
 const publicUser = (u) => ({
   id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role,
+  // Effective section permissions (utils/permissions.js): Super Admin =
+  // all keys, Vice-Admin = their explicitly granted set (the legacy
+  // default only when no choice was ever saved), customers = [].
+  // The admin client gates sidebar/pages/buttons on this.
+  permissions: effectivePermissions(u),
+  // Alternate phone on the same account ("" when unset); every
+  // phone-identifier login path matches it as well as `phone`.
+  secondaryPhone: u.secondaryPhone || "",
   addresses: u.addresses, emailVerified: u.emailVerified,
   phoneVerified: u.phoneVerified, avatar: u.avatar || "",
   accountStatus: u.accountStatus || "active",
@@ -27,6 +36,20 @@ const publicUser = (u) => ({
 
 const STAFF_ROLES = ["admin", "vice-admin"];
 const isStaffUser = (u) => u && STAFF_ROLES.includes(u.role);
+
+// A typed phone identifier resolves to an account when it matches the
+// PRIMARY phone or the ALTERNATE phone (secondaryPhone), in the raw
+// shape typed or normalized (+92…). Both numbers sign in to the same
+// account; an OTP requested with the alternate number is sent to it.
+const phoneIdentifierLookup = (raw) => {
+  const normalized = normalizePhone(raw);
+  return {
+    $or: [
+      { phone: raw }, { phone: normalized },
+      { secondaryPhone: raw }, { secondaryPhone: normalized },
+    ],
+  };
+};
 
 const MIN_PASSWORD_LENGTH = 8;
 const passwordError = (password) =>
@@ -132,10 +155,13 @@ export const signupVerify = asyncHandler(async (req, res) => {
 // to email+password sign-in, kept working alongside it. --
 export const loginOtp = asyncHandler(async (req, res) => {
   const { identifier, channel = "email" } = req.body;
-  const user = await User.findOne(channel === "email" ? { email: identifier } : { phone: identifier });
+  const user = await User.findOne(channel === "email" ? { email: identifier } : phoneIdentifierLookup(identifier));
   if (!user) return res.status(404).json({ message: "No account found. Please sign up first." });
   const result = await requestOtp({
-    identifier, channel, purpose: "login", phone: channel === "email" ? user.phone : identifier,
+    // On a phone channel the code is delivered to the number the user
+    // typed — when that is the account's alternate number, the code goes
+    // to the alternate number, not the primary.
+    identifier, channel, purpose: "login", phone: channel === "email" ? user.phone : normalizePhone(identifier),
   });
   res.json(result);
 });
@@ -144,7 +170,7 @@ export const loginVerify = asyncHandler(async (req, res) => {
   const { identifier, channel = "email", code } = req.body;
   const check = await verifyOtp({ identifier, channel, purpose: "login", code });
   if (!check.ok) return res.status(400).json({ message: check.reason });
-  const user = await User.findOne(channel === "email" ? { email: identifier } : { phone: identifier });
+  const user = await User.findOne(channel === "email" ? { email: identifier } : phoneIdentifierLookup(identifier));
   if (!user) return res.status(404).json({ message: "No account found. Please sign up first." });
   // Defense in depth: a customer whose one sign-up verification was never
   // completed must not be able to sign in. (Accounts are only created
@@ -170,7 +196,7 @@ export const loginCustomerPassword = asyncHandler(async (req, res) => {
   const isEmailId = rawIdentifier.includes("@");
   const lookup = isEmailId
     ? { email: rawIdentifier.toLowerCase() }
-    : { $or: [{ phone: rawIdentifier }, { phone: normalizePhone(rawIdentifier) }] };
+    : phoneIdentifierLookup(rawIdentifier);
   const user = await User.findOne(lookup).select("+passwordHash");
   if (user && isStaffUser(user)) {
     return res.status(403).json({ message: "Staff accounts must sign in from the Admin Login." });
@@ -195,7 +221,9 @@ export const loginCustomerPassword = asyncHandler(async (req, res) => {
 export const loginPassword = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
   if (!identifier || !password) return res.status(400).json({ message: "identifier and password are required" });
-  const user = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }] }).select("+passwordHash");
+  const user = await User.findOne({
+    $or: [{ email: identifier }, ...phoneIdentifierLookup(identifier).$or],
+  }).select("+passwordHash");
   if (!user || !isStaffUser(user)) {
     return res.status(401).json({ message: "Password sign-in here is for MALAC staff accounts. Customers sign in from the customer Login page." });
   }

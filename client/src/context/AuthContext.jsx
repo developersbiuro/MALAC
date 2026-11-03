@@ -24,9 +24,14 @@ export function AuthProvider({ children }) {
   const logout = () => { localStorage.removeItem("malac_token"); setUser(null); };
   const isStaff = user && ["admin", "vice-admin"].includes(user.role);
   const isSuperAdmin = user?.role === "admin";
+  // Effective section permissions come from the server payload (Super
+  // Admin = all keys; Vice-Admin = their granted set — the legacy
+  // default only when no choice was ever saved for the account).
+  const permissions = user?.permissions || [];
+  const hasPermission = (key) => permissions.includes(key);
 
   return (
-    <AuthContext.Provider value={{ user, loading, saveSession, logout, isStaff, isSuperAdmin }}>
+    <AuthContext.Provider value={{ user, loading, saveSession, logout, isStaff, isSuperAdmin, permissions, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

@@ -4,19 +4,22 @@ import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSeo } from "../utils/seo.js";
 
+// Section visibility: Dashboard is for all staff; Products/Categories/
+// Orders/Coupons follow the account's effective permissions (Super
+// Admin has them all); Roles & Users and Settings are Super-Admin-only.
 const links = [
   { to: "/admin", label: "Dashboard", Icon: LayoutDashboard, end: true },
-  { to: "/admin/products", label: "Products", Icon: Package },
-  { to: "/admin/categories", label: "Categories", Icon: FolderTree },
-  { to: "/admin/orders", label: "Orders", Icon: ShoppingBag },
-  { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent, superOnly: true },
+  { to: "/admin/products", label: "Products", Icon: Package, permission: "products" },
+  { to: "/admin/categories", label: "Categories", Icon: FolderTree, permission: "categories" },
+  { to: "/admin/orders", label: "Orders", Icon: ShoppingBag, permission: "orders" },
+  { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent, permission: "coupons" },
   { to: "/admin/roles", label: "Roles & Users", Icon: Users, superOnly: true },
   { to: "/admin/settings", label: "Settings", Icon: SettingsIcon, superOnly: true },
 ];
 
 export default function AdminLayout({ children }) {
   useSeo({ title: "Admin — MALAC", robots: "noindex, nofollow" });
-  const { user, logout, isSuperAdmin } = useAuth();
+  const { user, logout, isSuperAdmin, hasPermission } = useAuth();
   return (
     <div className="min-h-screen flex bg-[#f4f6f8]">
       <aside className="w-14 sm:w-56 bg-[#0f1b29] text-white shrink-0 flex flex-col sticky top-0 h-screen">
@@ -33,7 +36,7 @@ export default function AdminLayout({ children }) {
           </p>
         </div>
         <nav className="flex-1 py-2">
-          {links.filter((l) => !l.superOnly || isSuperAdmin).map(({ to, label, Icon, end }) => (
+          {links.filter((l) => (!l.superOnly || isSuperAdmin) && (!l.permission || hasPermission(l.permission))).map(({ to, label, Icon, end }) => (
             <NavLink key={to} to={to} end={end}
               className={({ isActive }) => `flex items-center gap-2.5 px-3 sm:px-4 py-2.5 text-sm ${isActive ? "bg-brand text-white" : "text-white/75 hover:bg-white/5"}`}>
               <Icon size={18} /><span className="hidden sm:inline">{label}</span>

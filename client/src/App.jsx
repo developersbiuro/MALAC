@@ -34,6 +34,31 @@ import AdminCoupons from "./pages/admin/AdminCoupons.jsx";
 import AdminRoles from "./pages/admin/AdminRoles.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 
+// Shown when a staff account opens a section URL directly without the
+// access for it (the sidebar already hides those sections; this covers
+// typed/pasted links). The API enforces the same gates server-side.
+function NoAccess() {
+  return (
+    <div className="bg-white rounded-md p-8 max-w-lg text-center">
+      <p className="font-semibold">You don't have access to this section</p>
+      <p className="text-sm text-gray-500 mt-2">
+        Your Vice-Admin account has not been granted this section. Ask the Super Admin
+        to grant it in Roles &amp; Users.
+      </p>
+    </div>
+  );
+}
+
+// Wraps one admin section: `permission` gates on the account's effective
+// permissions, `superOnly` on the Super Admin role. Dashboard is
+// intentionally unwrapped — it stays visible to all staff.
+function SectionGuard({ permission, superOnly, children }) {
+  const { isSuperAdmin, hasPermission } = useAuth();
+  if (superOnly && !isSuperAdmin) return <NoAccess />;
+  if (permission && !hasPermission(permission)) return <NoAccess />;
+  return children;
+}
+
 // Guard for the whole admin suite. Visiting /admin (or any /admin/* page)
 // while not signed in as staff shows the dedicated Admin Login screen at
 // the same URL — customers are denied even if they log in there.
@@ -45,14 +70,14 @@ function AdminShell() {
     <AdminLayout>
       <Routes>
         <Route index element={<Dashboard />} />
-        <Route path="products" element={<AdminProducts />} />
-        <Route path="products/new" element={<AdminProductForm />} />
-        <Route path="products/:id/edit" element={<AdminProductForm />} />
-        <Route path="categories" element={<AdminCategories />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="coupons" element={<AdminCoupons />} />
-        <Route path="roles" element={<AdminRoles />} />
-        <Route path="settings" element={<AdminSettings />} />
+        <Route path="products" element={<SectionGuard permission="products"><AdminProducts /></SectionGuard>} />
+        <Route path="products/new" element={<SectionGuard permission="products"><AdminProductForm /></SectionGuard>} />
+        <Route path="products/:id/edit" element={<SectionGuard permission="products"><AdminProductForm /></SectionGuard>} />
+        <Route path="categories" element={<SectionGuard permission="categories"><AdminCategories /></SectionGuard>} />
+        <Route path="orders" element={<SectionGuard permission="orders"><AdminOrders /></SectionGuard>} />
+        <Route path="coupons" element={<SectionGuard permission="coupons"><AdminCoupons /></SectionGuard>} />
+        <Route path="roles" element={<SectionGuard superOnly><AdminRoles /></SectionGuard>} />
+        <Route path="settings" element={<SectionGuard superOnly><AdminSettings /></SectionGuard>} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </AdminLayout>

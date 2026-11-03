@@ -27,6 +27,23 @@ const userSchema = new mongoose.Schema({
   // Vice-Admin accounts are created only by the Super Admin inside the
   // admin panel.
   role: { type: String, enum: ["admin", "vice-admin", "customer"], default: "customer" },
+  // Vice-Admin section access, chosen per-account by the Super Admin in
+  // Roles & Users (keys: products, categories, orders, payments, coupons
+  // — see utils/permissions.js). The Super Admin always has every
+  // permission regardless of this field.
+  permissions: { type: [String], default: [] },
+  // Whether `permissions` holds an EXPLICIT choice saved by the Super
+  // Admin (panel create form or Access editor). true = the stored array
+  // is authoritative, even when empty (empty = NO sections granted).
+  // false = the account predates an explicit choice, so an empty array
+  // falls back to the legacy default (products + orders) and the
+  // Vice-Admin keeps the access they have always had.
+  permissionsSet: { type: Boolean, default: false },
+  // Optional alternate phone for the SAME account (e.g. the owner's
+  // second number). Stored normalized (+92…); every phone-identifier
+  // login path matches it as well as the primary phone, and an OTP
+  // requested with it is sent to it. "" = none set.
+  secondaryPhone: { type: String, default: "" },
   // Password credential (scrypt hash, see utils/password.js; select:false
   // so it is never returned by the API). Customers choose a password at
   // sign-up; it is stored (hashed) only when the account is created, i.e.

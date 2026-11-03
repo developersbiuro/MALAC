@@ -1,15 +1,17 @@
 import { Router } from "express";
-import { protect, isStaff, isSuperAdmin } from "../middleware/auth.js";
+import { protect, isStaff, requirePermission } from "../middleware/auth.js";
 import * as products from "../controllers/productController.js";
 
 const router = Router();
 router.get("/", products.listProducts);
 router.get("/suggest", products.suggest);
 router.get("/:slug", products.getProduct);
-router.post("/", protect, isStaff, products.createProduct);
-router.put("/:id", protect, isStaff, products.updateProduct);
-router.patch("/:id/inline", protect, isStaff, products.inlineUpdateProduct);
-router.delete("/:id", protect, isSuperAdmin, products.deleteProduct); // archives
+// Product management is gated by the "products" permission (Super Admin
+// has it always; a Vice-Admin only when the Super Admin granted it).
+router.post("/", protect, isStaff, requirePermission("products"), products.createProduct);
+router.put("/:id", protect, isStaff, requirePermission("products"), products.updateProduct);
+router.patch("/:id/inline", protect, isStaff, requirePermission("products"), products.inlineUpdateProduct);
+router.delete("/:id", protect, isStaff, requirePermission("products"), products.deleteProduct); // archives
 router.get("/:id/reviews", products.listReviews);
 router.post("/:id/reviews", protect, products.createReview);
 router.post("/:id/questions", protect, products.askQuestion);

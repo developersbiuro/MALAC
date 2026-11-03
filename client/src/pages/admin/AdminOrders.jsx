@@ -14,7 +14,12 @@ const verifyBadge = {
 };
 
 export default function AdminOrders() {
-  const { isSuperAdmin } = useAuth();
+  // Payment verify/reject is gated by the "payments" permission (the
+  // server enforces the same on PATCH .../payment-verification), NOT by
+  // role: a Vice-Admin granted "payments" can verify, one with only
+  // "orders" cannot.
+  const { hasPermission } = useAuth();
+  const canVerifyPayments = hasPermission("payments");
   const [orders, setOrders] = useState([]);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
@@ -150,7 +155,7 @@ export default function AdminOrders() {
                     ) : <p className="text-red-500">No screenshot attached.</p>}
                     {selected.paymentVerificationNote && <p className="text-gray-500">Note: {selected.paymentVerificationNote}</p>}
                     {selected.paymentVerifiedBy && <p className="text-gray-400 text-xs">Last action by {selected.paymentVerifiedBy}</p>}
-                    {isSuperAdmin ? (
+                    {canVerifyPayments ? (
                       <div className="flex gap-2 pt-1">
                         <button onClick={() => verifyPayment("verified")} className="flex items-center gap-1 bg-green-600 text-white rounded px-3 py-1.5 text-xs">
                           <ShieldCheck size={14} /> Verify Payment</button>
@@ -158,7 +163,7 @@ export default function AdminOrders() {
                           <ShieldX size={14} /> Reject</button>
                       </div>
                     ) : (
-                      <p className="text-[11px] text-gray-400">Payment verification is Super Admin only. Vice-Admins can update fulfillment status below.</p>
+                      <p className="text-[11px] text-gray-400">Payment verification needs the "Payments verification" permission — ask the Super Admin to grant it in Roles &amp; Users. You can still update fulfillment status below.</p>
                     )}
                   </div>
                 )}
