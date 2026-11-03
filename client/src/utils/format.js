@@ -1,4 +1,7 @@
 export const rs = (n) => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
+// Store-wide free-shipping rule (Rs. 5,000) — the same threshold hardcoded in
+// CartPage/Checkout shipping math and in the server's order service.
+export const FREE_SHIPPING_THRESHOLD = 5000;
 export const discountPct = (p) =>
   p.salePrice > 0 ? Math.round(((p.basePrice - p.salePrice) / p.basePrice) * 100) : 0;
 export const priceOf = (p) => (p.salePrice > 0 ? p.salePrice : p.basePrice);

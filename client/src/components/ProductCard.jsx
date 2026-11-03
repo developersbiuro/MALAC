@@ -2,36 +2,58 @@ import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import RatingStars from "./RatingStars.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
+import { useCart } from "../context/CartContext.jsx";
 import { rs, discountPct, priceOf } from "../utils/format.js";
 
 export default function ProductCard({ product }) {
   const { toggle, has } = useWishlist();
+  const { add, setDrawerOpen } = useCart();
   const pct = discountPct(product);
+  const out = product.stock === 0;
+  const addToCart = () => { add(product); setDrawerOpen(true); };
   return (
-    <Link to={`/product/${product.slug}`}
-      className="group relative block bg-white rounded-md overflow-hidden hover:shadow-lg transition-shadow fade-up">
-      <div className="relative aspect-square overflow-hidden">
-        <img src={product.images?.[0]} alt={product.title} loading="lazy"
-          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        {pct > 0 && <span className="absolute top-2 left-2 bg-brand text-white text-xs font-semibold px-1.5 py-0.5 rounded">-{pct}%</span>}
-        <button aria-label="Toggle wishlist"
-          onClick={(e) => { e.preventDefault(); toggle(product); }}
-          className="absolute top-2 right-2 bg-white/90 rounded-full p-1.5 shadow">
-          <Heart size={16} className={has(product._id) ? "fill-red-500 text-red-500" : "text-gray-500"} />
-        </button>
+    <div className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-cream-line hover:shadow-xl hover:-translate-y-0.5 transition fade-up">
+      <div className="p-2 pb-0">
+        <div className="relative rounded-xl overflow-hidden aspect-square">
+          <Link to={`/product/${product.slug}`}>
+            <img src={product.images?.[0]} alt={product.title} loading="lazy"
+              className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          </Link>
+          {pct > 0 && <span className="absolute top-2 left-2 bg-lux-amber text-white text-[11px] font-bold px-2 py-0.5 rounded-full">-{pct}%</span>}
+          <button aria-label="Toggle wishlist"
+            onClick={() => toggle(product)}
+            className="absolute top-2 right-2 bg-white rounded-full p-1.5 shadow-md">
+            <Heart size={16} className={has(product._id) ? "fill-red-500 text-red-500" : "text-gray-500"} />
+          </button>
+        </div>
       </div>
-      <div className="p-2.5">
-        <p className="text-[13px] leading-snug line-clamp-2 min-h-[34px]">{product.title}</p>
-        <p className="text-brand font-semibold mt-1">{rs(priceOf(product))}</p>
-        {product.salePrice > 0 && <p className="text-xs text-gray-400 line-through">{rs(product.basePrice)}</p>}
+      <div className="p-3 flex flex-col flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lux-burnt">
+          {product.category}{product.subCategory ? ` · ${product.subCategory}` : ""}
+        </p>
+        <Link to={`/product/${product.slug}`}
+          className="font-serif font-semibold text-[18px] leading-snug line-clamp-2 mt-0.5 hover:text-lux-burnt">
+          {product.title}
+        </Link>
         <div className="flex items-center gap-1 mt-1">
           <RatingStars value={product.ratingAvg || 0} />
-          <span className="text-[11px] text-gray-400">({product.ratingCount || 0}) · {product.sold || 0} sold</span>
+          <span className="text-[11px] text-gray-400">({product.ratingCount || 0})</span>
         </div>
-        {product.stock <= 5 && product.stock > 0 &&
-          <p className="text-[11px] text-red-500 mt-1">Only {product.stock} left</p>}
-        {product.stock === 0 && <p className="text-[11px] text-gray-400 mt-1">Out of stock</p>}
+        {out
+          ? <p className="text-[11px] text-gray-400 mt-1">Out of stock</p>
+          : product.stock <= 5
+            ? <p className="text-[11px] font-medium text-red-500 mt-1">Only {product.stock} left{product.codAvailable ? " · COD" : ""}</p>
+            : <p className="text-[11px] font-medium text-[#059669] mt-1">In Stock{product.codAvailable ? " · COD" : ""}</p>}
+        <div className="mt-auto pt-2">
+          <p>
+            <span className="text-lux-amber font-extrabold">{rs(priceOf(product))}</span>
+            {product.salePrice > 0 && <span className="text-xs text-gray-400 line-through ml-1.5">{rs(product.basePrice)}</span>}
+          </p>
+          <button onClick={addToCart} disabled={out} className="btn-lux w-full mt-2 py-2 text-sm">
+            {out ? "Out of Stock" : "Add to Cart"}
+          </button>
+        </div>
       </div>
-    </Link>
+    </div>
   );
 }

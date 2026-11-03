@@ -20,14 +20,17 @@ export default function FlashSale({ products }) {
   const [h, m, s] = useCountdown(products?.[0]?.flashSaleEndsAt);
   if (!products?.length) return null;
   return (
-    <section className="bg-white rounded-md mt-3 p-3">
-      <div className="flex items-center gap-3 flex-wrap">
-        <h2 className="text-brand font-bold text-lg">Flash Sale</h2>
-        <span className="text-sm text-gray-500">Ending in</span>
-        <span className="flex gap-1 text-white font-mono text-sm">
-          {[h, m, s].map((v, i) => <span key={i} className="bg-brand rounded px-1.5 py-0.5">{v}</span>)}
+    <section className="bg-white rounded-2xl border border-cream-line shadow-sm mt-4 p-4">
+      <div className="flex items-end gap-3 flex-wrap">
+        <div>
+          <p className="eyebrow">Flash Deals &amp; Exclusive Offers</p>
+          <h2 className="font-serif text-3xl font-semibold leading-none mt-1">Flash Sale</h2>
+        </div>
+        <span className="text-sm text-gray-500 mb-0.5">Ending in</span>
+        <span className="flex gap-1 font-mono text-sm mb-0.5">
+          {[h, m, s].map((v, i) => <span key={i} className="bg-lux-ink text-lux-pale rounded-md px-1.5 py-0.5">{v}</span>)}
         </span>
-        <Link to="/shop?flash=1" className="ml-auto text-sm text-brand border border-brand rounded px-3 py-1">Shop All</Link>
+        <Link to="/shop?flash=1" className="btn-lux ml-auto text-xs px-4 py-1.5">Shop All</Link>
       </div>
       <div className="flex gap-3 overflow-x-auto no-scrollbar mt-3 pb-1">
         {products.map((p) => (

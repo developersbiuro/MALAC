@@ -3,6 +3,11 @@ import { useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import ProductCard from "../components/ProductCard.jsx";
 
+// API-supported sort values are sent to the server. "rating" is not one of
+// them (server sortMap has price-asc / price-desc / newest / popular), so
+// Highest Rating is applied client-side to the fetched results.
+const API_SORTS = ["price-asc", "price-desc", "newest", "popular"];
+
 export default function Shop() {
   const [params] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -20,35 +25,46 @@ export default function Shop() {
     if (category) q.category = category;
     if (sub) q.subCategory = sub;
     if (flash) q.flashSale = "true";
-    if (sort) q.sort = sort;
+    if (API_SORTS.includes(sort)) q.sort = sort;
     if (minPrice) q.minPrice = minPrice;
     if (maxPrice) q.maxPrice = maxPrice;
-    api.get("/products", { params: q }).then((r) => setProducts(r.data.products)).catch(() => setProducts([]));
+    api.get("/products", { params: q })
+      .then((r) => {
+        let list = r.data.products;
+        if (sort === "rating") {
+          list = [...list].sort((a, b) =>
+            (b.ratingAvg || 0) - (a.ratingAvg || 0) || (b.ratingCount || 0) - (a.ratingCount || 0));
+        }
+        setProducts(list);
+      })
+      .catch(() => setProducts([]));
   }, [search, category, sub, flash, sort, minPrice, maxPrice]);
 
   const title = search ? `Results for "${search}"` : category || (flash ? "Flash Sale" : "All Products");
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
-      <h1 className="font-bold text-xl">{title}</h1>
-      {sub && <p className="text-sm text-gray-500">{category} / {sub}</p>}
-      <div className="bg-white rounded-md p-3 mt-3 flex flex-wrap gap-3 items-center text-sm">
+      <p className="eyebrow">The Collection</p>
+      <h1 className="font-display text-3xl font-bold mt-1">{title}</h1>
+      {sub && <p className="text-sm text-gray-500 mt-1">{category} / {sub}</p>}
+      <div className="bg-white rounded-2xl border border-cream-line shadow-sm p-3 mt-3 flex flex-wrap gap-3 items-center text-sm">
         <label>Sort
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="border rounded ml-2 px-2 py-1">
-            <option value="">Recommended</option>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="border border-cream-line rounded-full ml-2 px-3 py-1.5 bg-white">
+            <option value="">Featured</option>
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
+            <option value="rating">Highest Rating</option>
             <option value="newest">Newest</option>
             <option value="popular">Most Sold</option>
           </select>
         </label>
-        <label>Min <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" className="border rounded ml-1 px-2 py-1 w-24" /></label>
-        <label>Max <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" className="border rounded ml-1 px-2 py-1 w-24" /></label>
-        <span className="ml-auto text-gray-400">{products.length} items</span>
+        <label>Min <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" className="border border-cream-line rounded-full ml-1 px-3 py-1.5 w-24" /></label>
+        <label>Max <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" className="border border-cream-line rounded-full ml-1 px-3 py-1.5 w-24" /></label>
+        <span className="ml-auto text-gray-400">Showing {products.length} products</span>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
         {products.map((p) => <ProductCard key={p._id} product={p} />)}
       </div>
-      {products.length === 0 && <p className="text-center text-gray-400 py-10 bg-white rounded-md mt-3">No products match your filters.</p>}
+      {products.length === 0 && <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-cream-line mt-3">No products match your filters.</p>}
     </main>
   );
 }

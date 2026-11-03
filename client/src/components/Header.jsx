@@ -39,12 +39,12 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-sm">
-      <div className="bg-brand text-white text-xs">
-        <div className="max-w-7xl mx-auto px-3 py-1 flex justify-between">
-          <span>Free shipping on orders over Rs. 5,000</span>
+      <div className="bg-lux-ink text-cream-soft text-xs">
+        <div className="max-w-7xl mx-auto px-3 py-1.5 flex justify-between">
+          <span><span className="text-lux-pale font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1">|</span> Free Shipping on Orders Over Rs. 5,000</span>
           <span className="hidden sm:flex gap-3">
-            <Link to="/orders">Track Order</Link>
-            {isStaff && <Link to="/admin" className="flex items-center gap-1"><ShieldCheck size={12} /> Admin</Link>}
+            <Link to="/orders" className="hover:text-lux-pale">Track Order</Link>
+            {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-lux-pale"><ShieldCheck size={12} /> Admin</Link>}
           </span>
         </div>
       </div>
@@ -77,10 +77,10 @@ export default function Header() {
 
         {/* Predictive search */}
         <div className="relative flex-1" ref={searchRef}>
-          <form onSubmit={submitSearch} className="flex bg-brand-light rounded-md overflow-hidden border border-brand/30 focus-within:border-brand">
+          <form onSubmit={submitSearch} className="flex bg-gray-100 rounded-full overflow-hidden border border-gray-200 focus-within:border-lux-amber focus-within:bg-white transition-colors">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in MALAC"
-              className="flex-1 bg-transparent px-3 py-2 text-sm outline-none" />
-            <button className="bg-brand text-white px-4" aria-label="Search"><Search size={18} /></button>
+              className="flex-1 bg-transparent px-4 py-2 text-sm outline-none" />
+            <button className="bg-lux-gradient text-white px-5" aria-label="Search"><Search size={18} /></button>
           </form>
           {suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1 bg-white shadow-xl rounded-md z-50 overflow-hidden">
@@ -123,8 +123,15 @@ export default function Header() {
           )}
         </div>
       </div>
+      {/* Desktop category nav row (uppercase, malacpk-style) */}
+      <nav className="hidden lg:flex gap-5 max-w-7xl mx-auto px-3 pb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-600 overflow-x-auto no-scrollbar">
+        <Link to="/shop" className="whitespace-nowrap hover:text-lux-burnt">All Products</Link>
+        {categories.map((c) => (
+          <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-lux-burnt">{c.name}</Link>
+        ))}
+      </nav>
       {/* Mobile category strip */}
-      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pb-2 text-xs">
+      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-600">
         {categories.map((c) => (
           <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
         ))}

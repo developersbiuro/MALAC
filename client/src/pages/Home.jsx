@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
+import { BadgeCheck, Truck, ShieldCheck, MapPin } from "lucide-react";
 import api from "../api/client.js";
 import HeroCarousel from "../components/HeroCarousel.jsx";
 import FlashSale from "../components/FlashSale.jsx";
 import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+
+const TRUST = [
+  { Icon: BadgeCheck, label: "Cash on Delivery Available" },
+  { Icon: Truck, label: "Free Shipping Over Rs. 5,000" },
+  { Icon: ShieldCheck, label: "Secure Ordering" },
+  { Icon: MapPin, label: "Nationwide Delivery" },
+];
 
 export default function Home() {
   const [categories, setCategories] = useState([]);
@@ -36,14 +44,22 @@ export default function Home() {
   return (
     <main className="max-w-7xl mx-auto px-3 pt-3">
       <HeroCarousel />
+      <div className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-4 py-3 flex flex-wrap justify-center gap-x-7 gap-y-2">
+        {TRUST.map(({ Icon, label }) => (
+          <span key={label} className="flex items-center gap-1.5 text-[13px] font-medium text-gray-700">
+            <Icon size={16} className="text-[#059669]" /> {label}
+          </span>
+        ))}
+      </div>
       <FlashSale products={flash} />
       <CategoryGrid categories={categories} />
-      <section className="mt-5">
-        <h2 className="font-bold text-lg mb-2">Just For You</h2>
+      <section className="mt-6">
+        <p className="eyebrow">Curated Picks</p>
+        <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-3">Just For You</h2>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
           {tabs.map((t) => (
             <button key={t} onClick={() => { setTab(t); setPage(1); }}
-              className={`whitespace-nowrap text-sm px-3 py-1.5 rounded-full border ${tab === t ? "bg-brand text-white border-brand" : "bg-white"}`}>{t}</button>
+              className={`whitespace-nowrap text-sm px-4 py-1.5 rounded-full border ${tab === t ? "bg-lux-gradient text-white border-transparent font-semibold" : "bg-white border-cream-line"}`}>{t}</button>
           ))}
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

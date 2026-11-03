@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Heart, Truck, ShieldCheck, BadgeCheck, ChevronDown, Minus, Plus } from "lucide-react";
+import { Heart, Truck, ShieldCheck, BadgeCheck, ChevronDown, Minus, Plus, MessageCircle, Lock } from "lucide-react";
 import api from "../api/client.js";
 import RatingStars from "../components/RatingStars.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { rs, priceOf, deliveryWindow } from "../utils/format.js";
+import { rs, priceOf, discountPct, deliveryWindow, FREE_SHIPPING_THRESHOLD } from "../utils/format.js";
 
 export default function ProductDetails() {
   const { slug } = useParams();
@@ -94,7 +94,8 @@ export default function ProductDetails() {
 
         {/* Info */}
         <div>
-          <h1 className="text-lg font-medium leading-snug">{product.title}</h1>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-lux-burnt">{product.category}{product.subCategory ? ` · ${product.subCategory}` : ""}</p>
+          <h1 className="font-serif text-2xl font-semibold leading-snug mt-0.5">{product.title}</h1>
           <div className="flex items-center gap-2 mt-1.5 text-sm">
             <RatingStars value={product.ratingAvg} size={16} />
             <span className="text-sky-600">{product.ratingCount} ratings</span>
@@ -103,11 +104,12 @@ export default function ProductDetails() {
               <Heart size={20} className={has(product._id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
             </button>
           </div>
-          <div className="bg-brand-light rounded p-3 mt-3">
-            <span className="text-brand text-2xl font-bold">{rs(unitPrice)}</span>
+          <div className="bg-cream-soft rounded-xl p-3 mt-3">
+            <span className="text-lux-amber text-2xl font-extrabold">{rs(unitPrice)}</span>
             {variantDelta === 0 && product.salePrice > 0 && <>
               <span className="text-gray-400 line-through ml-2">{rs(product.basePrice)}</span>
-              <span className="text-brand ml-1">-{Math.round((1 - product.salePrice / product.basePrice) * 100)}%</span>
+              <span className="text-lux-amber ml-1">-{Math.round((1 - product.salePrice / product.basePrice) * 100)}%</span>
+              <p className="text-[#059669] text-sm font-semibold mt-1">You Save {rs(product.basePrice - product.salePrice)} ({discountPct(product)}%)</p>
             </>}
           </div>
           {Object.entries(groups).map(([name, variants]) => (
@@ -135,6 +137,12 @@ export default function ProductDetails() {
             </span>
           </div>
           <p className="text-sm text-gray-600 mt-4 whitespace-pre-line">{product.description}</p>
+          <a href={`https://wa.me/923236016684?text=${encodeURIComponent(`Hi MALAC! I'm interested in "${product.title}" (${rs(unitPrice)}). ${window.location.href}`)}`}
+            target="_blank" rel="noreferrer"
+            className="mt-4 flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#1eb857] text-white rounded-full py-2.5 font-semibold text-sm transition-colors">
+            <MessageCircle size={18} /> Order on WhatsApp
+          </a>
+          <p className="text-[11px] text-gray-400 text-center mt-1.5">Chat with us for instant ordering</p>
         </div>
 
         {/* Delivery box */}
@@ -154,11 +162,18 @@ export default function ProductDetails() {
       </div>
 
       {/* Sticky buy bar */}
-      <div className="sticky bottom-14 md:bottom-0 bg-white border-t mt-3 rounded-md p-3 flex gap-3 z-30">
-        <button onClick={doAdd} disabled={variantStock === 0}
-          className="flex-1 bg-sky-500 text-white rounded py-2.5 font-medium disabled:opacity-50">Add to Cart</button>
-        <button onClick={buyNow} disabled={variantStock === 0}
-          className="flex-1 bg-brand text-white rounded py-2.5 font-medium disabled:opacity-50">Buy Now</button>
+      <div className="sticky bottom-14 md:bottom-0 bg-white border-t mt-3 rounded-md p-3 z-30">
+        <div className="flex gap-3">
+          <button onClick={doAdd} disabled={variantStock === 0}
+            className="btn-lux flex-1 py-2.5">Add to Cart</button>
+          <button onClick={buyNow} disabled={variantStock === 0}
+            className="flex-1 bg-lux-ink text-white rounded-full py-2.5 font-semibold disabled:opacity-50 hover:bg-lux-deep transition-colors">Buy Now</button>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 mt-2.5 text-[12px] text-gray-500">
+          <span className="flex items-center gap-1"><Lock size={13} className="text-[#059669]" /> SSL Secured Checkout</span>
+          <span className="flex items-center gap-1"><Truck size={13} className="text-[#059669]" /> Free Shipping Over {rs(FREE_SHIPPING_THRESHOLD)}</span>
+          <span className="flex items-center gap-1"><BadgeCheck size={13} className="text-[#059669]" /> Cash on Delivery</span>
+        </div>
       </div>
 
       {/* Ratings & reviews */}
@@ -171,7 +186,7 @@ export default function ProductDetails() {
             <div key={star} className="flex items-center gap-2 text-xs mt-1.5">
               <span>{star} star</span>
               <div className="flex-1 bg-gray-100 rounded h-2">
-                <div className="bg-amber-400 h-2 rounded" style={{ width: `${product.ratingCount ? (product.ratingBreakdown?.[star] || 0) / product.ratingCount * 100 : 0}%` }} />
+                <div className="bg-lux-gold h-2 rounded" style={{ width: `${product.ratingCount ? (product.ratingBreakdown?.[star] || 0) / product.ratingCount * 100 : 0}%` }} />
               </div>
               <span className="text-gray-400">{product.ratingBreakdown?.[star] || 0}</span>
             </div>
@@ -216,7 +231,8 @@ export default function ProductDetails() {
 
       {related.length > 0 && (
         <section className="mt-5">
-          <h2 className="font-bold text-lg mb-2">Related Products</h2>
+          <p className="eyebrow">Keep Exploring</p>
+          <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-3">You May Also Like</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {related.slice(0, 5).map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
