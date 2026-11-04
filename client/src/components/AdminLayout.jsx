@@ -1,6 +1,6 @@
 import { LOGO_MARK } from "../assets/logo.js";
 import { NavLink, Link } from "react-router-dom";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings as SettingsIcon, LogOut, Store } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings as SettingsIcon, KeyRound, LogOut, Store } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useSeo } from "../utils/seo.js";
 
@@ -15,6 +15,8 @@ const links = [
   { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent, permission: "coupons" },
   { to: "/admin/roles", label: "Roles & Users", Icon: Users, superOnly: true },
   { to: "/admin/settings", label: "Settings", Icon: SettingsIcon, superOnly: true },
+  // Own-account password change: every staff member, no permission gate.
+  { to: "/admin/password", label: "Update Password", Icon: KeyRound },
 ];
 
 export default function AdminLayout({ children }) {
