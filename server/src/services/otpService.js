@@ -53,13 +53,19 @@ export async function verifyOtp({ identifier, channel, purpose = "signup", code 
   const token = await OtpToken.findOne({
     identifier, channel, purpose, consumed: false,
   }).sort({ createdAt: -1 });
-  if (!token) return { ok: false, reason: "No OTP requested for this identifier" };
-  if (token.expiresAt < new Date()) return { ok: false, reason: "OTP has expired" };
-  if (token.attempts >= MAX_ATTEMPTS) return { ok: false, reason: "Too many attempts" };
+  // Failure wording is deliberately GENERIC for the no-token, expired and
+  // wrong-code cases: distinct messages would let an unauthenticated
+  // caller probe whether a code was ever issued for an identifier (i.e.
+  // whether the account exists). Only the attempt-cap message differs —
+  // it fires solely after repeated wrong guesses against a live code.
+  const GENERIC = "Invalid or expired verification code";
+  if (!token) return { ok: false, reason: GENERIC };
+  if (token.expiresAt < new Date()) return { ok: false, reason: GENERIC };
+  if (token.attempts >= MAX_ATTEMPTS) return { ok: false, reason: "Too many incorrect attempts. Please request a new code." };
   token.attempts += 1;
   if (token.codeHash !== OtpToken.hashCode(code)) {
     await token.save();
-    return { ok: false, reason: "Incorrect OTP code" };
+    return { ok: false, reason: GENERIC };
   }
   token.consumed = true;
   await token.save();

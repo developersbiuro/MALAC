@@ -54,7 +54,13 @@ function makeStorage(dir) {
 
 function imageFileFilter(req, file, cb) {
   if (/^image\/(png|jpe?g|webp)$/.test(file.mimetype)) cb(null, true);
-  else cb(new Error("Only PNG, JPG or WEBP images are allowed"));
+  else {
+    // Client-facing validation message (safe to expose via errorHandler).
+    const err = new Error("Only PNG, JPG or WEBP images are allowed");
+    err.status = 400;
+    err.expose = true;
+    cb(err);
+  }
 }
 
 export const uploadPaymentScreenshot = multer({
@@ -71,3 +77,47 @@ export const uploadCatalogImage = multer({
   fileFilter: imageFileFilter,
 });
 export default uploadPaymentScreenshot;
+
+// -- Magic-byte verification (runs AFTER multer has stored the file) --
+// The multer filter above only sees the client-DECLARED mimetype, which
+// any uploader can forge. This middleware reads the stored file's first
+// bytes and checks them against the real PNG / JPEG / WebP signatures:
+// a file whose content is not actually one of those image formats is
+// deleted and rejected, whatever its name or mimetype claimed. The
+// stored filename's extension is also normalized to the DETECTED type,
+// so express.static later serves it with a truthful Content-Type (with
+// nosniff set globally, a mismatched type would otherwise be blocked
+// or, worse, sniffed).
+const IMAGE_SIGNATURES = [
+  { type: "png", ext: ".png", test: (b) => b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a },
+  { type: "jpg", ext: ".jpg", test: (b) => b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  { type: "webp", ext: ".webp", test: (b) => b.length >= 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" },
+];
+
+export function verifyImageMagicBytes(req, res, next) {
+  if (!req.file) return next();
+  let header;
+  try {
+    const fd = fs.openSync(req.file.path, "r");
+    header = Buffer.alloc(12);
+    fs.readSync(fd, header, 0, 12, 0);
+    fs.closeSync(fd);
+  } catch (err) {
+    return next(err);
+  }
+  const detected = IMAGE_SIGNATURES.find((sig) => sig.test(header));
+  if (!detected) {
+    fs.unlink(req.file.path, () => {});
+    return res.status(400).json({ message: "Uploaded file is not a valid PNG, JPG or WEBP image" });
+  }
+  if (!req.file.filename.toLowerCase().endsWith(detected.ext)) {
+    const newFilename = req.file.filename.replace(/\.[^.]*$/, "") + detected.ext;
+    const newPath = path.join(req.file.destination, newFilename);
+    try {
+      fs.renameSync(req.file.path, newPath);
+      req.file.filename = newFilename;
+      req.file.path = newPath;
+    } catch { /* keep the original name — the content check already passed */ }
+  }
+  return next();
+}

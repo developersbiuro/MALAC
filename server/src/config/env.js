@@ -9,6 +9,10 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || "dev-only-secret-change-me",
   seedToken: process.env.SEED_TOKEN || "",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "30d",
+  // Staff sessions (Super Admin / Vice-Admin) are deliberately shorter
+  // than customer sessions: a leaked staff token is far more damaging
+  // than a leaked customer token, so staff re-authenticate daily.
+  staffJwtExpiresIn: process.env.JWT_STAFF_EXPIRES_IN || "12h",
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   // Super Admin allowlist: the ONLY email/phone that may ever hold the
   // "admin" (Super Admin) role. Public sign-up can never grant staff roles;
@@ -57,4 +61,11 @@ export const env = {
     accountNumber: process.env.EASYPAISA_ACCOUNT_NUMBER || "+923036253428",
   },
 };
+// Fail LOUD (not silent) if production is running on the built-in
+// fallback JWT secret — tokens signed with a publicly known secret can
+// be forged by anyone. Set JWT_SECRET in the deployment environment.
+if (env.nodeEnv === "production" && env.jwtSecret === "dev-only-secret-change-me") {
+  console.error("[MALAC] CRITICAL: JWT_SECRET is not set — using the built-in development fallback. Set JWT_SECRET in the production environment immediately.");
+}
+
 export default env;

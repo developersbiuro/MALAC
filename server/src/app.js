@@ -16,8 +16,11 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
+import { securityHeaders } from "./middleware/securityHeaders.js";
 
 const app = express();
+app.disable("x-powered-by");
+app.use(securityHeaders);
 
 // CORS — allowed origins:
 //  1. The configured CLIENT_URL (local dev defaults to the Vite URL).
@@ -81,7 +84,12 @@ app.use(async (req, res, next) => {
     await ensureDb();
     return next();
   } catch (err) {
-    return res.status(503).json({ message: `Database unavailable: ${err.message}` });
+    // The real connection error is logged server-side; in production the
+    // client gets a generic message (driver errors can expose internal
+    // hostnames/URIs). Development keeps the detail for debugging.
+    console.error(`[MALAC] Database connection failed: ${err.message}`);
+    const detail = env.nodeEnv === "production" ? "" : `: ${err.message}`;
+    return res.status(503).json({ message: `Database unavailable${detail}` });
   }
 });
 

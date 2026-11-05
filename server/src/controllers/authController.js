@@ -11,6 +11,7 @@ import { normalizePhone, phoneLast10 } from "../utils/phone.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
 import { effectivePermissions } from "../utils/permissions.js";
 import { requestOtp, verifyOtp } from "../services/otpService.js";
+import { loginLockStatus, recordLoginFailure, clearLoginFailures } from "../utils/loginGuard.js";
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
 import { createResetRequest, RESET_TOKEN_TTL_MINUTES } from "../services/passwordResetService.js";
 import { sendEmail } from "../services/emailService.js";
@@ -50,6 +51,21 @@ const phoneIdentifierLookup = (raw) => {
     ],
   };
 };
+
+// -- Credential-attack defences shared by the password sign-ins --
+// Failure answers are UNIFIED: unknown identifier, account without a
+// password, wrong-role account and wrong password all return the same
+// status and message, so the endpoints cannot be used to enumerate
+// which emails/phones have accounts or how they sign in. A throwaway
+// scrypt verification runs on the no-account paths so response timing
+// does not leak the difference either. Repeated failures additionally
+// trip the per-account lockout (utils/loginGuard.js); the lock answer
+// is 429 and points at OTP sign-in, which is never locked.
+const DUMMY_PASSWORD_HASH = hashPassword(crypto.randomBytes(16).toString("hex"));
+const burnPasswordCycle = (password) => { verifyPassword(password || "", DUMMY_PASSWORD_HASH); };
+const lockedResponse = (res, lock) => res.status(429).json({
+  message: `Too many failed sign-in attempts. This account is temporarily locked — try again in about ${Math.max(1, Math.ceil(lock.retryAfterSec / 60))} minute(s), or sign in with a one-time code.`,
+});
 
 const MIN_PASSWORD_LENGTH = 8;
 const passwordError = (password) =>
@@ -156,7 +172,11 @@ export const signupVerify = asyncHandler(async (req, res) => {
 export const loginOtp = asyncHandler(async (req, res) => {
   const { identifier, channel = "email" } = req.body;
   const user = await User.findOne(channel === "email" ? { email: identifier } : phoneIdentifierLookup(identifier));
-  if (!user) return res.status(404).json({ message: "No account found. Please sign up first." });
+  // No account: answer with the SAME success shape as a real send (and
+  // create/send nothing) so this endpoint cannot be used to enumerate
+  // registered emails/phones. A code entered for such an identifier
+  // then fails verification with the generic invalid-code message.
+  if (!user) return res.json({ sent: true, channel });
   const result = await requestOtp({
     // On a phone channel the code is delivered to the number the user
     // typed — when that is the account's alternate number, the code goes
@@ -198,18 +218,30 @@ export const loginCustomerPassword = asyncHandler(async (req, res) => {
     ? { email: rawIdentifier.toLowerCase() }
     : phoneIdentifierLookup(rawIdentifier);
   const user = await User.findOne(lookup).select("+passwordHash");
-  if (user && isStaffUser(user)) {
-    return res.status(403).json({ message: "Staff accounts must sign in from the Admin Login." });
+  // Unified failure (see the defences note above): unknown identifier,
+  // staff account, password-less account and wrong password are
+  // indistinguishable. Staff are still refused here — just without a
+  // message that confirms the account is a staff one.
+  const fail = () => res.status(401).json({
+    message: "Invalid credentials. If you usually sign in with Google or a one-time code, please use that method instead.",
+  });
+  if (!user || !user.passwordHash || isStaffUser(user)) {
+    burnPasswordCycle(password);
+    return fail();
   }
-  if (!user || !user.passwordHash) {
-    return res.status(401).json({ message: "No password is set for this account. Sign in with OTP or Google instead." });
+  const lockKey = `user:${user._id}`;
+  const lock = loginLockStatus(lockKey);
+  if (lock.locked) return lockedResponse(res, lock);
+  if (!verifyPassword(password, user.passwordHash)) {
+    recordLoginFailure(lockKey);
+    return fail();
   }
+  // The verification gate is checked only AFTER the password proves
+  // out — before that, revealing it would confirm the account exists.
   if (!isVerifiedCustomer(user)) {
     return res.status(403).json({ message: "Please complete sign-up verification before signing in." });
   }
-  if (!verifyPassword(password, user.passwordHash)) {
-    return res.status(401).json({ message: "Incorrect password" });
-  }
+  clearLoginFailures(lockKey);
   res.json({ user: publicUser(user), token: generateToken(user) });
 });
 
@@ -224,15 +256,26 @@ export const loginPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({
     $or: [{ email: identifier }, ...phoneIdentifierLookup(identifier).$or],
   }).select("+passwordHash");
-  if (!user || !isStaffUser(user)) {
-    return res.status(401).json({ message: "Password sign-in here is for MALAC staff accounts. Customers sign in from the customer Login page." });
+  // Unified failure (see the defences note above): unknown identifier,
+  // customer account, password-less staff account and wrong password
+  // are indistinguishable — this endpoint no longer confirms that an
+  // identifier belongs to a staff account. The hint in the message is
+  // generic guidance, identical in every failure case.
+  const fail = () => res.status(401).json({
+    message: "Invalid credentials. If you have not set a password yet, sign in with a one-time code or use Forgot password.",
+  });
+  if (!user || !isStaffUser(user) || !user.passwordHash) {
+    burnPasswordCycle(password);
+    return fail();
   }
-  if (!user.passwordHash) {
-    return res.status(401).json({ message: "No password is set for this account yet. Use OTP sign-in, or use Forgot password to set one." });
-  }
+  const lockKey = `user:${user._id}`;
+  const lock = loginLockStatus(lockKey);
+  if (lock.locked) return lockedResponse(res, lock);
   if (!verifyPassword(password, user.passwordHash)) {
-    return res.status(401).json({ message: "Incorrect password" });
+    recordLoginFailure(lockKey);
+    return fail();
   }
+  clearLoginFailures(lockKey);
   res.json({ user: publicUser(user), token: generateToken(user) });
 });
 
@@ -479,11 +522,19 @@ export const changePassword = asyncHandler(async (req, res) => {
       message: "No password is set for this account. You sign in with Google or a one-time code instead.",
     });
   }
+  // Wrong-current-password guesses feed the same per-account lockout as
+  // the sign-in endpoints (a stolen session must not become an offline-
+  // speed password oracle either).
+  const lockKey = `user:${user._id}`;
+  const lock = loginLockStatus(lockKey);
+  if (lock.locked) return lockedResponse(res, lock);
   if (!verifyPassword(currentPassword, user.passwordHash)) {
+    recordLoginFailure(lockKey);
     return res.status(401).json({ message: "Current password is incorrect" });
   }
   user.passwordHash = hashPassword(newPassword);
   await user.save();
+  clearLoginFailures(lockKey);
   res.json({ message: "Password updated." });
 });
 
