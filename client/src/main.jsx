@@ -15,6 +15,18 @@ favicon.type = "image/png";
 favicon.href = LOGO_MARK;
 document.head.appendChild(favicon);
 
+// PWA: register the service worker (production builds only). Progressive
+// enhancement — the store works exactly the same if registration fails.
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    try {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    } catch {
+      /* service worker unsupported — ignore */
+    }
+  });
+}
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>

@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { MessageCircle, Mail } from "lucide-react";
+import { MessageCircle, Mail, Smartphone } from "lucide-react";
 import { LOGO_FULL } from "../assets/logo.js";
+import InstallAppButton from "./InstallAppButton.jsx";
 
 const COURIERS = ["TCS", "Leopards", "Trax"];
 const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Faisalabad"];
@@ -74,6 +75,16 @@ export default function Footer() {
             <Link to="/policy" className="hover:text-lux-burnt">Privacy Policy</Link>
           </span>
           <span>{CITIES.join(" · ")}</span>
+        </div>
+      </div>
+      {/* Get the app — PWA install strip (last block of the footer) */}
+      <div className="border-t border-cream-line">
+        <div className="max-w-7xl mx-auto px-3 py-5 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-4 text-center">
+          <p className="flex items-center gap-2 text-sm text-gray-600">
+            <Smartphone size={17} className="text-lux-burnt shrink-0" />
+            Get the MALAC app — install it on your phone for faster shopping.
+          </p>
+          <InstallAppButton />
         </div>
       </div>
     </footer>
