@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
       <div className="p-2 pb-0">
         <div className="relative rounded-xl overflow-hidden aspect-square">
           <Link to={`/product/${product.slug}`}>
-            <img src={product.images?.[0]} alt={product.title} loading="lazy"
+            <img src={product.images?.[0]} alt={product.category ? `${product.title} — ${product.category}` : product.title} loading="lazy"
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
           </Link>
           {pct > 0 && <span className="absolute top-2 left-2 bg-lux-amber text-white text-[11px] font-bold px-2 py-0.5 rounded-full">-{pct}%</span>}

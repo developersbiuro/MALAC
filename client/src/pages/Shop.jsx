@@ -9,6 +9,20 @@ import { useSeo } from "../utils/seo.js";
 // Highest Rating is applied client-side to the fetched results.
 const API_SORTS = ["price-asc", "price-desc", "newest", "popular"];
 
+// Short, generic descriptions shown when a category is selected — written
+// from the category name only (no invented product specifics). Keys are
+// the store's real category names.
+const CATEGORY_DESCRIPTIONS = {
+  "Mobiles & Tablets": "Shop mobiles and tablets online in Pakistan at MALAC — smartphones, tablets and mobile accessories with prices in PKR, Cash on Delivery, and standard shipping free on orders over Rs. 5,000.",
+  "Electronics": "Shop electronics online in Pakistan at MALAC — LED TVs, audio and cameras for home and everyday use, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
+  "Fashion": "Shop fashion online in Pakistan at MALAC — clothing and footwear for men and women, from embroidered lawn suits and kurta shalwar to everyday shoes, with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
+  "Home & Living": "Shop home and living essentials online in Pakistan at MALAC — furniture, kitchen and bedding picks for every room, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
+  "Beauty & Health": "Shop beauty and health products online in Pakistan at MALAC — skincare, makeup and personal care essentials, with Cash on Delivery and standard shipping free on orders over Rs. 5,000.",
+  "Groceries": "Shop groceries online in Pakistan at MALAC — everyday staples, snacks and beverages for your kitchen, delivered to your door with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
+  "Sports & Fitness": "Shop sports and fitness gear online in Pakistan at MALAC — gym equipment, cricket gear and outdoor essentials, with Cash on Delivery and standard shipping free on orders over Rs. 5,000.",
+  "Toys & Baby": "Shop toys and baby products online in Pakistan at MALAC — toys, diapers and feeding essentials for little ones, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
+};
+
 export default function Shop() {
   const [params] = useSearchParams();
   const [products, setProducts] = useState([]);
@@ -53,6 +67,9 @@ export default function Shop() {
       <p className="eyebrow">The Collection</p>
       <h1 className="font-display text-2xl sm:text-3xl font-bold mt-1 break-words">{title}</h1>
       {sub && <p className="text-sm text-gray-500 mt-1">{category} / {sub}</p>}
+      {category && CATEGORY_DESCRIPTIONS[category] && (
+        <p className="text-sm text-gray-500 leading-relaxed mt-2 max-w-3xl">{CATEGORY_DESCRIPTIONS[category]}</p>
+      )}
       <div className="bg-white rounded-2xl border border-cream-line shadow-sm p-3 mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center text-sm">
         <label className="flex items-center gap-2 sm:gap-0">Sort
           <select value={sort} onChange={(e) => setSort(e.target.value)} className="border border-cream-line rounded-full sm:ml-2 px-3 py-2 sm:py-1.5 bg-white flex-1 sm:flex-none min-w-0">

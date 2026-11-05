@@ -4,14 +4,26 @@ import { LOGO_FULL } from "../assets/logo.js";
 
 const COURIERS = ["TCS", "Leopards", "Trax"];
 const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Faisalabad"];
+// The store's category names (mirrors the seeded catalogue and the
+// sitemap's /shop?category=<name> URLs).
+const CATEGORIES = [
+  "Mobiles & Tablets",
+  "Electronics",
+  "Fashion",
+  "Home & Living",
+  "Beauty & Health",
+  "Groceries",
+  "Sports & Fitness",
+  "Toys & Baby",
+];
 
 export default function Footer() {
   return (
     <footer className="bg-cream-soft mt-12 border-t border-cream-line pb-24 md:pb-0">
-      <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-4 gap-8 text-sm">
+      <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
         <div className="col-span-2 md:col-span-1">
           <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-24 w-auto" />
-          <p className="text-gray-500 mt-3 leading-relaxed">Online shopping in Pakistan — fashion, mobiles, electronics, groceries and more, delivered nationwide with Cash on Delivery.</p>
+          <p className="text-gray-500 mt-3 leading-relaxed">MALAC — M.A Luxury Apparel Collection. Online shopping in Pakistan for fashion, mobiles &amp; tablets, electronics, home &amp; living, beauty, groceries and more, delivered nationwide with Cash on Delivery or JazzCash / Easypaisa.</p>
           <p className="mt-3 space-y-1.5">
             <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
               <MessageCircle size={15} className="text-[#059669]" /> WhatsApp: +92 3236016684
@@ -20,6 +32,12 @@ export default function Footer() {
               <Mail size={15} className="text-[#059669]" /> developersbiuro@gmail.com
             </a>
           </p>
+        </div>
+        <div>
+          <p className="eyebrow !text-[10px] mb-3">Shop by Category</p>
+          {CATEGORIES.map((c) => (
+            <Link key={c} to={`/shop?category=${encodeURIComponent(c)}`} className="block text-gray-600 hover:text-lux-burnt py-0.5">{c}</Link>
+          ))}
         </div>
         <div>
           <p className="eyebrow !text-[10px] mb-3">Customer Care &amp; Tracking</p>
@@ -44,7 +62,6 @@ export default function Footer() {
           <p className="text-gray-600 py-0.5">Cash on Delivery (COD)</p>
           <p className="text-gray-600 py-0.5">JazzCash — Muhammad Abdullah · 0303 6253428</p>
           <p className="text-gray-600 py-0.5">Easypaisa — Muhammad Abdullah · 0303 6253428</p>
-          <p className="text-gray-600 py-0.5">Bank transfer / Raast on request</p>
           <Link to="/admin" className="block text-gray-600 hover:text-lux-burnt py-0.5 mt-3">Admin Login</Link>
         </div>
       </div>

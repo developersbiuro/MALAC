@@ -49,22 +49,45 @@ export default function ProductDetails() {
   useSeo({
     title: product ? `${product.title} — MALAC` : undefined,
     description: seoDescription,
+    image: product?.images?.[0] || undefined,
     jsonLd: product
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: product.title,
-          image: product.images?.[0] ? [product.images[0]] : undefined,
-          description: seoDescription,
-          sku: product.sku || undefined,
-          offers: {
-            "@type": "Offer",
-            url: `https://malac1.vercel.app/product/${product.slug}`,
-            priceCurrency: "PKR",
-            price: priceOf(product),
-            availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.title,
+            image: product.images?.[0] ? [product.images[0]] : undefined,
+            description: seoDescription,
+            sku: product.sku || undefined,
+            offers: {
+              "@type": "Offer",
+              url: `https://malac1.vercel.app/product/${product.slug}`,
+              priceCurrency: "PKR",
+              price: priceOf(product),
+              availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+            },
           },
-        }
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Home", item: "https://malac1.vercel.app/" },
+              { "@type": "ListItem", position: 2, name: "Shop", item: "https://malac1.vercel.app/shop" },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: product.category,
+                item: `https://malac1.vercel.app/shop?category=${encodeURIComponent(product.category)}`,
+              },
+              {
+                "@type": "ListItem",
+                position: 4,
+                name: product.title,
+                item: `https://malac1.vercel.app/product/${product.slug}`,
+              },
+            ],
+          },
+        ]
       : undefined,
   });
 
@@ -104,13 +127,13 @@ export default function ProductDetails() {
         {/* Gallery */}
         <div>
           <div className="relative overflow-hidden rounded border" onMouseEnter={() => setZoom(true)} onMouseLeave={() => setZoom(false)}>
-            <img src={product.images?.[img]} alt={product.title}
+            <img src={product.images?.[img]} alt={`${product.title} — ${product.category}`}
               className={`w-full aspect-square object-cover transition-transform duration-200 ${zoom ? "scale-150" : ""}`} />
           </div>
           <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1">
             {(product.images || []).map((src, i) => (
               <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 shrink-0 ${i === img ? "border-brand" : ""}`}>
-                <img src={src} alt={product.title} className="w-full h-full object-cover" />
+                <img src={src} alt={`${product.title} — photo ${i + 1}`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
@@ -229,7 +252,7 @@ export default function ProductDetails() {
               <div className="flex items-center gap-2"><RatingStars value={r.rating} /><b className="text-sm">{r.authorName}</b>
                 {r.verifiedPurchase && <span className="text-[11px] text-green-600">Verified Purchase</span>}</div>
               <p className="text-sm mt-1">{r.comment}</p>
-              {(r.images || []).map((src, i) => <img key={i} src={src} alt="" className="w-16 h-16 object-cover rounded mt-2 inline-block mr-2" />)}
+              {(r.images || []).map((src, i) => <img key={i} src={src} alt={`Customer review photo for ${product.title}`} className="w-16 h-16 object-cover rounded mt-2 inline-block mr-2" />)}
             </article>
           ))}
           {reviews.length === 0 && <p className="text-gray-400 text-sm">No reviews yet.</p>}

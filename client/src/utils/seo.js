@@ -6,6 +6,12 @@ import { useEffect } from "react";
 // this hook only overrides them while the page is mounted.
 const JSON_LD_ID = "malac-page-jsonld";
 
+// Interim default share image: the seeded Women Embroidered 3-Piece Lawn
+// Suit product photo (picsum seed "fas-wom-lawn3") at 1200x630. Replace
+// with a hosted brand share image once durable image hosting (Cloudinary)
+// lands. Mirrors the og:image in index.html.
+export const SITE_IMAGE = "https://picsum.photos/seed/fas-wom-lawn3/1200/630";
+
 function upsertMeta(name, content) {
   let tag = document.head.querySelector(`meta[name="${name}"]`);
   if (!tag) {
@@ -16,7 +22,17 @@ function upsertMeta(name, content) {
   tag.setAttribute("content", content);
 }
 
-export function useSeo({ title, description, robots, jsonLd } = {}) {
+function upsertProperty(property, content) {
+  let tag = document.head.querySelector(`meta[property="${property}"]`);
+  if (!tag) {
+    tag = document.createElement("meta");
+    tag.setAttribute("property", property);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute("content", content);
+}
+
+export function useSeo({ title, description, robots, jsonLd, image } = {}) {
   // Serialize during render so the effect only re-runs when the
   // structured data actually changes (callers build fresh objects).
   const jsonLdText = jsonLd ? JSON.stringify(jsonLd) : null;
@@ -25,6 +41,11 @@ export function useSeo({ title, description, robots, jsonLd } = {}) {
     if (title) document.title = title;
     if (description) upsertMeta("description", description);
     if (robots) upsertMeta("robots", robots);
+    // Share image: a page may pass its own (e.g. a product photo);
+    // otherwise the site-wide default applies.
+    const shareImage = image || SITE_IMAGE;
+    upsertProperty("og:image", shareImage);
+    upsertMeta("twitter:image", shareImage);
     if (jsonLdText) {
       let script = document.getElementById(JSON_LD_ID);
       if (!script) {
@@ -39,7 +60,7 @@ export function useSeo({ title, description, robots, jsonLd } = {}) {
       // Page JSON-LD must not leak into the next route.
       document.getElementById(JSON_LD_ID)?.remove();
     };
-  }, [title, description, robots, jsonLdText]);
+  }, [title, description, robots, jsonLdText, image]);
 }
 
 export default useSeo;

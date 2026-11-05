@@ -17,8 +17,16 @@
     <meta property="og:title" content="MALAC - M.A Luxury Apparel Collection" />
     <meta property="og:description" content="MALAC — M.A Luxury Apparel Collection. Shop fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000." />
     <meta property="og:url" content="https://malac1.vercel.app/" />
+    <!-- Interim og:image: the seeded Women Embroidered 3-Piece Lawn Suit
+         product photo (picsum seed "fas-wom-lawn3") at the recommended
+         1200x630 share size. Replace with a hosted brand share image once
+         durable image hosting (Cloudinary) lands. -->
+    <meta property="og:image" content="https://picsum.photos/seed/fas-wom-lawn3/1200/630" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://picsum.photos/seed/fas-wom-lawn3/1200/630" />
     <meta name="twitter:title" content="MALAC - M.A Luxury Apparel Collection" />
     <meta name="twitter:description" content="MALAC — M.A Luxury Apparel Collection. Shop fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000." />
     <script type="application/ld+json">
@@ -26,10 +34,22 @@
       "@context": "https://schema.org",
       "@graph": [
         {
-          "@type": "Organization",
+          "@type": ["Organization", "OnlineStore"],
           "name": "MALAC",
           "url": "https://malac1.vercel.app/",
           "email": "developersbiuro@gmail.com",
+          "address": {
+            "@type": "PostalAddress",
+            "addressCountry": "PK"
+          },
+          "areaServed": [
+            { "@type": "Country", "name": "Pakistan" },
+            { "@type": "City", "name": "Karachi" },
+            { "@type": "City", "name": "Lahore" },
+            { "@type": "City", "name": "Islamabad" },
+            { "@type": "City", "name": "Peshawar" },
+            { "@type": "City", "name": "Faisalabad" }
+          ],
           "sameAs": []
         },
         {

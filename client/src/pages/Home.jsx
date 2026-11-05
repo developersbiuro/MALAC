@@ -16,10 +16,48 @@ const TRUST = [
   { Icon: MapPin, label: "Nationwide Delivery" },
 ];
 
+// FAQ answers mirror the store's real rules in Terms of Service /
+// Privacy Policy — keep the visible text and the FAQPage JSON-LD in sync.
+const FAQS = [
+  {
+    q: "How do I place an order on MALAC?",
+    a: "Create a MALAC account or sign in — an account is required to place an order. Add the items you like to your cart, go to checkout, confirm your delivery address and payment method, and place your order. Every order is reviewed and confirmed by our team before it is packed and dispatched.",
+  },
+  {
+    q: "How do I pay with JazzCash or Easypaisa?",
+    a: "At checkout, choose JazzCash or Easypaisa and transfer the order total to account title Muhammad Abdullah, number 0303 6253428. Then upload your payment screenshot and transaction details with your order. Our team verifies the payment before your order is processed; if a payment cannot be verified, we will contact you and the order will not be dispatched until it is resolved. Cash on Delivery is also available — pay in cash when your order arrives.",
+  },
+  {
+    q: "When is shipping free?",
+    a: "Standard shipping is free on orders over Rs. 5,000. On smaller orders, standard delivery is Rs. 199 on most orders (the exact fee for an item is shown on its product page). Express delivery is available at checkout for Rs. 399 where offered. We deliver nationwide across Pakistan through courier partners including TCS, Leopards and Trax.",
+  },
+  {
+    q: "How can I track my order?",
+    a: "Use the Track Your Order page with your order ID and the phone number from your order, or sign in and open My Orders to follow your order's status at any time.",
+  },
+  {
+    q: "What is MALAC's return and exchange policy?",
+    a: "If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (developersbiuro@gmail.com) with your order number. After we inspect the returned item, we will arrange a replacement or a refund. Items must be unused and in their original packaging. For hygiene and safety reasons, certain items may not be returnable, and change-of-mind returns are not accepted.",
+  },
+  {
+    q: "How do I contact MALAC?",
+    a: "Message us on WhatsApp at +92 3236016684 or email us at developersbiuro@gmail.com — for order help, payment questions, or anything about your account.",
+  },
+];
+
 export default function Home() {
   useSeo({
     title: "MALAC - M.A Luxury Apparel Collection",
     description: "MALAC — M.A Luxury Apparel Collection. Shop fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQS.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    },
   });
   const navigate = useNavigate();
   const [trackId, setTrackId] = useState("");
@@ -104,6 +142,48 @@ export default function Home() {
             <button onClick={() => setPage((p) => p + 1)} className="bg-white border px-8 py-2 rounded text-sm hover:border-brand hover:text-brand">Load More</button>
           </div>
         )}
+      </section>
+
+      {/* About MALAC — SEO content */}
+      <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 px-5 py-6 sm:px-8">
+        <p className="eyebrow">About MALAC</p>
+        <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Luxury Apparel &amp; Ladies Fashion Online in Pakistan</h2>
+        <div className="text-sm sm:text-[15px] text-gray-600 leading-relaxed space-y-3 mt-3 max-w-3xl">
+          <p>
+            MALAC — M.A Luxury Apparel Collection is an online fashion store in Pakistan for shoppers who want
+            considered, well-made clothing without leaving home. Our Fashion collection brings ladies fashion and
+            menswear together in one place — embroidered 3-piece lawn suits, premium cotton kurta shalwar and
+            everyday footwear — alongside the wider MALAC catalogue of Mobiles &amp; Tablets, Electronics,
+            Home &amp; Living, Beauty &amp; Health, Groceries, Sports &amp; Fitness and Toys &amp; Baby.
+          </p>
+          <p>
+            Looking for ladies fashion online in Pakistan? Start with our women&apos;s lawn suits — printed lawn
+            shirts with embroidered necklines, chiffon dupattas and dyed cambric trousers — and complete the look
+            with skincare and personal care from Beauty &amp; Health. Every product page shows the full price in
+            Pakistani Rupees, any discount, and live stock, so you know exactly what you are ordering before you
+            check out.
+          </p>
+          <p>
+            Ordering is straightforward: pay with Cash on Delivery, or by JazzCash / Easypaisa transfer with a
+            payment screenshot our team verifies before dispatch. Standard delivery is Rs. 199 on most orders and
+            free on orders over Rs. 5,000, and we deliver nationwide through courier partners including TCS,
+            Leopards and Trax. Once your order is placed, you can follow it any time from the Track Your Order page.
+          </p>
+        </div>
+      </section>
+
+      {/* FAQ — answers mirror the Terms / Policy pages (see FAQS above) */}
+      <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-5 py-6 sm:px-8 mb-2">
+        <p className="eyebrow">Good To Know</p>
+        <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Frequently Asked Questions</h2>
+        <div className="mt-4 divide-y divide-cream-line">
+          {FAQS.map((f) => (
+            <div key={f.q} className="py-3.5">
+              <h3 className="font-serif text-lg font-semibold leading-snug">{f.q}</h3>
+              <p className="text-sm sm:text-[15px] text-gray-600 leading-relaxed mt-1 max-w-3xl">{f.a}</p>
+            </div>
+          ))}
+        </div>
       </section>
     </main>
   );
