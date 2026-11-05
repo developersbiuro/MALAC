@@ -1,33 +1,30 @@
-import { readFileSync } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import { Router } from "express";
 import { protect, isStaff } from "../middleware/auth.js";
+import { CUSTOMER_APK_B64, ADMIN_APK_B64 } from "../assets/apkAssets.js";
+import { ICON_B64 } from "../assets/iconAssets.js";
 
 // Binary assets (Android APKs, PWA icons) ship inside this repo as base64
-// TEXT files — the snapshot-based GitHub push accepts UTF-8 text only, so
-// no binary can be committed directly. Each asset is decoded ONCE here at
-// server start into an in-memory Buffer and then served from memory.
+// text embedded in JS modules (server/src/assets/*Assets.js) — the
+// snapshot-based GitHub push accepts UTF-8 text only, so no binary can be
+// committed directly, and loose files read via fs at runtime are not
+// reliably bundled into the serverless function. Decoded ONCE here at
+// module load into in-memory buffers and served from memory. Decoding is
+// guarded so a bad asset can never crash the API — its route just 503s.
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const decodeAsset = (rel) =>
-  Buffer.from(
-    readFileSync(path.join(__dirname, rel), "utf8").replace(/\s+/g, ""),
-    "base64"
-  );
-
-const customerApk = decodeAsset("../assets/apk/malac-app.b64");
-const adminApk = decodeAsset("../assets/apk/malac-admin-app.b64");
-
-const ICONS = {
-  "icon-512.png": decodeAsset("../assets/icons/icon-512.png.b64.txt"),
-  "icon-192.png": decodeAsset("../assets/icons/icon-192.png.b64.txt"),
-  "icon-maskable-512.png": decodeAsset("../assets/icons/icon-maskable-512.png.b64.txt"),
-  "apple-touch-icon.png": decodeAsset("../assets/icons/apple-touch-icon.png.b64.txt"),
+const decode = (b64) => {
+  try {
+    return Buffer.from(String(b64).replace(/\s+/g, ""), "base64");
+  } catch {
+    return null;
+  }
 };
+
+const customerApk = decode(CUSTOMER_APK_B64);
+const adminApk = decode(ADMIN_APK_B64);
 
 const APK_TYPE = "application/vnd.android.package-archive";
 const sendApk = (buffer, filename) => (req, res) => {
+  if (!buffer) return res.status(503).json({ message: "App download is temporarily unavailable." });
   res.set({
     "Content-Type": APK_TYPE,
     "Content-Disposition": `attachment; filename="${filename}"`,
@@ -50,8 +47,10 @@ router.get("/download/malac-app.apk", sendApk(customerApk, "MALAC-App.apk"));
 router.get("/api/admin/app-download", protect, isStaff, sendApk(adminApk, "MALAC-Admin-App.apk"));
 
 // PWA icons generated from the real MALAC monogram (see assets/icons).
-for (const [name, buffer] of Object.entries(ICONS)) {
+for (const [name, b64] of Object.entries(ICON_B64)) {
+  const buffer = decode(b64);
   router.get(`/app-icons/${name}`, (req, res) => {
+    if (!buffer) return res.status(503).json({ message: "Icon unavailable." });
     res.set({
       "Content-Type": "image/png",
       "Content-Length": buffer.length,
