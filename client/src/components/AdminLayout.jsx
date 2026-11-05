@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { LOGO_MARK } from "../assets/logo.js";
 import { NavLink, Link } from "react-router-dom";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings as SettingsIcon, KeyRound, LogOut, Store } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Users, Settings as SettingsIcon, KeyRound, LogOut, Store, Smartphone } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
+import api from "../api/client.js";
 import { useSeo } from "../utils/seo.js";
 
 // Section visibility: Dashboard is for all staff; Products/Categories/
@@ -22,6 +24,31 @@ const links = [
 export default function AdminLayout({ children }) {
   useSeo({ title: "Admin — MALAC", robots: "noindex, nofollow" });
   const { user, logout, isSuperAdmin, hasPermission } = useAuth();
+  const [appDlBusy, setAppDlBusy] = useState(false);
+  const [appDlError, setAppDlError] = useState("");
+
+  // The admin Android app is served ONLY by the staff-authenticated
+  // endpoint /api/admin/app-download — fetch it as a blob with the staff
+  // token (the api client adds the Authorization header) and save it.
+  const downloadAdminApp = async () => {
+    setAppDlError("");
+    setAppDlBusy(true);
+    try {
+      const res = await api.get("/admin/app-download", { responseType: "blob" });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "MALAC-Admin-App.apk";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch {
+      setAppDlError("Download failed — please try again.");
+    } finally {
+      setAppDlBusy(false);
+    }
+  };
   return (
     <div className="min-h-screen flex bg-[#f4f6f8]">
       <aside className="w-14 sm:w-56 bg-[#0f1b29] text-white shrink-0 flex flex-col sticky top-0 h-screen">
@@ -46,6 +73,10 @@ export default function AdminLayout({ children }) {
           ))}
         </nav>
         <div className="p-2 border-t border-white/10 text-sm">
+          <button onClick={downloadAdminApp} disabled={appDlBusy} className="flex items-center gap-2.5 px-2 py-2 text-white/75 hover:text-white disabled:opacity-50 w-full text-left">
+            <Smartphone size={17} /><span className="hidden sm:inline">{appDlBusy ? "Downloading…" : "Download Admin App"}</span>
+          </button>
+          {appDlError && <p className="px-2 pb-1 text-[11px] text-red-300 hidden sm:block">{appDlError}</p>}
           <Link to="/" className="flex items-center gap-2.5 px-2 py-2 text-white/75 hover:text-white"><Store size={17} /><span className="hidden sm:inline">View Store</span></Link>
           <button onClick={logout} className="flex items-center gap-2.5 px-2 py-2 text-white/75 hover:text-white"><LogOut size={17} /><span className="hidden sm:inline">Logout</span></button>
         </div>

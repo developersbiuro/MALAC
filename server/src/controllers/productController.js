@@ -3,17 +3,25 @@ import Review from "../models/Review.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { slugify } from "../utils/slugify.js";
 
+// Escape regex metacharacters in user-supplied search text (and cap its
+// length) so a query is always a LITERAL substring match — never a
+// pattern the caller controls (match-everything / ReDoS tricks).
+const escapeRegex = (s) => String(s).slice(0, 64).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 export const listProducts = asyncHandler(async (req, res) => {
   const { search, category, subCategory, minPrice, maxPrice, flashSale, page = 1, limit = 20, sort } = req.query;
   const filter = { status: { $in: ["Active", "Out of Stock"] } };
   if (category) filter.category = category;
   if (subCategory) filter.subCategory = subCategory;
   if (flashSale === "true") filter.flashSale = true;
-  if (search) filter.$or = [
-    { title: { $regex: search, $options: "i" } },
-    { tags: { $regex: search, $options: "i" } },
-    { category: { $regex: search, $options: "i" } },
-  ];
+  if (search) {
+    const literal = escapeRegex(search);
+    filter.$or = [
+      { title: { $regex: literal, $options: "i" } },
+      { tags: { $regex: literal, $options: "i" } },
+      { category: { $regex: literal, $options: "i" } },
+    ];
+  }
   if (minPrice || maxPrice) {
     filter.basePrice = {};
     if (minPrice) filter.basePrice.$gte = Number(minPrice);
@@ -30,9 +38,10 @@ export const listProducts = asyncHandler(async (req, res) => {
 export const suggest = asyncHandler(async (req, res) => {
   const q = String(req.query.q || "").trim();
   if (!q) return res.json({ suggestions: [] });
+  const literal = escapeRegex(q);
   const products = await Product.find({
     status: "Active",
-    $or: [{ title: { $regex: q, $options: "i" } }, { tags: { $regex: q, $options: "i" } }],
+    $or: [{ title: { $regex: literal, $options: "i" } }, { tags: { $regex: literal, $options: "i" } }],
   }).select("title slug category").limit(8);
   res.json({ suggestions: products });
 });

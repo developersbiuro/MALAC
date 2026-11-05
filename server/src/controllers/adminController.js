@@ -214,7 +214,11 @@ export const deleteUser = asyncHandler(async (req, res) => {
 // -- Staff password-reset approvals (Super Admin only, route-guarded) --
 export const listPasswordResets = asyncHandler(async (req, res) => {
   const filter = {};
-  if (req.query.status) filter.status = req.query.status;
+  // Whitelist: only the known PasswordResetRequest statuses may filter
+  // the list — anything else (including a query-operator object such as
+  // ?status[$ne]=x) is ignored instead of reaching Mongo as-is.
+  const RESET_STATUSES = ["pending", "approved", "rejected", "used", "superseded"];
+  if (RESET_STATUSES.includes(req.query.status)) filter.status = req.query.status;
   const requests = await PasswordResetRequest.find(filter)
     .populate("user", "name email phone role")
     .sort({ createdAt: -1 })

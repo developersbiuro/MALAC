@@ -10,6 +10,25 @@
           "destination": "/index.html"
         }
       ],
+      "headers": [
+        {
+          "source": "/(.*)",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            },
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        }
+      ],
       "bindings": [
         {
           "type": "service",
@@ -39,6 +58,18 @@
     },
     {
       "source": "/sitemap.xml",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/download/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/app-icons/(.*)",
       "destination": {
         "service": "server"
       }

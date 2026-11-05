@@ -90,7 +90,13 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
 export const adminListOrders = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.status && ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;
-  if (req.query.search) filter.orderId = { $regex: req.query.search, $options: "i" };
+  if (req.query.search) {
+    // Literal substring match only: escape regex metacharacters and cap
+    // the length so the search text can never act as a caller-controlled
+    // pattern against order ids.
+    const literal = String(req.query.search).slice(0, 64).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.orderId = { $regex: literal, $options: "i" };
+  }
   const orders = await Order.find(filter).populate("user", "name email phone")
     .sort({ createdAt: -1 }).limit(200);
   res.json({ orders });

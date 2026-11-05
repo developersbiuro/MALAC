@@ -14,6 +14,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
+import appAssetRoutes from "./routes/appAssetRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { securityHeaders } from "./middleware/securityHeaders.js";
@@ -58,6 +59,13 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "2mb" }));
 if (env.nodeEnv === "development") app.use(morgan("dev"));
+
+// App downloads + PWA icons (APKs/icons decoded from base64 text assets
+// at startup, served from memory). Mounted BEFORE the database gate below
+// on purpose: the public customer-APK download and the icons never need
+// the DB, and the staff-only admin-APK route runs its own protect+isStaff
+// chain (which answers 401 without a token before any DB touch).
+app.use(appAssetRoutes);
 
 // Database readiness gate. On Vercel the Express app is loaded and served
 // as a function WITHOUT executing server.js, so the startup connect there
