@@ -95,15 +95,20 @@ export default function InstallAppButton({ variant = "pill", className = "" }) {
 
   return (
     <>
-      {button}
-      {!isIOS && variant === "pill" && deferredPrompt && (
-        <button
-          onClick={handleBrowserInstall}
-          className="block mt-1 text-[11px] text-gray-400 underline underline-offset-2 hover:text-lux-burnt"
-        >
-          or install in browser
-        </button>
-      )}
+      {/* The pill and its secondary link form ONE centred column, so the
+          link hugs the pill's underside instead of stretching the flex row
+          it sits in (which pushed the pill up against the top bar). */}
+      <span className="flex flex-col items-center">
+        {button}
+        {!isIOS && variant === "pill" && deferredPrompt && (
+          <button
+            onClick={handleBrowserInstall}
+            className="mt-0.5 text-[11px] leading-tight text-gray-400 underline underline-offset-2 hover:text-lux-burnt"
+          >
+            or install in browser
+          </button>
+        )}
+      </span>
       {showHelp && (
         <div
           className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center p-3"
