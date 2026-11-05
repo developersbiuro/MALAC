@@ -87,7 +87,7 @@ export default function Shop() {
         </div>
         <span className="sm:ml-auto text-gray-400">Showing {products.length} products</span>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mt-3">
         {products.map((p) => <ProductCard key={p._id} product={p} />)}
       </div>
       {products.length === 0 && <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-cream-line mt-3">No products match your filters.</p>}

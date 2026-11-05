@@ -50,7 +50,7 @@ export default function Header() {
           </span>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-3 py-2.5 flex items-center gap-2 sm:gap-3">
+      <div className="max-w-7xl mx-auto px-3 py-2.5 flex flex-wrap items-center gap-2 sm:gap-3">
         <Link to="/" className="shrink-0" aria-label="MALAC — home">
           <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-10 sm:h-12 w-auto" />
         </Link>
@@ -64,11 +64,11 @@ export default function Header() {
             <div className="absolute left-0 top-full bg-white shadow-xl rounded-b-md w-[560px] grid grid-cols-3 gap-1 p-3 z-50">
               {categories.map((c) => (
                 <div key={c._id}>
-                  <Link to={`/shop?category=${encodeURIComponent(c.name)}`} className="font-medium text-sm hover:text-brand">{c.name}</Link>
+                  <Link to={`/shop?category=${encodeURIComponent(c.name)}`} className="font-medium text-sm hover:text-lux-burnt">{c.name}</Link>
                   <div className="mt-1 space-y-0.5">
                     {c.subCategories?.map((s) => (
                       <Link key={s._id} to={`/shop?category=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s.name)}`}
-                        className="block text-xs text-gray-500 hover:text-brand">{s.name}</Link>
+                        className="block text-xs text-gray-500 hover:text-lux-burnt">{s.name}</Link>
                     ))}
                   </div>
                 </div>
@@ -77,12 +77,13 @@ export default function Header() {
           )}
         </div>
 
-        {/* Predictive search */}
-        <div className="relative flex-1 min-w-0" ref={searchRef}>
-          <form onSubmit={submitSearch} className="flex bg-gray-100 rounded-full overflow-hidden border border-gray-200 focus-within:border-lux-amber focus-within:bg-white transition-colors">
+        {/* Predictive search — dominant full-width bar on mobile (own row),
+            inline flex-1 from sm up */}
+        <div className="relative flex-1 min-w-0 basis-full order-last mt-1 sm:basis-auto sm:order-none sm:mt-0" ref={searchRef}>
+          <form onSubmit={submitSearch} className="flex bg-gray-100 rounded-full overflow-hidden border border-gray-200 shadow-sm focus-within:border-lux-amber focus-within:bg-white focus-within:shadow transition-colors">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in MALAC"
-              className="flex-1 min-w-0 bg-transparent px-3 sm:px-4 py-2 text-sm outline-none" />
-            <button className="bg-lux-gradient text-white px-3.5 sm:px-5 shrink-0" aria-label="Search"><Search size={18} /></button>
+              className="flex-1 min-w-0 bg-transparent px-4 py-2.5 text-sm outline-none" />
+            <button className="bg-lux-gradient text-white px-5 sm:px-6 shrink-0 flex items-center justify-center" aria-label="Search"><Search size={19} /></button>
           </form>
           {suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1 bg-white shadow-xl rounded-md z-50 overflow-hidden max-h-[60vh] overflow-y-auto">
@@ -104,11 +105,11 @@ export default function Header() {
         </div>
         <Link to="/wishlist" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Wishlist">
           <Heart size={22} />
-          {wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-brand text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
+          {wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
         </Link>
         <button onClick={() => setDrawerOpen(true)} className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
           <ShoppingCart size={22} />
-          {count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-brand text-white text-[10px] rounded-full px-1">{count}</span>}
+          {count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{count}</span>}
         </button>
 
         <div className="relative">

@@ -132,7 +132,7 @@ export default function ProductDetails() {
           </div>
           <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1">
             {(product.images || []).map((src, i) => (
-              <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 shrink-0 ${i === img ? "border-brand" : ""}`}>
+              <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 shrink-0 ${i === img ? "border-lux-amber" : ""}`}>
                 <img src={src} alt={`${product.title} — photo ${i + 1}`} className="w-full h-full object-cover" />
               </button>
             ))}
@@ -152,10 +152,10 @@ export default function ProductDetails() {
             </button>
           </div>
           <div className="bg-cream-soft rounded-xl p-3 mt-3">
-            <span className="text-lux-amber text-2xl font-extrabold">{rs(unitPrice)}</span>
+            <span className="text-lux-amber text-3xl font-extrabold">{rs(unitPrice)}</span>
             {variantDelta === 0 && product.salePrice > 0 && <>
-              <span className="text-gray-400 line-through ml-2">{rs(product.basePrice)}</span>
-              <span className="text-lux-amber ml-1">-{Math.round((1 - product.salePrice / product.basePrice) * 100)}%</span>
+              <span className="text-gray-400 line-through ml-2 text-sm">{rs(product.basePrice)}</span>
+              <span className="bg-lux-gradient text-white text-xs font-bold px-1.5 py-0.5 rounded ml-2 align-middle">-{discountPct(product)}%</span>
               <p className="text-[#059669] text-sm font-semibold mt-1">You Save {rs(product.basePrice - product.salePrice)} ({discountPct(product)}%)</p>
             </>}
           </div>
@@ -165,7 +165,7 @@ export default function ProductDetails() {
               <div className="flex gap-2 mt-1.5 flex-wrap">
                 {variants.map((v) => (
                   <button key={v._id} onClick={() => setSelected((s) => ({ ...s, [name]: v }))}
-                    className={`border rounded px-3 py-1.5 text-sm ${selected[name]?._id === v._id ? "border-brand text-brand" : ""}`}>
+                    className={`border rounded px-3 py-1.5 text-sm ${selected[name]?._id === v._id ? "border-lux-amber text-lux-burnt" : ""}`}>
                     {v.value}{v.priceDelta ? ` (+${rs(v.priceDelta)})` : ""}
                   </button>
                 ))}
@@ -243,7 +243,7 @@ export default function ProductDetails() {
               {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} stars</option>)}
             </select>
             <textarea value={myComment} onChange={(e) => setMyComment(e.target.value)} placeholder="Write a review..." className="border rounded px-2 py-1.5 w-full text-sm" rows={2} />
-            <button className="bg-brand text-white text-sm rounded px-4 py-1.5 w-full">Submit Review</button>
+            <button className="bg-lux-gradient text-white text-sm rounded-full px-4 py-1.5 w-full font-semibold">Submit Review</button>
           </form>
         </div>
         <div className="space-y-3">
@@ -272,7 +272,7 @@ export default function ProductDetails() {
         ))}
         <form onSubmit={submitQuestion} className="flex gap-2 mt-3">
           <input value={question} onChange={(e) => setQuestion(e.target.value)} required placeholder="Ask a question about this product" className="border rounded px-3 py-2 text-sm flex-1 min-w-0" />
-          <button className="bg-brand text-white text-sm rounded px-4 shrink-0">Ask</button>
+          <button className="bg-lux-gradient text-white text-sm rounded-full px-4 shrink-0 font-semibold">Ask</button>
         </form>
       </section>
 
