@@ -23,7 +23,8 @@ import { slugify } from "../utils/slugify.js";
 const categories = [
   { name: "Mobiles & Tablets", icon: "Smartphone", subCategories: ["Smartphones", "Tablets", "Mobile Accessories"] },
   { name: "Electronics", icon: "Tv", subCategories: ["LED TVs", "Audio", "Cameras"] },
-  { name: "Fashion", icon: "Shirt", subCategories: ["Men", "Women", "Shoes"] },
+  { name: "Fashion", icon: "Shirt", subCategories: ["Men", "Women", "Shoes", "Unisex"] },
+  { name: "Kids", icon: "Blocks", subCategories: ["Boys Fashion", "Girls Fashion", "Kids Shoes", "School Supplies"] },
   { name: "Home & Living", icon: "Sofa", subCategories: ["Furniture", "Kitchen", "Bedding"] },
   { name: "Beauty & Health", icon: "Sparkles", subCategories: ["Skincare", "Makeup", "Personal Care"] },
   { name: "Groceries", icon: "ShoppingBasket", subCategories: ["Staples", "Snacks", "Beverages"] },
