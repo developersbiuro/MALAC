@@ -495,9 +495,10 @@ export const me = asyncHandler(async (req, res) => {
 });
 
 // -- Profile settings (signed-in users, own account only) --
-// Only the display name is editable here. Email and phone are the
-// account's OTP-verified identities, so they are deliberately NOT
-// changeable through this endpoint.
+// Only the display name is editable through THIS endpoint. Email and
+// phone are the account's OTP-verified identities: they change only
+// through the OTP-verified change flows further below, never by simply
+// typing a new value here.
 export const updateProfile = asyncHandler(async (req, res) => {
   const name = String(req.body.name || "").trim();
   if (!name) return res.status(400).json({ message: "Name cannot be empty" });
@@ -601,4 +602,170 @@ export const addAddress = asyncHandler(async (req, res) => {
   req.user.addresses.push({ ...fields, isDefault: Boolean(req.body.isDefault) });
   await req.user.save();
   res.status(201).json({ addresses: req.user.addresses });
+});
+
+// -- Profile photo (avatar) --
+// The photo is stored ON the user record as a base64 data URI: the
+// server runs on serverless infrastructure with an ephemeral
+// filesystem, so a file written to disk (the catalog/screenshot model)
+// could vanish with the function instance — the same reasoning that
+// ships the brand logo as data URIs. The route's memory-storage multer
+// caps the upload at 400 KB and verifyImageBufferMagicBytes has already
+// confirmed the bytes really are a PNG/JPEG/WebP and recorded the
+// detected type; the client downscales to at most 512×512 JPEG before
+// sending, so the stored string stays small.
+export const uploadAvatar = asyncHandler(async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: "No image file received" });
+  const mime = req.file.detectedImage?.mime || "image/jpeg";
+  req.user.avatar = `data:${mime};base64,${req.file.buffer.toString("base64")}`;
+  await req.user.save();
+  const full = await User.findById(req.user._id).select("+passwordHash");
+  res.json({ user: publicUser(full || req.user) });
+});
+
+export const removeAvatar = asyncHandler(async (req, res) => {
+  req.user.avatar = "";
+  await req.user.save();
+  const full = await User.findById(req.user._id).select("+passwordHash");
+  res.json({ user: publicUser(full || req.user) });
+});
+
+// -- Change phone / email: OTP-verified (signed-in users, own account) --
+// Email and phone are sign-in identities, so changing one takes the
+// same proof as registering it: a one-time code sent to the NEW value
+// (WhatsApp for a phone, email for an email) through the same OTP
+// machinery as sign-up (hashed codes, 10-minute expiry, attempt caps —
+// services/otpService.js), under its own purposes so a sign-up/login
+// code can never be replayed here. The pending token is also BOUND to
+// the requesting account (OtpToken.userId): even if two accounts race
+// to claim the same new identifier, only the account that requested
+// its code can complete the change with it. Uniqueness is re-checked
+// at verify time, immediately before the value is applied. Neither
+// flow touches the other identifier, so a synthetic placeholder
+// (phone-<digits>@malac.local / email-<hex>) simply stays in place.
+const OTP_CODE_INVALID = "Invalid or expired verification code";
+
+// A channel whose provider is not configured must fail HONESTLY (503)
+// — never a fake "code sent". requestOtp preserves the WhatsApp
+// sender's coded error (WHATSAPP_NOT_CONFIGURED) and folds the email
+// one into a "… OTP is not configured" message; both shapes land here.
+const otpSendFailure = (res, err, channelLabel) => {
+  if (err?.code?.endsWith("_NOT_CONFIGURED") || /is not configured/i.test(err?.message || "")) {
+    return res.status(503).json({
+      code: "OTP_NOT_CONFIGURED",
+      message: `${channelLabel} OTP is not available right now. Please try again later.`,
+    });
+  }
+  throw err;
+};
+
+// The pending-change token for (identifier, channel, purpose) must
+// exist AND belong to the signed-in account; anything else answers
+// with the generic code error so the check leaks nothing.
+const pendingChangeBelongsTo = async ({ identifier, channel, purpose, userId }) => {
+  const token = await OtpToken.findOne({
+    identifier, channel, purpose, consumed: false,
+  }).sort({ createdAt: -1 });
+  return Boolean(token) && String(token.userId || "") === String(userId);
+};
+
+// Another account already holding this phone — as its primary OR its
+// alternate number (both are login identifiers for that account).
+const phoneHeldByOther = (phone, userId) =>
+  User.findOne({ _id: { $ne: userId }, $or: [{ phone }, { secondaryPhone: phone }] });
+
+export const changePhoneStart = asyncHandler(async (req, res) => {
+  const newPhone = normalizePhone(req.body.newPhone);
+  if (phoneLast10(newPhone).length < 10) {
+    return res.status(400).json({ message: "Please enter a valid phone number" });
+  }
+  if (newPhone === req.user.phone) {
+    return res.status(400).json({ message: "This is already your phone number" });
+  }
+  if (await phoneHeldByOther(newPhone, req.user._id)) {
+    return res.status(409).json({ message: "An account with this phone number already exists." });
+  }
+  try {
+    const result = await requestOtp({
+      identifier: newPhone, channel: "whatsapp", purpose: "phone_change",
+      phone: newPhone, userId: req.user._id,
+    });
+    return res.json({ step: "verify", channel: "whatsapp", identifier: newPhone, ...result });
+  } catch (err) {
+    return otpSendFailure(res, err, "WhatsApp");
+  }
+});
+
+export const changePhoneVerify = asyncHandler(async (req, res) => {
+  const newPhone = normalizePhone(req.body.newPhone);
+  if (phoneLast10(newPhone).length < 10) {
+    return res.status(400).json({ message: "Please enter a valid phone number" });
+  }
+  if (!await pendingChangeBelongsTo({
+    identifier: newPhone, channel: "whatsapp", purpose: "phone_change", userId: req.user._id,
+  })) {
+    return res.status(400).json({ message: OTP_CODE_INVALID });
+  }
+  if (await phoneHeldByOther(newPhone, req.user._id)) {
+    return res.status(409).json({ message: "An account with this phone number already exists." });
+  }
+  const check = await verifyOtp({
+    identifier: newPhone, channel: "whatsapp", purpose: "phone_change", code: req.body.code,
+  });
+  if (!check.ok) return res.status(400).json({ message: check.reason });
+  const user = await User.findById(req.user._id).select("+passwordHash");
+  user.phone = newPhone;
+  user.phoneVerified = true;
+  // The new primary must not linger as the same account's alternate.
+  if (user.secondaryPhone === newPhone) user.secondaryPhone = "";
+  await user.save();
+  res.json({ user: publicUser(user) });
+});
+
+const emailHeldByOther = (email, userId) =>
+  User.findOne({ _id: { $ne: userId }, email });
+
+export const changeEmailStart = asyncHandler(async (req, res) => {
+  const newEmail = String(req.body.newEmail || "").toLowerCase().trim();
+  // The synthetic @malac.local mailboxes are internal placeholders that
+  // can never receive mail, so they are not valid change targets either.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail) || newEmail.endsWith("@malac.local")) {
+    return res.status(400).json({ message: "Please enter a valid email address" });
+  }
+  if (newEmail === req.user.email) {
+    return res.status(400).json({ message: "This is already your email address" });
+  }
+  if (await emailHeldByOther(newEmail, req.user._id)) {
+    return res.status(409).json({ message: "An account with this email already exists." });
+  }
+  try {
+    const result = await requestOtp({
+      identifier: newEmail, channel: "email", purpose: "email_change", userId: req.user._id,
+    });
+    return res.json({ step: "verify", channel: "email", identifier: newEmail, ...result });
+  } catch (err) {
+    return otpSendFailure(res, err, "Email");
+  }
+});
+
+export const changeEmailVerify = asyncHandler(async (req, res) => {
+  const newEmail = String(req.body.newEmail || "").toLowerCase().trim();
+  if (!newEmail) return res.status(400).json({ message: OTP_CODE_INVALID });
+  if (!await pendingChangeBelongsTo({
+    identifier: newEmail, channel: "email", purpose: "email_change", userId: req.user._id,
+  })) {
+    return res.status(400).json({ message: OTP_CODE_INVALID });
+  }
+  if (await emailHeldByOther(newEmail, req.user._id)) {
+    return res.status(409).json({ message: "An account with this email already exists." });
+  }
+  const check = await verifyOtp({
+    identifier: newEmail, channel: "email", purpose: "email_change", code: req.body.code,
+  });
+  if (!check.ok) return res.status(400).json({ message: check.reason });
+  const user = await User.findById(req.user._id).select("+passwordHash");
+  user.email = newEmail;
+  user.emailVerified = true;
+  await user.save();
+  res.json({ user: publicUser(user) });
 });

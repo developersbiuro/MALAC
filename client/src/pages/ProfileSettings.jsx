@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, MapPin, Star, Pencil, Trash2, Plus } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Pencil, Trash2, Plus, Camera } from "lucide-react";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
@@ -9,9 +9,13 @@ import PasswordInput from "../components/PasswordInput.jsx";
 import { useSeo } from "../utils/seo.js";
 
 // Profile Settings (/account/settings, login required — see
-// ProtectedRoute in App.jsx). Three sections:
-//  1. Profile — display name is editable; email & phone are read-only
-//     because they are this account's OTP-verified identities.
+// ProtectedRoute in App.jsx). Four sections:
+//  1. Profile — display name and profile photo are editable here
+//     (photo: picked locally, downscaled to at most 512×512 JPEG on a
+//     canvas, then POSTed to /api/auth/me/avatar, which stores it as a
+//     data URI on the account). Email & phone are OTP-verified sign-in
+//     identities: each has a Change flow that sends a one-time code to
+//     the NEW value and only switches after that code verifies.
 //  2. Change password — only when the account actually has a password
 //     (server reports hasPassword via GET /auth/me); Google / OTP-only
 //     accounts see an explanatory note instead.
@@ -39,6 +43,15 @@ export default function ProfileSettings() {
   const [name, setName] = useState("");
   const [addresses, setAddresses] = useState([]);
   const [profileMsg, setProfileMsg] = useState("");
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  // Email/phone change flow: which identity is being edited (null =
+  // closed), the step within it, and the values typed so far.
+  const [contactEdit, setContactEdit] = useState(null); // "email" | "phone" | null
+  const [contactStep, setContactStep] = useState("enter"); // "enter" -> "code"
+  const [contactValue, setContactValue] = useState("");
+  const [contactCode, setContactCode] = useState("");
+  const [contactMsg, setContactMsg] = useState("");
+  const [contactBusy, setContactBusy] = useState(false);
   const [pw, setPw] = useState({ current: "", next: "", confirm: "" });
   const [pwMsg, setPwMsg] = useState("");
   const [addrMsg, setAddrMsg] = useState("");
@@ -64,6 +77,113 @@ export default function ProfileSettings() {
       saveSession({ user: r.data.user, token: localStorage.getItem("malac_token") });
       setProfileMsg("Profile saved.");
     } catch (err) { setProfileMsg(err.response?.data?.message || "Could not save your profile."); }
+  };
+
+  // Every /me mutation answers with the fresh public user; keep the
+  // page state and the header session in sync the same way each time.
+  const applyUpdatedUser = (user) => {
+    setProfile(user);
+    setName(user.name || "");
+    saveSession({ user, token: localStorage.getItem("malac_token") });
+  };
+
+  // Downscale a picked photo to at most 512×512 JPEG on a canvas, so
+  // the stored data URI stays small (the server also caps uploads at
+  // 400 KB — retry at lower quality if the first pass is still big).
+  const downscalePhoto = (file) => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, 512 / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      const attempt = (quality) => canvas.toBlob((blob) => {
+        if (!blob) reject(new Error("Could not process that image."));
+        else if (blob.size > 400 * 1024 && quality > 0.5) attempt(quality - 0.15);
+        else resolve(blob);
+      }, "image/jpeg", quality);
+      attempt(0.85);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read that image file.")); };
+    img.src = url;
+  });
+
+  const onPhotoPicked = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file later
+    if (!file) return;
+    setAvatarBusy(true); setProfileMsg("");
+    try {
+      const blob = await downscalePhoto(file);
+      const fd = new FormData();
+      fd.append("avatar", blob, "avatar.jpg");
+      const r = await api.post("/auth/me/avatar", fd);
+      applyUpdatedUser(r.data.user);
+      setProfileMsg("Profile photo updated.");
+    } catch (err) {
+      setProfileMsg(err.response?.data?.message || err.message || "Could not update your profile photo.");
+    } finally { setAvatarBusy(false); }
+  };
+
+  const removePhoto = async () => {
+    setAvatarBusy(true); setProfileMsg("");
+    try {
+      const r = await api.delete("/auth/me/avatar");
+      applyUpdatedUser(r.data.user);
+      setProfileMsg("Profile photo removed.");
+    } catch (err) { setProfileMsg(err.response?.data?.message || "Could not remove your profile photo."); }
+    finally { setAvatarBusy(false); }
+  };
+
+  // -- Change email / phone (OTP to the NEW value, then verify) --
+  const openContactEdit = (kind) => {
+    setContactEdit(kind);
+    setContactStep("enter");
+    setContactValue("");
+    setContactCode("");
+    setContactMsg("");
+  };
+  const closeContactEdit = () => { setContactEdit(null); setContactMsg(""); };
+
+  const sendContactCode = async () => {
+    setContactBusy(true); setContactMsg("");
+    try {
+      const body = contactEdit === "phone" ? { newPhone: contactValue } : { newEmail: contactValue.trim() };
+      const r = await api.post(`/auth/me/${contactEdit}/change/start`, body);
+      setContactStep("code");
+      setContactMsg(r.data.channel === "whatsapp"
+        ? "Code sent on WhatsApp to your new number. Enter it below within 10 minutes."
+        : "Code sent to your new email address. Enter it below within 10 minutes.");
+    } catch (err) {
+      // Channel not configured on the server (WhatsApp OTP while the
+      // production sender is still being set up): say so plainly.
+      if (err.response?.status === 503 || err.response?.data?.code === "OTP_NOT_CONFIGURED") {
+        setContactMsg(contactEdit === "phone"
+          ? "WhatsApp OTP is not available right now — please try again later."
+          : "Email OTP is not available right now — please try again later.");
+      } else {
+        setContactMsg(err.response?.data?.message || "Could not send the code. Please try again.");
+      }
+    } finally { setContactBusy(false); }
+  };
+
+  const verifyContactCode = async () => {
+    setContactBusy(true); setContactMsg("");
+    try {
+      const body = contactEdit === "phone"
+        ? { newPhone: contactValue, code: contactCode.trim() }
+        : { newEmail: contactValue.trim(), code: contactCode.trim() };
+      const r = await api.post(`/auth/me/${contactEdit}/change/verify`, body);
+      const kind = contactEdit;
+      applyUpdatedUser(r.data.user);
+      closeContactEdit();
+      setProfileMsg(kind === "phone" ? "Phone number updated." : "Email address updated.");
+    } catch (err) {
+      setContactMsg(err.response?.data?.message || "That code could not be verified. Please try again.");
+    } finally { setContactBusy(false); }
   };
 
   const savePassword = async (e) => {
@@ -155,26 +275,103 @@ export default function ProfileSettings() {
 
       {/* 1. Profile */}
       <Section eyebrow="Profile" title="Your Details">
+        {/* Profile photo — the account's avatar, or its initial. The
+            file input is visually hidden behind the Change Photo label;
+            picking a file downscales + uploads it immediately. */}
+        <div className="flex items-center gap-4 mb-5">
+          {profile.avatar ? (
+            <img src={profile.avatar} alt="Your profile photo" className="w-16 h-16 rounded-full object-cover border border-cream-line shrink-0" />
+          ) : (
+            <span aria-hidden="true" className="w-16 h-16 rounded-full bg-lux-gradient text-white font-serif text-2xl font-semibold flex items-center justify-center shrink-0">
+              {(profile.name || "?").trim().charAt(0).toUpperCase()}
+            </span>
+          )}
+          <div>
+            <div className="flex flex-wrap gap-2">
+              <label className={`border border-cream-line rounded-full px-4 py-2 text-xs font-medium inline-flex items-center gap-1.5 hover:border-lux-amber ${avatarBusy ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}>
+                <Camera size={14} /> {profile.avatar ? "Change Photo" : "Add Photo"}
+                <input type="file" accept="image/*" className="hidden" onChange={onPhotoPicked} disabled={avatarBusy} />
+              </label>
+              {profile.avatar && (
+                <button type="button" onClick={removePhoto} disabled={avatarBusy} className="border border-red-200 text-red-500 rounded-full px-4 py-2 text-xs font-medium inline-flex items-center gap-1.5 hover:bg-red-50 disabled:opacity-50">
+                  <Trash2 size={13} /> Remove Photo
+                </button>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">A square photo works best — it is resized automatically before upload.</p>
+          </div>
+        </div>
+
         <form onSubmit={saveProfile} className="grid sm:grid-cols-2 gap-3">
           <label className="block">
             <span className="text-xs font-medium text-gray-500">Full name</span>
             <input value={name} onChange={(e) => setName(e.target.value)} required className={`${input} mt-1`} />
           </label>
-          <label className="block">
-            <span className="text-xs font-medium text-gray-500">Email (verified — cannot be changed here)</span>
-            <input value={profile.email} readOnly className={`${input} mt-1 bg-cream-alt text-gray-500`} />
-          </label>
-          <label className="block">
-            <span className="text-xs font-medium text-gray-500">Phone (verified — cannot be changed here)</span>
-            <input value={profile.phone} readOnly className={`${input} mt-1 bg-cream-alt text-gray-500`} />
-          </label>
           <div className="flex items-end">
             <button className="btn-lux px-6 py-2.5 text-sm w-full sm:w-auto">Save Changes</button>
           </div>
         </form>
+
+        {/* Sign-in identities: each row can start its OTP change flow. */}
+        <div className="mt-5 border-t border-cream-line pt-5 space-y-3">
+          {[
+            { kind: "email", label: "Email", value: profile.email, verified: profile.emailVerified },
+            { kind: "phone", label: "Phone", value: profile.phone, verified: profile.phoneVerified },
+          ].map((row) => (
+            <div key={row.kind} className="flex flex-wrap items-center gap-2">
+              <div className="flex-1 min-w-[220px]">
+                <span className="text-xs font-medium text-gray-500">{row.label}{row.verified ? " (verified)" : ""}</span>
+                <p className="text-sm mt-0.5 break-all">{row.value}</p>
+              </div>
+              {contactEdit !== row.kind && (
+                <button type="button" onClick={() => openContactEdit(row.kind)} className="border border-cream-line rounded-full px-4 py-2 text-xs font-medium inline-flex items-center gap-1.5 hover:border-lux-amber">
+                  <Pencil size={13} /> Change
+                </button>
+              )}
+            </div>
+          ))}
+
+          {contactEdit && (
+            <div className="border border-cream-line rounded-xl p-4 bg-cream-alt/40">
+              <p className="text-sm font-semibold">
+                Change {contactEdit === "phone" ? "phone number" : "email address"}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {contactStep === "enter"
+                  ? `We will send a one-time code to your new ${contactEdit === "phone" ? "number on WhatsApp" : "email address"} — the change applies only after that code is entered.`
+                  : `Enter the 6-digit code sent to ${contactValue}. It expires in 10 minutes.`}
+              </p>
+              {contactStep === "enter" ? (
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                  {contactEdit === "phone" ? (
+                    <PhoneInput value={contactValue} onChange={setContactValue} required className={`${input.replace("focus:border-lux-amber", "focus-within:border-lux-amber")} flex-1`} />
+                  ) : (
+                    <input type="email" value={contactValue} onChange={(e) => setContactValue(e.target.value)} placeholder="you@example.com" required className={`${input} flex-1`} />
+                  )}
+                  <button type="button" onClick={sendContactCode} disabled={contactBusy} className="btn-lux px-5 py-2.5 text-sm disabled:opacity-50">
+                    {contactBusy ? "Sending..." : "Send Code"}
+                  </button>
+                  <button type="button" onClick={closeContactEdit} className="border border-cream-line rounded-full px-5 py-2.5 text-sm">Cancel</button>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                  <input value={contactCode} onChange={(e) => setContactCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" className={`${input} flex-1`} />
+                  <button type="button" onClick={verifyContactCode} disabled={contactBusy || contactCode.length !== 6} className="btn-lux px-5 py-2.5 text-sm disabled:opacity-50">
+                    {contactBusy ? "Verifying..." : "Verify & Save"}
+                  </button>
+                  <button type="button" onClick={sendContactCode} disabled={contactBusy} className="border border-cream-line rounded-full px-5 py-2.5 text-sm disabled:opacity-50">Resend Code</button>
+                  <button type="button" onClick={closeContactEdit} className="border border-cream-line rounded-full px-5 py-2.5 text-sm">Cancel</button>
+                </div>
+              )}
+              {contactMsg && <p className="text-sm text-gray-600 mt-3">{contactMsg}</p>}
+            </div>
+          )}
+        </div>
+
         <p className="text-xs text-gray-400 mt-3">
-          Your email and phone are verified with one-time codes and act as your sign-in identity.
-          To use a different email or phone, please sign up with the new details or contact us on WhatsApp for help.
+          Your email and phone act as your sign-in identity, so changing one always needs the
+          one-time code sent to the new value first — an unverified change is never applied.
         </p>
         {profileMsg && <p className="text-sm text-gray-600 mt-2">{profileMsg}</p>}
       </Section>

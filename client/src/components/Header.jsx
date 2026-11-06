@@ -4,12 +4,14 @@ import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, ShieldCheck, Pack
 import api from "../api/client.js";
 import { LOGO_FULL } from "../assets/logo.js";
 import InstallAppButton from "./InstallAppButton.jsx";
+import { useAppMode } from "../utils/appMode.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { rs, priceOf } from "../utils/format.js";
 
 export default function Header() {
+  const appMode = useAppMode();
   const { user, logout, isStaff } = useAuth();
   const { count, setDrawerOpen } = useCart();
   const { items: wishlist } = useWishlist();
@@ -100,9 +102,11 @@ export default function Header() {
         <Link to="/track-order" className="btn-lux hidden md:inline-flex text-xs px-4 py-2 shrink-0">
           <PackageSearch size={15} /> Track Order
         </Link>
-        <div className="hidden md:block shrink-0">
-          <InstallAppButton />
-        </div>
+        {!appMode && (
+          <div className="hidden md:block shrink-0">
+            <InstallAppButton />
+          </div>
+        )}
         <Link to="/wishlist" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Wishlist">
           <Heart size={22} />
           {wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
@@ -148,7 +152,7 @@ export default function Header() {
         {categories.map((c) => (
           <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
         ))}
-        <InstallAppButton variant="link" className="text-lux-burnt" />
+        {!appMode && <InstallAppButton variant="link" className="text-lux-burnt" />}
       </nav>
     </header>
   );

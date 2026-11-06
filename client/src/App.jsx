@@ -3,6 +3,8 @@ import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import MobileBottomNav from "./components/MobileBottomNav.jsx";
 import CartDrawer from "./components/CartDrawer.jsx";
+import ChatWidget from "./components/ChatWidget.jsx";
+import { isAppMode } from "./utils/appMode.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
@@ -16,6 +18,7 @@ import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
 import ProfileSettings from "./pages/ProfileSettings.jsx";
+import AccountHub from "./pages/AccountHub.jsx";
 import WishlistPage from "./pages/WishlistPage.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
@@ -89,10 +92,15 @@ function AdminShell() {
 export default function App() {
   const { pathname } = useLocation();
   const isAdmin = pathname.startsWith("/admin");
+  // App mode (Android WebView): the website footer disappears (the app
+  // uses its bottom nav instead) and the bottom nav is always rendered,
+  // so the content wrapper keeps nav clearance at every width.
+  const appMode = isAppMode();
   return (
     <>
       {!isAdmin && <Header />}
       {!isAdmin && <CartDrawer />}
+      <div className={appMode && !isAdmin ? "pb-20" : undefined}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
@@ -102,8 +110,9 @@ export default function App() {
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-        {/* Public tracking (order ID + phone, no login) and account settings */}
+        {/* Public tracking (order ID + phone, no login) and account pages */}
         <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/account" element={<AccountHub />} />
         <Route path="/account/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/login" element={<Login />} />
@@ -118,8 +127,10 @@ export default function App() {
         <Route path="/admin/*" element={<AdminShell />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {!isAdmin && <Footer />}
+      </div>
+      {!isAdmin && !appMode && <Footer />}
       {!isAdmin && <MobileBottomNav />}
+      {!isAdmin && <ChatWidget />}
     </>
   );
 }

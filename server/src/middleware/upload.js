@@ -76,6 +76,21 @@ export const uploadCatalogImage = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: imageFileFilter,
 });
+
+// Profile photo (avatar) upload — MEMORY storage, unlike the two disk
+// uploads above: the photo is stored on the User record itself as a
+// base64 data URI (see authController.uploadAvatar), because the server
+// runs on serverless infrastructure whose filesystem is ephemeral — a
+// file written to disk here can vanish with the function instance. The
+// 400 KB cap keeps the stored document (and every /auth/me payload)
+// small; the client downscales to at most 512×512 JPEG before upload,
+// so this limit is only a safety net for direct API callers.
+export const AVATAR_MAX_BYTES = 400 * 1024;
+export const uploadAvatarImage = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: AVATAR_MAX_BYTES },
+  fileFilter: imageFileFilter,
+});
 export default uploadPaymentScreenshot;
 
 // -- Magic-byte verification (runs AFTER multer has stored the file) --
@@ -89,10 +104,18 @@ export default uploadPaymentScreenshot;
 // nosniff set globally, a mismatched type would otherwise be blocked
 // or, worse, sniffed).
 const IMAGE_SIGNATURES = [
-  { type: "png", ext: ".png", test: (b) => b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a },
-  { type: "jpg", ext: ".jpg", test: (b) => b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
-  { type: "webp", ext: ".webp", test: (b) => b.length >= 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" },
+  { type: "png", mime: "image/png", ext: ".png", test: (b) => b.length >= 8 && b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 && b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a },
+  { type: "jpg", mime: "image/jpeg", ext: ".jpg", test: (b) => b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  { type: "webp", mime: "image/webp", ext: ".webp", test: (b) => b.length >= 12 && b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" },
 ];
+
+// The detected signature entry ({ type, mime, ext }) for a buffer whose
+// first bytes are a real PNG / JPEG / WebP image, or null. Shared by the
+// disk-file check below and the in-memory avatar check.
+export function detectImageType(buffer) {
+  if (!buffer) return null;
+  return IMAGE_SIGNATURES.find((sig) => sig.test(buffer)) || null;
+}
 
 export function verifyImageMagicBytes(req, res, next) {
   if (!req.file) return next();
@@ -105,7 +128,7 @@ export function verifyImageMagicBytes(req, res, next) {
   } catch (err) {
     return next(err);
   }
-  const detected = IMAGE_SIGNATURES.find((sig) => sig.test(header));
+  const detected = detectImageType(header);
   if (!detected) {
     fs.unlink(req.file.path, () => {});
     return res.status(400).json({ message: "Uploaded file is not a valid PNG, JPG or WEBP image" });
@@ -119,5 +142,20 @@ export function verifyImageMagicBytes(req, res, next) {
       req.file.path = newPath;
     } catch { /* keep the original name — the content check already passed */ }
   }
+  return next();
+}
+
+// Buffer variant of the check above, for the memory-storage avatar
+// upload: same signatures, same rejection. There is no file to delete
+// and no extension to normalize — instead the DETECTED type is recorded
+// on req.file so the controller builds the stored data URI with a
+// truthful MIME type (the declared mimetype is never trusted).
+export function verifyImageBufferMagicBytes(req, res, next) {
+  if (!req.file) return next();
+  const detected = detectImageType(req.file.buffer);
+  if (!detected) {
+    return res.status(400).json({ message: "Uploaded file is not a valid PNG, JPG or WEBP image" });
+  }
+  req.file.detectedImage = detected;
   return next();
 }

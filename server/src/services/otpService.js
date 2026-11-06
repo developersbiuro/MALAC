@@ -18,14 +18,16 @@ function newCode() {
 // not-configured error and the request fails honestly.
 // `pending` (sign-up only) carries the pending registration — name plus
 // the password's scrypt hash — on the token until verification creates
-// the account.
-export async function requestOtp({ identifier, channel, purpose = "signup", phone, pending }) {
+// the account. `userId` (signed-in phone/email change flows only) binds
+// the token to the account that requested the change.
+export async function requestOtp({ identifier, channel, purpose = "signup", phone, pending, userId }) {
   const code = newCode();
   await OtpToken.deleteMany({ identifier, channel, purpose, consumed: false });
   await OtpToken.create({
     identifier, channel, purpose,
     codeHash: OtpToken.hashCode(code),
     ...(pending ? { pendingName: pending.name, pendingPasswordHash: pending.passwordHash } : {}),
+    ...(userId ? { userId } : {}),
     expiresAt: new Date(Date.now() + OTP_TTL_MINUTES * 60 * 1000),
   });
   const text = `Your MALAC verification code is ${code}. It expires in ${OTP_TTL_MINUTES} minutes. Do not share it.`;

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { protect } from "../middleware/auth.js";
 import { rateLimit, ipKey, identifierKey } from "../middleware/rateLimit.js";
+import { uploadAvatarImage, verifyImageBufferMagicBytes } from "../middleware/upload.js";
 import * as auth from "../controllers/authController.js";
 
 const router = Router();
@@ -53,6 +54,26 @@ router.post("/google", rateLimit({ windowMs: 15 * MIN, max: 60, key: ipKey }), a
 router.get("/me", protect, auth.me);
 router.put("/me", protect, auth.updateProfile);
 router.put("/me/password", protect, auth.changePassword);
+// Profile photo: memory-storage multer capped at 400 KB (see
+// middleware/upload.js for why the photo lives on the user record as a
+// data URI). Multer's size error is reworded here — the shared error
+// handler quotes the 5 MB disk-upload limit, which is wrong for this
+// route; other multer errors (e.g. the image-only filter) pass through.
+const avatarUploadErrors = (err, req, res, next) => {
+  if (err?.name === "MulterError" && err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({ message: "Profile photo is too large — please choose an image under 400 KB." });
+  }
+  return next(err);
+};
+router.post("/me/avatar", protect, uploadAvatarImage.single("avatar"), avatarUploadErrors, verifyImageBufferMagicBytes, auth.uploadAvatar);
+router.delete("/me/avatar", protect, auth.removeAvatar);
+// Change phone / email: OTP to the NEW identifier proves ownership of
+// it before the identity is switched (controller-enforced). Same
+// per-identifier OTP send/verify limiters as sign-up.
+router.post("/me/phone/change/start", protect, ...otpSend, auth.changePhoneStart);
+router.post("/me/phone/change/verify", protect, ...otpVerify, auth.changePhoneVerify);
+router.post("/me/email/change/start", protect, ...otpSend, auth.changeEmailStart);
+router.post("/me/email/change/verify", protect, ...otpVerify, auth.changeEmailVerify);
 router.post("/addresses", protect, auth.addAddress);
 router.put("/addresses/:addressId", protect, auth.updateAddress);
 router.delete("/addresses/:addressId", protect, auth.deleteAddress);

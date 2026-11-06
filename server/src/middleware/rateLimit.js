@@ -30,7 +30,8 @@ export const ipKey = (req) => `ip:${getClientIp(req)}`;
 // (identifier / email / phone), normalized so the same account typed in
 // different shapes shares one counter.
 export function identifierKey(req) {
-  const raw = req.body?.identifier || req.body?.email || req.body?.phone || "";
+  const raw = req.body?.identifier || req.body?.email || req.body?.phone
+    || req.body?.newEmail || req.body?.newPhone || "";
   const value = String(raw).trim().toLowerCase();
   if (!value) return null;
   return `id:${value.includes("@") ? value : normalizePhone(value)}`;

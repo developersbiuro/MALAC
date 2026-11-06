@@ -46,6 +46,20 @@ router.get("/download/malac-app.apk", sendApk(customerApk, "MALAC-App.apk"));
 // the admin app from the site.
 router.get("/api/admin/app-download", protect, isStaff, sendApk(adminApk, "MALAC-Admin-App.apk"));
 
+// App version manifest — the installed customer app polls this on
+// startup and offers an in-app update when a newer build is published.
+// Static on purpose: no DB access, so it answers even if the DB is down
+// (same guarantee as the asset routes above). Bump versionCode here AND
+// in the APK (AndroidManifest + MainActivity) whenever a new APK ships.
+router.get("/api/app/version", (req, res) => {
+  res.json({
+    versionCode: 2,
+    versionName: "1.1",
+    apkUrl: "/download/malac-app.apk",
+    notes: "App-style layout, My Account page, MALAC Assistant chat, profile photo & settings",
+  });
+});
+
 // PWA icons generated from the real MALAC monogram (see assets/icons).
 for (const [name, b64] of Object.entries(ICON_B64)) {
   const buffer = decode(b64);
