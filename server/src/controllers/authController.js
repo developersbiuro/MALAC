@@ -15,6 +15,7 @@ import { loginLockStatus, recordLoginFailure, clearLoginFailures } from "../util
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
 import { createResetRequest, RESET_TOKEN_TTL_MINUTES } from "../services/passwordResetService.js";
 import { sendEmail } from "../services/emailService.js";
+import { actionLinkEmail } from "../services/emailTemplates.js";
 
 const publicUser = (u) => ({
   id: u._id, name: u.name, email: u.email, phone: u.phone, role: u.role,
@@ -414,13 +415,22 @@ export const forgotCustomerPassword = asyncHandler(async (req, res) => {
   });
   const link = `${env.clientUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}&type=customer`;
   try {
-    await sendEmail({
-      to: email,
-      subject: "Reset your MALAC password",
+    const mail = actionLinkEmail({
+      heading: "Reset your password",
+      intro: "You requested a password reset for your MALAC account.",
+      buttonLabel: "Reset my password",
+      url: link,
+      expiryNote: `This link expires in ${RESET_TOKEN_TTL_MINUTES} minutes.`,
       text:
         `You requested a password reset for your MALAC account.\n` +
         `Set a new password within ${RESET_TOKEN_TTL_MINUTES} minutes using this link:\n${link}\n` +
         `If you did not request this, ignore this email — your password will not change.`,
+    });
+    await sendEmail({
+      to: email,
+      subject: "Reset your MALAC password",
+      text: mail.text,
+      html: mail.html,
     });
   } catch (err) {
     // Email not configured / send failed: log honestly server-side, but

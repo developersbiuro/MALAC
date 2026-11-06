@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import OtpToken from "../models/OtpToken.js";
 import { sendEmail } from "./emailService.js";
+import { otpEmail } from "./emailTemplates.js";
 import { sendWhatsAppOtp } from "./whatsappService.js";
 import { sendSms } from "./smsService.js";
 
@@ -33,7 +34,8 @@ export async function requestOtp({ identifier, channel, purpose = "signup", phon
   const text = `Your MALAC verification code is ${code}. It expires in ${OTP_TTL_MINUTES} minutes. Do not share it.`;
   if (channel === "email") {
     try {
-      await sendEmail({ to: identifier, subject: "Your MALAC verification code", text });
+      const branded = otpEmail(code, OTP_TTL_MINUTES);
+      await sendEmail({ to: identifier, subject: "Your MALAC verification code", text: branded.text, html: branded.html });
     } catch (err) {
       if (err.code === "EMAIL_NOT_CONFIGURED") throw new Error("Email OTP is not configured");
       throw err;

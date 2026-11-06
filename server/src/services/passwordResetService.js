@@ -2,6 +2,7 @@ import crypto from "crypto";
 import PasswordResetRequest from "../models/PasswordResetRequest.js";
 import env from "../config/env.js";
 import { sendEmail } from "./emailService.js";
+import { actionLinkEmail } from "./emailTemplates.js";
 
 export const RESET_TOKEN_TTL_MINUTES = 60;
 
@@ -39,13 +40,22 @@ export async function issueResetToken(request) {
   }
   await request.save();
   const link = `${env.clientUrl}/reset-password?token=${token}&email=${encodeURIComponent(request.email)}`;
-  const result = await sendEmail({
-    to: request.email,
-    subject: "MALAC staff password reset",
+  const mail = actionLinkEmail({
+    heading: "Set your new password",
+    intro: "A password reset for your MALAC staff account was approved by the Super Admin.",
+    buttonLabel: "Set my password",
+    url: link,
+    expiryNote: `This link expires in ${RESET_TOKEN_TTL_MINUTES} minutes.`,
     text:
       `A password reset for your MALAC staff account was approved by the Super Admin.\n` +
       `Set your new password within ${RESET_TOKEN_TTL_MINUTES} minutes using this link:\n${link}\n` +
       `If you did not request this, ignore this email — your password will not change.`,
+  });
+  const result = await sendEmail({
+    to: request.email,
+    subject: "MALAC staff password reset",
+    text: mail.text,
+    html: mail.html,
   });
   return { link, delivered: result.delivered };
 }
