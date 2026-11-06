@@ -3,11 +3,13 @@ import { useParams, useLocation, Link } from "react-router-dom";
 import { CheckCircle2, Package } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
+import { useSeo } from "../utils/seo.js";
 
 export default function OrderConfirmation() {
   const { orderId } = useParams();
   const location = useLocation();
   const [order, setOrder] = useState(location.state?.order || null);
+  useSeo({ title: "Order Confirmed — MALAC", robots: "noindex" });
 
   useEffect(() => {
     if (!order) api.get(`/orders/${orderId}`).then((r) => setOrder(r.data.order)).catch(() => {});

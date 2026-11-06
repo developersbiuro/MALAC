@@ -6,11 +6,10 @@ import { useEffect } from "react";
 // this hook only overrides them while the page is mounted.
 const JSON_LD_ID = "malac-page-jsonld";
 
-// Interim default share image: the seeded Women Embroidered 3-Piece Lawn
-// Suit product photo (picsum seed "fas-wom-lawn3") at 1200x630. Replace
-// with a hosted brand share image once durable image hosting (Cloudinary)
-// lands. Mirrors the og:image in index.html.
-export const SITE_IMAGE = "https://picsum.photos/seed/fas-wom-lawn3/1200/630";
+// Default share image: the branded 1200x630 MALAC share image (official
+// logo artwork on the site's cream background), served by the API at
+// /og-image.png. Mirrors the og:image in index.html.
+export const SITE_IMAGE = "https://malac1.vercel.app/og-image.png";
 
 function upsertMeta(name, content) {
   let tag = document.head.querySelector(`meta[name="${name}"]`);

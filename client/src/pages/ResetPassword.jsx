@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import api from "../api/client.js";
 import PasswordInput from "../components/PasswordInput.jsx";
+import { useSeo } from "../utils/seo.js";
 
 // Password reset — the destination of the emailed one-time link, shared
 // by two flows that the ?type parameter keeps apart:
@@ -16,6 +17,7 @@ import PasswordInput from "../components/PasswordInput.jsx";
 //    consumed through the customer endpoint and ends at the customer
 //    Login page, never the Admin Login.
 export default function ResetPassword() {
+  useSeo({ title: "Reset Password — MALAC", robots: "noindex" });
   const [params] = useSearchParams();
   const token = params.get("token") || "";
   const email = params.get("email") || "";

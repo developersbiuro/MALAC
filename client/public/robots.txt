@@ -4,5 +4,9 @@ Disallow: /admin
 Disallow: /api/
 Disallow: /checkout
 Disallow: /account/
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
 
 Sitemap: https://malac1.vercel.app/sitemap.xml

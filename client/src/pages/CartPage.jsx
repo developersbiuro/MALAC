@@ -5,6 +5,7 @@ import api from "../api/client.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs } from "../utils/format.js";
+import { useSeo } from "../utils/seo.js";
 
 export default function CartPage() {
   const { items, updateQty, remove, subtotal, clear } = useCart();
@@ -13,6 +14,7 @@ export default function CartPage() {
   const [code, setCode] = useState("");
   const [coupon, setCoupon] = useState(null);
   const [msg, setMsg] = useState("");
+  useSeo({ title: "Shopping Cart — MALAC", robots: "noindex" });
 
   const applyCoupon = async () => {
     try {

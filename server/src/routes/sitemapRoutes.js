@@ -43,12 +43,15 @@ async function tryDb() {
 }
 
 router.get("/sitemap.xml", async (req, res) => {
+  // Static + category entries carry the generation date as <lastmod>
+  // (products below use their real updatedAt). Same URL set as before.
+  const today = new Date().toISOString().slice(0, 10);
   const entries = [
-    { loc: `${SITE_URL}/`, changefreq: "daily", priority: "1.0" },
-    { loc: `${SITE_URL}/shop`, changefreq: "daily", priority: "0.9" },
-    { loc: `${SITE_URL}/track-order`, changefreq: "weekly", priority: "0.5" },
-    { loc: `${SITE_URL}/terms`, changefreq: "monthly", priority: "0.3" },
-    { loc: `${SITE_URL}/policy`, changefreq: "monthly", priority: "0.3" },
+    { loc: `${SITE_URL}/`, lastmod: today, changefreq: "daily", priority: "1.0" },
+    { loc: `${SITE_URL}/shop`, lastmod: today, changefreq: "daily", priority: "0.9" },
+    { loc: `${SITE_URL}/track-order`, lastmod: today, changefreq: "weekly", priority: "0.5" },
+    { loc: `${SITE_URL}/terms`, lastmod: today, changefreq: "monthly", priority: "0.3" },
+    { loc: `${SITE_URL}/policy`, lastmod: today, changefreq: "monthly", priority: "0.3" },
   ];
 
   if (await tryDb()) {
@@ -61,6 +64,7 @@ router.get("/sitemap.xml", async (req, res) => {
       for (const c of categories) {
         entries.push({
           loc: `${SITE_URL}/shop?category=${encodeURIComponent(c.name)}`,
+          lastmod: today,
           changefreq: "weekly",
           priority: "0.7",
         });

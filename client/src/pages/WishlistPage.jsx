@@ -1,8 +1,10 @@
 import { useWishlist } from "../context/WishlistContext.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import { useSeo } from "../utils/seo.js";
 
 export default function WishlistPage() {
   const { items } = useWishlist();
+  useSeo({ title: "My Wishlist — MALAC", robots: "noindex" });
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
       <h1 className="font-bold text-xl mb-3">My Wishlist ({items.length})</h1>

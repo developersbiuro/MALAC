@@ -2,6 +2,7 @@ import { Router } from "express";
 import { protect, isStaff } from "../middleware/auth.js";
 import { CUSTOMER_APK_B64, ADMIN_APK_B64 } from "../assets/apkAssets.js";
 import { ICON_B64 } from "../assets/iconAssets.js";
+import { OG_IMAGE_B64 } from "../assets/ogImageAssets.js";
 
 // Binary assets (Android APKs, PWA icons) ship inside this repo as base64
 // text embedded in JS modules (server/src/assets/*Assets.js) — the
@@ -21,6 +22,7 @@ const decode = (b64) => {
 
 const customerApk = decode(CUSTOMER_APK_B64);
 const adminApk = decode(ADMIN_APK_B64);
+const ogImage = decode(OG_IMAGE_B64);
 
 const APK_TYPE = "application/vnd.android.package-archive";
 const sendApk = (buffer, filename) => (req, res) => {
@@ -58,6 +60,18 @@ router.get("/api/app/version", (req, res) => {
     apkUrl: "/download/malac-app.apk",
     notes: "App-style layout, My Account page, MALAC Assistant chat, profile photo & settings",
   });
+});
+
+// Social share image (og:image / twitter:image) — PUBLIC. Branded
+// 1200x630 PNG built from the official logo artwork (assets/ogImageAssets).
+router.get("/og-image.png", (req, res) => {
+  if (!ogImage) return res.status(503).json({ message: "Share image unavailable." });
+  res.set({
+    "Content-Type": "image/png",
+    "Content-Length": ogImage.length,
+    "Cache-Control": "public, max-age=604800",
+  });
+  res.send(ogImage);
 });
 
 // PWA icons generated from the real MALAC monogram (see assets/icons).

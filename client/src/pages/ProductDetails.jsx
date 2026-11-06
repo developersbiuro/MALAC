@@ -46,17 +46,22 @@ export default function ProductDetails() {
   }, [product]);
 
   const seoDescription = product?.description ? product.description.trim().slice(0, 155) : undefined;
+  // Share image: the product's own photo only when it is an absolute
+  // http(s) URL (relative /uploads paths would be broken in shares);
+  // otherwise undefined, so useSeo falls back to the branded site image.
+  const firstImage = product?.images?.[0];
+  const seoImage = firstImage && /^https?:\/\//i.test(firstImage) ? firstImage : undefined;
   useSeo({
     title: product ? `${product.title} — MALAC` : undefined,
     description: seoDescription,
-    image: product?.images?.[0] || undefined,
+    image: seoImage,
     jsonLd: product
       ? [
           {
             "@context": "https://schema.org",
             "@type": "Product",
             name: product.title,
-            image: product.images?.[0] ? [product.images[0]] : undefined,
+            image: seoImage ? [seoImage] : ["https://malac1.vercel.app/og-image.png"],
             description: seoDescription,
             sku: product.sku || undefined,
             offers: {
