@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Settings2 } from "lucide-react";
+import { Settings2, Printer } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
+import { printBlock } from "../utils/print.js";
+import OrderInvoice from "../components/OrderInvoice.jsx";
 
 const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
 // Badges are keyed by the customer-facing label; Confirmed/Packed show
@@ -30,6 +32,15 @@ export default function MyOrders() {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelNote, setCancelNote] = useState("");
   const [cancelBusy, setCancelBusy] = useState(false);
+  // Invoice printing: the chosen order renders one hidden invoice block;
+  // seq makes re-printing the same order re-trigger the effect.
+  const [printState, setPrintState] = useState({ order: null, seq: 0 });
+  const printInvoice = (o) => setPrintState((s) => ({ order: o, seq: s.seq + 1 }));
+  useEffect(() => {
+    if (!printState.order) return;
+    const t = setTimeout(() => printBlock("invoice"), 80);
+    return () => clearTimeout(t);
+  }, [printState]);
 
   const load = () => {
     const params = tab === "All" ? {} : { status: tab };
@@ -104,6 +115,9 @@ export default function MyOrders() {
                 <li key={idx}>{customerStatus(h.status)} · {new Date(h.at).toLocaleDateString("en-PK")}</li>
               ))}
             </ol>
+            <button onClick={() => printInvoice(o)} className="mt-2 mr-2 inline-flex items-center gap-1 border rounded px-4 py-2 sm:py-1.5 text-xs text-gray-600 hover:bg-gray-50">
+              <Printer size={13} /> Print invoice
+            </button>
             {["Pending", "Confirmed", "Packed"].includes(o.status) && cancellingId !== o.orderId && (
               <button onClick={() => openCancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-2 sm:py-1.5 text-xs">
                 Cancel Order
@@ -138,6 +152,8 @@ export default function MyOrders() {
         ))}
         {orders.length === 0 && <p className="bg-white rounded-md p-8 text-center text-gray-400">No orders in this tab yet.</p>}
       </div>
+      {/* Hidden invoice print block for the order chosen above. */}
+      {printState.order && <OrderInvoice order={printState.order} />}
     </main>
   );
 }

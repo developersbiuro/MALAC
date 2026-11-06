@@ -3,6 +3,9 @@ import { X, ShieldCheck, ShieldX, Printer, Truck } from "lucide-react";
 import api from "../../api/client.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { rs } from "../../utils/format.js";
+import { customerContact } from "../../utils/customerContact.js";
+import { printBlock } from "../../utils/print.js";
+import OrderInvoice from "../../components/OrderInvoice.jsx";
 
 const FILTERS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
 // Staff pipeline (Daraz-style): Pending → Confirmed → Packed → Shipped →
@@ -21,19 +24,6 @@ const statusBadge = {
   Returned: "bg-orange-100 text-orange-700",
 };
 
-// Sign-up is ONE-method, so the unused identifier is a synthetic
-// placeholder (phone "email-<hex>" / email "phone-…@malac.local"). Never
-// render those: show the customer's real other identifier instead.
-const isRealPhone = (p) => !!p && !String(p).startsWith("email-");
-const isRealEmail = (e) => !!e && !String(e).endsWith("@malac.local");
-function customerContact(user, address) {
-  const userPhone = isRealPhone(user?.phone) ? user.phone : "";
-  const secondary = isRealPhone(user?.secondaryPhone) ? user.secondaryPhone : "";
-  const addressPhone = isRealPhone(address?.phone) ? address.phone : "";
-  const email = isRealEmail(user?.email) ? user.email : "";
-  const phone = userPhone || secondary || addressPhone;
-  return { email, phone, line: [email, phone].filter(Boolean).join(" · ") };
-}
 const verifyBadge = {
   pending_verification: "bg-amber-100 text-amber-700",
   verified: "bg-green-100 text-green-700",
@@ -113,13 +103,8 @@ export default function AdminOrders() {
     finally { setSaving(false); }
   };
 
-  const printLabel = () => {
-    document.body.classList.add("printing-label");
-    const done = () => { document.body.classList.remove("printing-label"); window.removeEventListener("afterprint", done); };
-    window.addEventListener("afterprint", done);
-    window.print();
-    setTimeout(done, 1000);
-  };
+  const printLabel = () => printBlock("label");
+  const printInvoice = () => printBlock("invoice");
 
   const verifyPayment = async (decision) => {
     if (!selected) return;
@@ -190,6 +175,9 @@ export default function AdminOrders() {
                 <button onClick={() => setShowLabel((v) => !v)} className="flex items-center gap-1 text-xs border rounded-full px-3 py-1.5 hover:bg-gray-50">
                   <Printer size={14} /> {showLabel ? "Hide label" : "Print shipping label"}
                 </button>
+                <button onClick={printInvoice} className="flex items-center gap-1 text-xs border rounded-full px-3 py-1.5 hover:bg-gray-50">
+                  <Printer size={14} /> Print Invoice
+                </button>
                 <button onClick={() => setSelected(null)} aria-label="Close"><X size={20} /></button>
               </div>
             </div>
@@ -203,8 +191,8 @@ export default function AdminOrders() {
               )}
               {showLabel && (
                 <section className="border-2 border-dashed border-gray-300 rounded p-4">
-                  {/* The .print-area block below is what actually prints. */}
-                  <div className="print-area text-black">
+                  {/* The .print-label-block below is what actually prints. */}
+                  <div className="print-area print-label-block text-black">
                     <div className="flex items-start justify-between border-b-2 border-black pb-2">
                       <div>
                         <p className="text-2xl font-black tracking-[0.2em]">MALAC</p>
@@ -395,6 +383,9 @@ export default function AdminOrders() {
                   ))}
                 </ol>
               </section>
+              {/* Priced invoice print block — display:none on screen (see
+                  index.css); prints only when body has printing-invoice. */}
+              <OrderInvoice order={selected} />
             </div>
           </aside>
         </div>

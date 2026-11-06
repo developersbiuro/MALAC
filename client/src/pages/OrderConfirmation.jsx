@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
-import { CheckCircle2, Package } from "lucide-react";
+import { CheckCircle2, Package, Printer } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
+import { printBlock } from "../utils/print.js";
+import OrderInvoice from "../components/OrderInvoice.jsx";
 
 export default function OrderConfirmation() {
   const { orderId } = useParams();
@@ -45,8 +47,15 @@ export default function OrderConfirmation() {
           <p className="text-gray-500 pt-2">Deliver to: {order.address?.fullName}, {order.address?.street}, {order.address?.area}, {order.address?.city}{order.address?.province ? `, ${order.address.province}` : ""}
             {order.estimatedDelivery ? ` · Expected by ${new Date(order.estimatedDelivery).toLocaleDateString("en-PK")}` : ""}</p>
         </div>
-        <Link to="/orders" className="inline-block mt-5 bg-brand text-white px-6 py-2 rounded text-sm">Track in My Orders</Link>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <Link to="/orders" className="inline-block bg-brand text-white px-6 py-2 rounded text-sm">Track in My Orders</Link>
+          <button onClick={() => printBlock("invoice")} className="inline-flex items-center gap-1 border rounded px-5 py-2 text-sm text-gray-600 hover:bg-gray-50">
+            <Printer size={14} /> Print invoice
+          </button>
+        </div>
       </div>
+      {/* Hidden invoice print block (prints via the button above). */}
+      <OrderInvoice order={order} />
     </main>
   );
 }

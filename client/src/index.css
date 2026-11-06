@@ -22,13 +22,23 @@ img, video { max-width: 100%; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .fade-up { animation: fadeUp .25s ease both; }
 
-/* Shipping label / packing slip printing (admin order detail): when a
-   .print-area is on the page, printing shows ONLY that area — the label
-   prints as one clean sheet instead of the whole admin screen. */
+/* Printing (admin order detail, My Orders, order confirmation): every
+   printable block carries .print-area plus a mode class
+   (.print-label-block for the shipping label, .print-invoice-block for
+   the priced invoice). Printing adds printing-label / printing-invoice
+   to <body> (see utils/print.js) and ONLY the block matching the active
+   mode prints, as one clean sheet instead of the whole screen. */
+@media screen {
+  /* Invoice blocks exist only for printing — never on screen. (The label
+     block is the exception: staff toggle a visible preview of it.) */
+  .print-invoice-block { display: none; }
+}
 @media print {
-  body.printing-label * { visibility: hidden; }
-  body.printing-label .print-area, body.printing-label .print-area * { visibility: visible; }
-  body.printing-label .print-area {
+  body.printing-label *, body.printing-invoice * { visibility: hidden; }
+  body.printing-label .print-label-block, body.printing-label .print-label-block *,
+  body.printing-invoice .print-invoice-block, body.printing-invoice .print-invoice-block * { visibility: visible; }
+  body.printing-invoice .print-invoice-block { display: block; }
+  body.printing-label .print-label-block, body.printing-invoice .print-invoice-block {
     position: absolute; inset: 0; width: 100%; padding: 12mm;
     background: #fff; color: #000;
   }
