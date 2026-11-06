@@ -4,6 +4,8 @@ import { ArrowLeft, MapPin, Star, Pencil, Trash2, Plus, Camera } from "lucide-re
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
+import LocationSelect from "../components/LocationSelect.jsx";
+import { findCity } from "../data/pakLocations.js";
 import PhoneInput from "../components/PhoneInput.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 import { useSeo } from "../utils/seo.js";
@@ -21,9 +23,8 @@ import { useSeo } from "../utils/seo.js";
 //     accounts see an explanatory note instead.
 //  3. Address book — add / edit / delete / set-default against
 //     /api/auth/addresses (own addresses only, server-enforced).
-const CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Sialkot"];
 const input = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
-const emptyAddress = { label: "Home", fullName: "", phone: "", city: "Lahore", area: "", street: "", postalCode: "", lat: null, lng: null, mapsUrl: "", isDefault: false };
+const emptyAddress = { label: "Home", fullName: "", phone: "", province: "Punjab", city: "Lahore", area: "", street: "", postalCode: "", lat: null, lng: null, mapsUrl: "", isDefault: false };
 const mapLink = (a) => a.mapsUrl || (a.lat != null && a.lng != null ? `https://www.google.com/maps?q=${a.lat},${a.lng}` : "");
 
 function Section({ eyebrow, title, children }) {
@@ -203,9 +204,14 @@ export default function ProfileSettings() {
   };
   const openEdit = (a) => {
     setAddrMsg("");
+    // Addresses saved before the province field existed have none:
+    // infer it from the city when the dataset knows that city, else
+    // leave it blank for the customer to pick in the form.
+    const city = a.city || "Lahore";
     setForm({
       label: a.label || "Home", fullName: a.fullName || "", phone: a.phone || "",
-      city: a.city || "Lahore", area: a.area || "", street: a.street || "",
+      province: a.province || findCity(city)?.province || "",
+      city, area: a.area || "", street: a.street || "",
       postalCode: a.postalCode || "",
       lat: a.lat ?? null, lng: a.lng ?? null, mapsUrl: a.mapsUrl || "",
       isDefault: Boolean(a.isDefault),
@@ -215,14 +221,20 @@ export default function ProfileSettings() {
 
   // Live GPS capture: pin the coordinates to this address and use the
   // reverse-geocoded suggestions to prefill street / area / city (only
-  // overwriting fields the lookup actually resolved).
+  // overwriting fields the lookup actually resolved). A geocoded city
+  // known to the national dataset also brings its province along.
   const applyLocation = ({ lat, lng, mapsUrl, addressLine, area, city }) => {
-    setForm((f) => (f ? {
-      ...f, lat, lng, mapsUrl,
-      street: addressLine || f.street,
-      area: area || f.area,
-      city: city || f.city,
-    } : f));
+    setForm((f) => {
+      if (!f) return f;
+      const hit = findCity(city);
+      return {
+        ...f, lat, lng, mapsUrl,
+        street: addressLine || f.street,
+        area: area || f.area,
+        province: hit ? hit.province : f.province,
+        city: hit ? hit.city : (city || f.city),
+      };
+    });
   };
 
   const saveAddress = async (e) => {
@@ -262,8 +274,6 @@ export default function ProfileSettings() {
       </main>
     );
   }
-
-  const cityOptions = form && form.city && !CITIES.includes(form.city) ? [form.city, ...CITIES] : CITIES;
 
   return (
     <main className="max-w-4xl mx-auto px-4 pt-6 pb-12">
@@ -418,7 +428,7 @@ export default function ProfileSettings() {
                 </p>
                 <p className="text-gray-600 mt-0.5 break-words">
                   {a.fullName} · {a.phone}<br />
-                  {a.street}, {a.area}, {a.city}{a.postalCode ? ` — ${a.postalCode}` : ""}
+                  {a.street}, {a.area}, {a.city}{a.province ? `, ${a.province}` : ""}{a.postalCode ? ` — ${a.postalCode}` : ""}
                 </p>
                 {a.lat != null && a.lng != null && (
                   <p className="text-xs mt-1">
@@ -463,21 +473,17 @@ export default function ProfileSettings() {
               <span className="text-xs font-medium text-gray-500">Phone</span>
               <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required className={`${input.replace("focus:border-lux-amber", "focus-within:border-lux-amber")} mt-1`} />
             </label>
-            <label className="block">
-              <span className="text-xs font-medium text-gray-500">City</span>
-              <select value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={`${input} mt-1`}>
-                {cityOptions.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </label>
-            <label className="block">
-              <span className="text-xs font-medium text-gray-500">Area / Town</span>
-              <input value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} required className={`${input} mt-1`} />
-            </label>
+            <LocationSelect
+              inputClassName={input}
+              labelClassName="text-xs font-medium text-gray-500"
+              value={{ province: form.province, city: form.city, area: form.area }}
+              onChange={(loc) => setForm((f) => (f ? { ...f, ...loc } : f))}
+            />
             <label className="block">
               <span className="text-xs font-medium text-gray-500">Postal code (optional)</span>
               <input value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} className={`${input} mt-1`} />
             </label>
-            <label className="block sm:col-span-2">
+            <label className="block">
               <span className="text-xs font-medium text-gray-500">Street address, house no.</span>
               <input value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} required className={`${input} mt-1`} />
             </label>

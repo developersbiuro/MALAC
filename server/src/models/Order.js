@@ -49,7 +49,7 @@ const orderSchema = new mongoose.Schema({
   status: { type: String, enum: ORDER_STATUSES, default: "Pending", index: true },
   statusHistory: [statusEntrySchema],
   address: {
-    fullName: String, phone: String, city: String,
+    fullName: String, phone: String, province: String, city: String,
     area: String, street: String, postalCode: String,
     // Live-location pin snapshot (copied from the delivery address when
     // the customer ordered with "Use My Live Location"); shown to staff

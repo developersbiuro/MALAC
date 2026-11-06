@@ -107,7 +107,7 @@ export default function AdminOrders() {
                 <p className="font-semibold mb-1">Customer & Shipping</p>
                 <p>{selected.user?.name || selected.address?.fullName}</p>
                 <p className="text-gray-500">{selected.user?.email} · {selected.user?.phone || selected.address?.phone}</p>
-                <p className="text-gray-500">{selected.address?.street}, {selected.address?.area}, {selected.address?.city} {selected.address?.postalCode || ""}</p>
+                <p className="text-gray-500">{selected.address?.street}, {selected.address?.area}, {selected.address?.city}{selected.address?.province ? `, ${selected.address.province}` : ""} {selected.address?.postalCode || ""}</p>
                 {selected.address?.lat != null && selected.address?.lng != null && (
                   <p>
                     <a

@@ -42,7 +42,7 @@ export default function OrderConfirmation() {
           <div className="flex justify-between"><span>Discount</span><span>-{rs(order.discount)}</span></div>
           <div className="flex justify-between"><span>Shipping</span><span>{rs(order.shipping)}</span></div>
           <div className="flex justify-between border-t pt-2 font-bold"><span>Total ({order.paymentMethod})</span><span className="text-brand">{rs(order.total)}</span></div>
-          <p className="text-gray-500 pt-2">Deliver to: {order.address?.fullName}, {order.address?.street}, {order.address?.area}, {order.address?.city}
+          <p className="text-gray-500 pt-2">Deliver to: {order.address?.fullName}, {order.address?.street}, {order.address?.area}, {order.address?.city}{order.address?.province ? `, ${order.address.province}` : ""}
             {order.estimatedDelivery ? ` · Expected by ${new Date(order.estimatedDelivery).toLocaleDateString("en-PK")}` : ""}</p>
         </div>
         <Link to="/orders" className="inline-block mt-5 bg-brand text-white px-6 py-2 rounded text-sm">Track in My Orders</Link>

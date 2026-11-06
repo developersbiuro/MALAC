@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircle2, Truck, CreditCard, Banknote, Smartphone, UploadCloud } from "lucide-react";
 import api from "../api/client.js";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
+import LocationSelect from "../components/LocationSelect.jsx";
+import { findCity } from "../data/pakLocations.js";
 import PhoneInput from "../components/PhoneInput.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -14,7 +16,6 @@ import { useSeo } from "../utils/seo.js";
 // rejects unauthenticated POST /api/orders with 401 (no guest ordering).
 const steps = ["Shipping Address", "Delivery Method", "Payment"];
 const MANUAL = ["JazzCash", "Easypaisa"];
-const CITIES = ["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Hyderabad", "Sialkot"];
 
 export default function Checkout() {
   useSeo({ title: "Checkout — MALAC", robots: "noindex" });
@@ -24,7 +25,7 @@ export default function Checkout() {
   const [step, setStep] = useState(0);
   const [address, setAddress] = useState({
     fullName: user?.name || "", phone: user?.phone || "",
-    city: "Lahore", area: "", street: "", postalCode: "",
+    province: "Punjab", city: "Lahore", area: "", street: "", postalCode: "",
     lat: null, lng: null, mapsUrl: "",
   });
   const [savedId, setSavedId] = useState(""); // "" = typing a new address
@@ -51,28 +52,40 @@ export default function Checkout() {
     if (!a) {
       setAddress({
         fullName: user?.name || "", phone: user?.phone || "",
-        city: "Lahore", area: "", street: "", postalCode: "",
+        province: "Punjab", city: "Lahore", area: "", street: "", postalCode: "",
         lat: null, lng: null, mapsUrl: "",
       });
       return;
     }
+    // Legacy saved addresses predate the province field: adopt the
+    // saved province, or infer it from the city when it matches the
+    // national dataset (left blank when the city is unknown).
+    const city = a.city || "Lahore";
     setAddress({
       fullName: a.fullName || user?.name || "", phone: a.phone || user?.phone || "",
-      city: a.city || "Lahore", area: a.area || "", street: a.street || "",
+      province: a.province || findCity(city)?.province || "",
+      city, area: a.area || "", street: a.street || "",
       postalCode: a.postalCode || "",
       lat: a.lat ?? null, lng: a.lng ?? null, mapsUrl: a.mapsUrl || "",
     });
   };
 
   const applyLocation = ({ lat, lng, mapsUrl, addressLine, area, city }) => {
-    setAddress((cur) => ({
-      ...cur, lat, lng, mapsUrl,
-      street: addressLine || cur.street,
-      area: area || cur.area,
-      // The checkout city field is a fixed select — only adopt the
-      // reverse-geocoded city when it is one of the served cities.
-      city: CITIES.includes(city) ? city : cur.city,
-    }));
+    setAddress((cur) => {
+      // Adopt the reverse-geocoded city when it matches the national
+      // dataset (case-insensitive), bringing its province along. A
+      // geocoded name outside the dataset is still kept as the city
+      // (LocationSelect pins it as an extra option) and the province
+      // is left as the customer picked it.
+      const hit = findCity(city);
+      return {
+        ...cur, lat, lng, mapsUrl,
+        street: addressLine || cur.street,
+        area: area || cur.area,
+        province: hit ? hit.province : cur.province,
+        city: hit ? hit.city : (city || cur.city),
+      };
+    });
   };
 
   const discount = coupon?.discount || 0;
@@ -167,7 +180,7 @@ export default function Checkout() {
                   <option value="">Enter a new address manually</option>
                   {user.addresses.map((a) => (
                     <option key={a._id} value={a._id}>
-                      {a.label || "Home"} — {a.street}, {a.area}, {a.city}{a.lat != null && a.lng != null ? " 📍" : ""}
+                      {a.label || "Home"} — {a.street}, {a.area}, {a.city}{a.province ? `, ${a.province}` : ""}{a.lat != null && a.lng != null ? " 📍" : ""}
                     </option>
                   ))}
                 </select>
@@ -175,10 +188,11 @@ export default function Checkout() {
             )}
             <input required placeholder="Full name" className={input} value={address.fullName} onChange={(e) => setAddress({ ...address, fullName: e.target.value })} />
             <PhoneInput required className={input} value={address.phone} onChange={(v) => setAddress({ ...address, phone: v })} />
-            <select className={input} value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })}>
-              {(address.city && !CITIES.includes(address.city) ? [address.city, ...CITIES] : CITIES).map((c) => <option key={c}>{c}</option>)}
-            </select>
-            <input required placeholder="Area / Town" className={input} value={address.area} onChange={(e) => setAddress({ ...address, area: e.target.value })} />
+            <LocationSelect
+              inputClassName={input}
+              value={{ province: address.province, city: address.city, area: address.area }}
+              onChange={(loc) => setAddress((cur) => ({ ...cur, ...loc }))}
+            />
             <input required placeholder="Street address, house no." className={`${input} sm:col-span-2`} value={address.street} onChange={(e) => setAddress({ ...address, street: e.target.value })} />
             <input placeholder="Postal code (optional)" className={input} value={address.postalCode} onChange={(e) => setAddress({ ...address, postalCode: e.target.value })} />
             <div className="sm:col-span-2 border-t pt-3">

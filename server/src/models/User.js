@@ -4,6 +4,10 @@ const addressSchema = new mongoose.Schema({
   label: { type: String, default: "Home" },
   fullName: String,
   phone: String,
+  // Province / territory picked from the national dataset (see
+  // client/src/data/pakLocations.js). Optional so addresses saved
+  // before the field existed keep loading untouched.
+  province: String,
   city: String,
   area: String,
   street: String,

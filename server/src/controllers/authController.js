@@ -544,7 +544,7 @@ export const changePassword = asyncHandler(async (req, res) => {
 // lat/lng/mapsUrl carry the optional live-location pin. Coordinates are
 // range-checked and invalid values are dropped (never stored, never an
 // error); an explicit null clears a previously saved pin.
-const ADDRESS_FIELDS = ["label", "fullName", "phone", "city", "area", "street", "postalCode", "lat", "lng", "mapsUrl"];
+const ADDRESS_FIELDS = ["label", "fullName", "phone", "province", "city", "area", "street", "postalCode", "lat", "lng", "mapsUrl"];
 
 const validCoord = (value, min, max) => {
   if (value === null || value === undefined || value === "") return undefined;
