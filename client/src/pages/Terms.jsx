@@ -43,7 +43,7 @@ export default function Terms() {
       </LegalSection>
 
       <LegalSection title="6. Cancellation Policy">
-        <p>You may cancel your order free of charge from <Link to="/orders" className="text-lux-burnt font-medium hover:underline">My Orders</Link> while its status is <b>Pending</b> or <b>Processing</b>. Once an order has been shipped it can no longer be cancelled.</p>
+        <p>You may cancel your order free of charge from <Link to="/orders" className="text-lux-burnt font-medium hover:underline">My Orders</Link> while its status is <b>Pending</b> or <b>Processing</b> (before it is packed for dispatch). Once an order has been shipped it can no longer be cancelled.</p>
         <p>If you have already paid for a cancelled order by JazzCash or Easypaisa, the amount will be refunded to the same account after verification.</p>
       </LegalSection>
 

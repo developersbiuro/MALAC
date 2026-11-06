@@ -1,4 +1,4 @@
-import Order from "../models/Order.js";
+import Order, { CUSTOMER_CANCEL_REASONS, ADMIN_CANCEL_REASONS } from "../models/Order.js";
 import Product from "../models/Product.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
@@ -89,13 +89,23 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
   return order;
 }
 
-export const CANCELLABLE = ["Pending", "Processing"];
-export async function cancelOrder(order, by = "customer") {
+// Customers may self-cancel until the parcel is packed; staff may cancel
+// any order that has not shipped yet (a shipped parcel comes back via
+// "Returned" instead). A reason from the actor's list is REQUIRED.
+export const CANCELLABLE = ["Pending", "Confirmed", "Packed"];
+export async function cancelOrder(order, by = "customer", { reason = "", note = "" } = {}) {
   if (!CANCELLABLE.includes(order.status)) {
-    throw new Error(`Orders can only be cancelled while Pending or Processing (current: ${order.status})`);
+    throw new Error(`Orders can only be cancelled while Pending, Confirmed or Packed (current: ${order.status})`);
+  }
+  const reasons = by === "customer" ? CUSTOMER_CANCEL_REASONS : ADMIN_CANCEL_REASONS;
+  if (!reasons.includes(reason)) {
+    throw new Error("A cancellation reason is required");
   }
   order.status = "Cancelled";
-  order.statusHistory.push({ status: "Cancelled", by, note: "Cancelled" });
+  order.cancelReason = reason;
+  order.cancelNote = String(note || "").slice(0, 300);
+  order.cancelledBy = by === "customer" ? "customer" : "admin";
+  order.statusHistory.push({ status: "Cancelled", by, note: `Reason: ${reason}${order.cancelNote ? ` — ${order.cancelNote}` : ""}` });
   await order.save();
   for (const item of order.items) {
     if (item.product) await Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty, sold: -item.qty } });
@@ -103,10 +113,28 @@ export async function cancelOrder(order, by = "customer") {
   return order;
 }
 
-export async function setOrderStatus(order, status, by = "admin") {
+export async function setOrderStatus(order, status, by = "admin", { courier = "", trackingId = "" } = {}) {
+  const prev = order.status;
   order.status = status;
-  order.statusHistory.push({ status, by, note: `Status updated to ${status}` });
+  let note = `Status updated to ${status}`;
+  // Dispatch details ride along with the Shipped transition (and may be
+  // corrected while the order is Shipped/Delivered without a status change).
+  const c = String(courier || "").trim().slice(0, 60);
+  const t = String(trackingId || "").trim().slice(0, 80);
+  if (c || t || status === "Shipped") {
+    if (c) order.courier = c;
+    if (t) order.trackingId = t;
+    if (order.courier || order.trackingId) note += ` — ${order.courier || "Courier"} ${order.trackingId || ""}`.trimEnd();
+  }
+  order.statusHistory.push({ status, by, note });
   if (status === "Delivered" && order.paymentMethod === "COD") order.paymentStatus = "Paid";
+  // A returned parcel goes back on the shelf (unless it already came back
+  // once — moving within Returned must not double-restock).
+  if (status === "Returned" && prev !== "Returned") {
+    for (const item of order.items) {
+      if (item.product) await Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty, sold: -item.qty } });
+    }
+  }
   await order.save();
   return order;
 }

@@ -1,11 +1,39 @@
 import { useEffect, useState } from "react";
-import { X, ShieldCheck, ShieldX } from "lucide-react";
+import { X, ShieldCheck, ShieldX, Printer, Truck } from "lucide-react";
 import api from "../../api/client.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { rs } from "../../utils/format.js";
 
-const FILTERS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
-const STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+const FILTERS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
+// Staff pipeline (Daraz-style): Pending → Confirmed → Packed → Shipped →
+// Delivered. "Processing" is not a step — it is the tab that groups
+// Confirmed + Packed. Cancelled needs a reason (see ADMIN_CANCEL_REASONS).
+const STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled", "Returned"];
+const COURIERS = ["TCS", "Leopards", "Trax", "PostEx", "Other"];
+const ADMIN_CANCEL_REASONS = [
+  "Out of stock", "Customer requested", "Payment not verified",
+  "Customer unreachable", "Duplicate order", "Suspected fake order", "Other",
+];
+const statusBadge = {
+  Pending: "bg-amber-100 text-amber-700", Confirmed: "bg-sky-100 text-sky-700",
+  Packed: "bg-indigo-100 text-indigo-700", Shipped: "bg-violet-100 text-violet-700",
+  Delivered: "bg-green-100 text-green-700", Cancelled: "bg-red-100 text-red-600",
+  Returned: "bg-orange-100 text-orange-700",
+};
+
+// Sign-up is ONE-method, so the unused identifier is a synthetic
+// placeholder (phone "email-<hex>" / email "phone-…@malac.local"). Never
+// render those: show the customer's real other identifier instead.
+const isRealPhone = (p) => !!p && !String(p).startsWith("email-");
+const isRealEmail = (e) => !!e && !String(e).endsWith("@malac.local");
+function customerContact(user, address) {
+  const userPhone = isRealPhone(user?.phone) ? user.phone : "";
+  const secondary = isRealPhone(user?.secondaryPhone) ? user.secondaryPhone : "";
+  const addressPhone = isRealPhone(address?.phone) ? address.phone : "";
+  const email = isRealEmail(user?.email) ? user.email : "";
+  const phone = userPhone || secondary || addressPhone;
+  return { email, phone, line: [email, phone].filter(Boolean).join(" · ") };
+}
 const verifyBadge = {
   pending_verification: "bg-amber-100 text-amber-700",
   verified: "bg-green-100 text-green-700",
@@ -21,23 +49,76 @@ export default function AdminOrders() {
   const { hasPermission } = useAuth();
   const canVerifyPayments = hasPermission("payments");
   const [orders, setOrders] = useState([]);
+  const [counts, setCounts] = useState({});
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [msg, setMsg] = useState("");
+  // Fulfillment-form state for the open order: the step staff picked, the
+  // courier/tracking for dispatch, and the cancel reason flow.
+  const [formStatus, setFormStatus] = useState("");
+  const [courier, setCourier] = useState("");
+  const [trackingId, setTrackingId] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelNote, setCancelNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [showLabel, setShowLabel] = useState(false);
 
   const load = () => {
     const params = {};
     if (filter !== "All") params.status = filter;
     if (search) params.search = search;
-    api.get("/admin/orders", { params }).then((r) => setOrders(r.data.orders)).catch(() => setOrders([]));
+    api.get("/admin/orders", { params }).then((r) => {
+      setOrders(r.data.orders);
+      if (r.data.counts) setCounts(r.data.counts);
+    }).catch(() => setOrders([]));
   };
   useEffect(() => { const t = setTimeout(load, 200); return () => clearTimeout(t); }, [filter, search]);
 
-  const setStatus = async (id, status) => {
-    const r = await api.patch(`/admin/orders/${id}/status`, { status });
-    setOrders((prev) => prev.map((o) => o._id === id ? r.data.order : o));
-    if (selected?._id === id) setSelected(r.data.order);
+  const openOrder = (o) => {
+    setSelected(o);
+    setFormStatus(o.status);
+    setCourier(o.courier || "");
+    setTrackingId(o.trackingId || "");
+    setCancelReason("");
+    setCancelNote("");
+    setShowLabel(false);
+    setMsg("");
+  };
+
+  const applyOrder = (order) => {
+    setOrders((prev) => prev.map((o) => o._id === order._id ? order : o));
+    setSelected(order);
+    setFormStatus(order.status);
+    setCourier(order.courier || "");
+    setTrackingId(order.trackingId || "");
+  };
+
+  const saveFulfillment = async () => {
+    if (!selected) return;
+    setMsg(""); setSaving(true);
+    try {
+      const body = { status: formStatus };
+      if (["Shipped", "Delivered"].includes(formStatus) || courier || trackingId) {
+        body.courier = courier; body.trackingId = trackingId;
+      }
+      if (formStatus === "Cancelled") { body.reason = cancelReason; body.note = cancelNote; }
+      const changed = formStatus !== selected.status || courier !== (selected.courier || "") || trackingId !== (selected.trackingId || "");
+      if (!changed) { setMsg("Nothing to change."); setSaving(false); return; }
+      const r = await api.patch(`/admin/orders/${selected._id}/status`, body);
+      applyOrder(r.data.order);
+      setMsg("Order updated.");
+      load();
+    } catch (e) { setMsg(e.response?.data?.message || "Could not update the order"); }
+    finally { setSaving(false); }
+  };
+
+  const printLabel = () => {
+    document.body.classList.add("printing-label");
+    const done = () => { document.body.classList.remove("printing-label"); window.removeEventListener("afterprint", done); };
+    window.addEventListener("afterprint", done);
+    window.print();
+    setTimeout(done, 1000);
   };
 
   const verifyPayment = async (decision) => {
@@ -60,7 +141,8 @@ export default function AdminOrders() {
       <div className="flex flex-wrap gap-2 mt-3">
         {FILTERS.map((f) => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`text-sm px-3 py-1.5 rounded-full ${filter === f ? "bg-brand text-white" : "bg-white"}`}>{f}</button>
+            className={`text-sm px-3 py-1.5 rounded-full ${filter === f ? "bg-brand text-white" : "bg-white"}`}>
+            {f}{counts[f] != null ? ` (${counts[f]})` : ""}</button>
         ))}
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search order ID"
           className="border rounded px-3 py-2 sm:py-1.5 text-sm sm:ml-auto bg-white flex-1 sm:flex-none min-w-[150px]" />
@@ -74,9 +156,11 @@ export default function AdminOrders() {
           </tr></thead>
           <tbody>
             {orders.map((o) => (
-              <tr key={o._id} className="border-b last:border-0 hover:bg-gray-50 cursor-pointer" onClick={() => setSelected(o)}>
+              <tr key={o._id} className="border-b last:border-0 hover:bg-gray-50 cursor-pointer" onClick={() => openOrder(o)}>
                 <td className="p-3 font-medium">{o.orderId}</td>
-                <td>{o.user?.name || o.address?.fullName}<br /><span className="text-xs text-gray-400">{o.user?.phone || o.address?.phone}</span></td>
+                <td>{o.user?.name || o.address?.fullName}
+                  {(() => { const c = customerContact(o.user, o.address); return c.phone ? <><br /><span className="text-xs text-gray-400">{c.phone}</span></> : null; })()}
+                </td>
                 <td>{o.items.reduce((s, i) => s + i.qty, 0)}</td>
                 <td>{rs(o.total)}</td>
                 <td>{o.paymentMethod}
@@ -85,7 +169,9 @@ export default function AdminOrders() {
                       {o.paymentVerificationStatus.replace("_", " ")}
                     </span>)}
                 </td>
-                <td><span className="bg-gray-100 rounded-full px-2 py-0.5 text-xs">{o.status}</span></td>
+                <td><span className={`rounded-full px-2 py-0.5 text-xs ${statusBadge[o.status] || "bg-gray-100 text-gray-600"}`}>{o.status}</span>
+                  {(o.courier || o.trackingId) && <span className="block text-[10px] text-gray-400 mt-0.5">{o.courier}{o.trackingId ? ` · ${o.trackingId}` : ""}</span>}
+                </td>
                 <td className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString("en-PK")}</td>
               </tr>
             ))}
@@ -98,15 +184,79 @@ export default function AdminOrders() {
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSelected(null)} />
           <aside className="absolute right-0 top-0 h-full w-[420px] max-w-[94vw] bg-white shadow-xl overflow-y-auto fade-up">
-            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <p className="font-bold">{selected.orderId}</p>
-              <button onClick={() => setSelected(null)} aria-label="Close"><X size={20} /></button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => setShowLabel((v) => !v)} className="flex items-center gap-1 text-xs border rounded-full px-3 py-1.5 hover:bg-gray-50">
+                  <Printer size={14} /> {showLabel ? "Hide label" : "Print shipping label"}
+                </button>
+                <button onClick={() => setSelected(null)} aria-label="Close"><X size={20} /></button>
+              </div>
             </div>
             <div className="p-4 text-sm space-y-4">
+              {selected.status === "Cancelled" && (
+                <p className="bg-red-50 border border-red-200 text-red-700 rounded p-3">
+                  <b>Cancelled{selected.cancelledBy ? ` by ${selected.cancelledBy}` : ""}</b>
+                  {selected.cancelReason ? ` — ${selected.cancelReason}` : ""}
+                  {selected.cancelNote ? <span className="block text-xs mt-0.5">Note: {selected.cancelNote}</span> : null}
+                </p>
+              )}
+              {showLabel && (
+                <section className="border-2 border-dashed border-gray-300 rounded p-4">
+                  {/* The .print-area block below is what actually prints. */}
+                  <div className="print-area text-black">
+                    <div className="flex items-start justify-between border-b-2 border-black pb-2">
+                      <div>
+                        <p className="text-2xl font-black tracking-[0.2em]">MALAC</p>
+                        <p className="text-[10px] uppercase tracking-widest">M.A Luxury Apparel Collection</p>
+                      </div>
+                      <div className="text-right text-xs">
+                        <p>{selected.deliveryMethod} delivery</p>
+                        <p>{new Date(selected.createdAt).toLocaleDateString("en-PK")}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] uppercase tracking-widest mt-3">Order ID</p>
+                    <p className="text-3xl font-black font-mono">{selected.orderId}</p>
+                    {(selected.courier || selected.trackingId) && (
+                      <p className="mt-1 text-sm">Courier: <b>{selected.courier || "-"}</b> · Tracking: <b className="font-mono">{selected.trackingId || "-"}</b></p>
+                    )}
+                    <div className="mt-3 border-t pt-3">
+                      <p className="text-[11px] uppercase tracking-widest">Deliver to</p>
+                      <p className="text-lg font-bold">{selected.address?.fullName || selected.user?.name}</p>
+                      <p className="font-mono">{customerContact(selected.user, selected.address).phone}</p>
+                      <p>{selected.address?.street}, {selected.address?.area}</p>
+                      <p>{selected.address?.city}{selected.address?.province ? `, ${selected.address.province}` : ""} {selected.address?.postalCode || ""}</p>
+                    </div>
+                    {selected.paymentMethod === "COD" && selected.paymentStatus !== "Paid" ? (
+                      <p className="mt-3 border-2 border-black rounded p-2 text-center text-lg font-black">
+                        COLLECT CASH: {rs(selected.total)}
+                      </p>
+                    ) : (
+                      <p className="mt-3 border-2 border-black rounded p-2 text-center text-lg font-black">
+                        PAID — {selected.paymentMethod}{(selected.paymentMethod === "COD" || selected.paymentStatus === "Paid") ? "" : " (verify transfer)"}
+                      </p>
+                    )}
+                    <div className="mt-4 border-t pt-3">
+                      <p className="text-[11px] uppercase tracking-widest mb-1">Packing slip — check each item</p>
+                      {selected.items.map((i) => (
+                        <p key={i._id} className="flex gap-2 py-1 border-b border-dotted last:border-0">
+                          <span className="inline-block w-4 h-4 border border-black rounded-sm shrink-0 mt-0.5" />
+                          <span className="flex-1">{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""}{i.sku ? ` · ${i.sku}` : ""}</span>
+                          <b>× {i.qty}</b>
+                        </p>
+                      ))}
+                      <p className="flex justify-between pt-2 font-bold"><span>Total ({selected.items.reduce((s, i) => s + i.qty, 0)} items)</span><span>{rs(selected.total)}</span></p>
+                    </div>
+                  </div>
+                  <button onClick={printLabel} className="mt-3 flex items-center gap-1 bg-brand text-white rounded px-4 py-2 text-xs">
+                    <Printer size={14} /> Print label + packing slip
+                  </button>
+                </section>
+              )}
               <section>
                 <p className="font-semibold mb-1">Customer & Shipping</p>
                 <p>{selected.user?.name || selected.address?.fullName}</p>
-                <p className="text-gray-500">{selected.user?.email} · {selected.user?.phone || selected.address?.phone}</p>
+                <p className="text-gray-500">{customerContact(selected.user, selected.address).line}</p>
                 <p className="text-gray-500">{selected.address?.street}, {selected.address?.area}, {selected.address?.city}{selected.address?.province ? `, ${selected.address.province}` : ""} {selected.address?.postalCode || ""}</p>
                 {selected.address?.lat != null && selected.address?.lng != null && (
                   <p>
@@ -167,12 +317,78 @@ export default function AdminOrders() {
                     )}
                   </div>
                 )}
+                {(selected.courier || selected.trackingId) && (
+                  <p className="mt-2 flex items-center gap-1 text-gray-600">
+                    <Truck size={14} /> Courier: <b>{selected.courier || "-"}</b> · Tracking: <b className="font-mono">{selected.trackingId || "-"}</b>
+                  </p>
+                )}
               </section>
               <section>
                 <p className="font-semibold mb-1">Fulfillment Status</p>
-                <select value={selected.status} onChange={(e) => setStatus(selected._id, e.target.value)} className="border rounded px-3 py-2 w-full">
+                {/* Daraz-style step buttons */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {["Confirmed", "Packed", "Shipped", "Delivered"].map((s) => (
+                    <button key={s} onClick={() => setFormStatus(s)}
+                      className={`text-xs px-3 py-1.5 rounded-full border ${formStatus === s ? "bg-brand text-white border-transparent" : selected.status === s ? "bg-gray-100 font-semibold" : "bg-white"}`}>
+                      {s}{selected.status === s ? " ✓" : ""}
+                    </button>
+                  ))}
+                </div>
+                <label className="block text-xs text-gray-500 mb-1">Move to status</label>
+                <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} className="border rounded px-3 py-2 w-full">
                   {STATUSES.map((s) => <option key={s}>{s}</option>)}
                 </select>
+
+                {formStatus === "Shipped" && (
+                  <div className="mt-3 border rounded p-3 bg-violet-50 space-y-2">
+                    <p className="flex items-center gap-1 font-medium"><Truck size={14} /> Dispatch details</p>
+                    <label className="block text-xs text-gray-500">Courier
+                      <select value={courier} onChange={(e) => setCourier(e.target.value)} className="border rounded px-3 py-2 w-full mt-0.5 bg-white">
+                        <option value="">Select courier…</option>
+                        {COURIERS.map((c) => <option key={c}>{c}</option>)}
+                      </select>
+                    </label>
+                    <label className="block text-xs text-gray-500">Tracking ID
+                      <input value={trackingId} onChange={(e) => setTrackingId(e.target.value)} placeholder="e.g. TCS tracking number"
+                        className="border rounded px-3 py-2 w-full mt-0.5 bg-white font-mono" />
+                    </label>
+                    <p className="text-[11px] text-gray-500">The customer sees the courier + tracking ID on the Track Order page once shipped.</p>
+                  </div>
+                )}
+                {["Shipped", "Delivered", "Returned"].includes(selected.status) && formStatus !== "Shipped" && (selected.courier || selected.trackingId) && (
+                  <div className="mt-3 border rounded p-3 bg-gray-50 space-y-2">
+                    <p className="flex items-center gap-1 font-medium"><Truck size={14} /> Courier: {selected.courier || "-"} · <span className="font-mono">{selected.trackingId || "-"}</span></p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select value={courier} onChange={(e) => setCourier(e.target.value)} className="border rounded px-2 py-1.5 bg-white text-xs">
+                        <option value="">Courier…</option>
+                        {COURIERS.map((c) => <option key={c}>{c}</option>)}
+                      </select>
+                      <input value={trackingId} onChange={(e) => setTrackingId(e.target.value)} placeholder="Tracking ID"
+                        className="border rounded px-2 py-1.5 bg-white text-xs font-mono" />
+                    </div>
+                    <p className="text-[11px] text-gray-500">Edit dispatch details, then Save — the status stays {formStatus}.</p>
+                  </div>
+                )}
+
+                {formStatus === "Cancelled" && selected.status !== "Cancelled" && (
+                  <div className="mt-3 border border-red-200 rounded p-3 bg-red-50 space-y-2">
+                    <p className="font-medium text-red-700">Cancellation reason (required)</p>
+                    <select value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} className="border rounded px-3 py-2 w-full bg-white">
+                      <option value="">Select a reason…</option>
+                      {ADMIN_CANCEL_REASONS.map((r) => <option key={r}>{r}</option>)}
+                    </select>
+                    <input value={cancelNote} onChange={(e) => setCancelNote(e.target.value)} placeholder="Note (optional)"
+                      className="border rounded px-3 py-2 w-full bg-white" />
+                  </div>
+                )}
+                {formStatus === "Returned" && selected.status !== "Returned" && (
+                  <p className="mt-2 text-[11px] text-gray-500">Marking Returned puts the items back into stock.</p>
+                )}
+
+                <button onClick={saveFulfillment} disabled={saving}
+                  className="mt-3 bg-brand text-white rounded px-5 py-2 text-sm disabled:opacity-50 w-full">
+                  {saving ? "Saving…" : formStatus === "Cancelled" ? "Cancel this order" : "Save fulfillment"}
+                </button>
                 <ol className="mt-3 space-y-1 text-xs text-gray-500">
                   {(selected.statusHistory || []).map((h, i) => (
                     <li key={i}>• {h.status} — {new Date(h.at).toLocaleString("en-PK")} {h.by ? `by ${h.by}` : ""} {h.note ? `(${h.note})` : ""}</li>

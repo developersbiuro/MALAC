@@ -1,6 +1,33 @@
 import mongoose from "mongoose";
 
-export const ORDER_STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+export const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled", "Returned"];
+// Customer-facing stages collapse Confirmed + Packed into "Processing"
+// (that is what shoppers already see on My Orders / Track Order / the
+// chatbot): the storefront translates with this helper, and the public
+// track endpoint maps the internal status through it.
+export const CUSTOMER_STATUS = (status) =>
+  (status === "Confirmed" || status === "Packed" ? "Processing" : status);
+// Cancellation reasons (Daraz-style). Cancelling REQUIRES one of these —
+// validated server-side per actor (customer self-cancel vs staff cancel).
+export const CUSTOMER_CANCEL_REASONS = [
+  "Changed my mind",
+  "Ordered by mistake",
+  "Found a better price elsewhere",
+  "Delivery is taking too long",
+  "Need to change address or items",
+  "Payment issue",
+  "Other",
+];
+export const ADMIN_CANCEL_REASONS = [
+  "Out of stock",
+  "Customer requested",
+  "Payment not verified",
+  "Customer unreachable",
+  "Duplicate order",
+  "Suspected fake order",
+  "Other",
+];
+export const COURIERS = ["TCS", "Leopards", "Trax", "PostEx", "Other"];
 export const PAYMENT_METHODS = ["COD", "Card", "JazzCash", "Easypaisa"];
 export const PAYMENT_VERIFICATION_STATUSES =
   ["not_applicable", "pending_verification", "verified", "rejected"];
@@ -46,6 +73,14 @@ const orderSchema = new mongoose.Schema({
   paymentVerifiedBy: { type: String, default: "" },
   paymentVerifiedAt: Date,
   deliveryMethod: { type: String, enum: ["Standard", "Express"], default: "Standard" },
+  // Dispatch details, set by staff when the parcel is handed to a courier.
+  courier: { type: String, default: "" },
+  trackingId: { type: String, default: "" },
+  // Cancellation record (reason is required to cancel — see the cancel
+  // reason lists above; validated in orderService.cancelOrder).
+  cancelReason: { type: String, default: "" },
+  cancelNote: { type: String, default: "" },
+  cancelledBy: { type: String, enum: ["", "customer", "admin"], default: "" },
   status: { type: String, enum: ORDER_STATUSES, default: "Pending", index: true },
   statusHistory: [statusEntrySchema],
   address: {

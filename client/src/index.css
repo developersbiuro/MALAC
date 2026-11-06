@@ -22,6 +22,18 @@ img, video { max-width: 100%; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .fade-up { animation: fadeUp .25s ease both; }
 
+/* Shipping label / packing slip printing (admin order detail): when a
+   .print-area is on the page, printing shows ONLY that area — the label
+   prints as one clean sheet instead of the whole admin screen. */
+@media print {
+  body.printing-label * { visibility: hidden; }
+  body.printing-label .print-area, body.printing-label .print-area * { visibility: visible; }
+  body.printing-label .print-area {
+    position: absolute; inset: 0; width: 100%; padding: 12mm;
+    background: #fff; color: #000;
+  }
+}
+
 @layer components {
   /* malacpk luxury skin primitives: burnt-orange -> amber gradient pill CTAs
      (#d97706 -> #f59e0b) and #b45309 uppercase eyebrow labels. */

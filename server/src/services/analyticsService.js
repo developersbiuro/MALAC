@@ -8,7 +8,7 @@ export async function getAnalytics() {
   ]);
   const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
   const activeOrders = orders.filter((o) =>
-    ["Pending", "Processing", "Shipped"].includes(o.status)).length;
+    ["Pending", "Confirmed", "Packed", "Shipped"].includes(o.status) || o.status === "Processing").length;
   const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5)
     .map((p) => ({ id: p._id, title: p.title, sku: p.sku, stock: p.stock }));
   const byDay = {};

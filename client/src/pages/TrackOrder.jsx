@@ -14,7 +14,7 @@ const FLOW = ["Pending", "Processing", "Shipped", "Delivered"];
 const badge = {
   Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
   Shipped: "bg-violet-100 text-violet-700", Delivered: "bg-green-100 text-green-700",
-  Cancelled: "bg-red-100 text-red-600",
+  Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
 };
 const inputCls = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
 
@@ -97,7 +97,11 @@ export default function TrackOrder() {
 
           {/* Status timeline */}
           {order.status === "Cancelled" ? (
-            <p className="mt-5 text-sm text-red-500 font-medium">This order was cancelled.</p>
+            <p className="mt-5 text-sm text-red-500 font-medium">
+              This order was cancelled.{order.cancelReason ? ` Reason: ${order.cancelReason}` : ""}
+            </p>
+          ) : order.status === "Returned" ? (
+            <p className="mt-5 text-sm text-orange-600 font-medium">This order was returned to us (delivery could not be completed).</p>
           ) : (
             <ol className="mt-6 grid grid-cols-4 gap-1">
               {FLOW.map((s, i) => {
@@ -152,6 +156,9 @@ export default function TrackOrder() {
                 : order.paymentVerificationStatus === "rejected" ? "rejected — please contact us on WhatsApp" : ""}</>
             )}
             {" "}· {order.deliveryMethod} delivery
+            {(order.courier || order.trackingId) && ["Shipped", "Delivered"].includes(order.status) && (
+              <> · Courier: <b>{order.courier || "-"}</b>{order.trackingId ? <> · Tracking: <b className="font-mono">{order.trackingId}</b></> : ""}</>
+            )}
           </p>
         </article>
       )}

@@ -104,6 +104,10 @@ export default function ChatWidget() {
       const o = r.data.order;
       push(botSay(
         `Order ${o.orderId} ka status: ${o.status}. Payment: ${o.paymentMethod} (${o.paymentStatus})` +
+        (o.status === "Cancelled" && o.cancelReason ? ` — wajah: ${o.cancelReason}.` : "") +
+        (["Shipped", "Delivered"].includes(o.status) && (o.courier || o.trackingId)
+          ? ` — Courier: ${o.courier || "-"}${o.trackingId ? `, Tracking: ${o.trackingId}` : ""}.`
+          : "") +
         (o.estimatedDelivery && o.status !== "Delivered" && o.status !== "Cancelled"
           ? ` — expected delivery ${new Date(o.estimatedDelivery).toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}.`
           : "."),

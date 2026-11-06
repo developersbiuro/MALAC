@@ -1,4 +1,4 @@
-import Order, { ORDER_STATUSES } from "../models/Order.js";
+import Order, { ORDER_STATUSES, CUSTOMER_STATUS, COURIERS } from "../models/Order.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
@@ -39,11 +39,18 @@ export const trackOrder = asyncHandler(async (req, res) => {
   }
   if (!order) return notFound();
   if (last10Digits(order.address?.phone) !== phoneDigits) return notFound();
+  const customerStatus = CUSTOMER_STATUS(order.status);
+  const shipped = ["Shipped", "Delivered"].includes(order.status);
   res.json({
     order: {
       orderId: order.orderId,
-      status: order.status,
-      statusHistory: (order.statusHistory || []).map((h) => ({ status: h.status, at: h.at })),
+      // Shoppers see the collapsed vocabulary (Confirmed/Packed →
+      // "Processing"); courier + tracking ID appear once dispatched.
+      status: customerStatus,
+      courier: shipped ? (order.courier || "") : "",
+      trackingId: shipped ? (order.trackingId || "") : "",
+      cancelReason: order.status === "Cancelled" ? (order.cancelReason || "") : "",
+      statusHistory: (order.statusHistory || []).map((h) => ({ status: CUSTOMER_STATUS(h.status), at: h.at })),
       items: order.items.map((i) => ({
         title: i.title, variantLabel: i.variantLabel || "", qty: i.qty, price: i.price, image: i.image || "",
       })),
@@ -63,7 +70,10 @@ export const trackOrder = asyncHandler(async (req, res) => {
 
 export const myOrders = asyncHandler(async (req, res) => {
   const filter = { user: req.user._id };
-  if (req.query.status && ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;
+  // The My Orders tabs use the collapsed customer vocabulary: the
+  // "Processing" tab covers both Confirmed and Packed orders.
+  if (req.query.status === "Processing") filter.status = { $in: ["Confirmed", "Packed"] };
+  else if (req.query.status && ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;
   const orders = await Order.find(filter).sort({ createdAt: -1 });
   res.json({ orders });
 });
@@ -74,12 +84,14 @@ export const getOrder = asyncHandler(async (req, res) => {
   res.json({ order });
 });
 
-// Self-service cancellation: only while Pending or Processing (enforced in service)
+// Self-service cancellation: only before the parcel ships (enforced in
+// service) and only with a reason from the customer list (also enforced
+// in the service — a missing/invalid reason is a 400).
 export const cancelMyOrder = asyncHandler(async (req, res) => {
   const order = await Order.findOne({ orderId: req.params.orderId, user: req.user._id });
   if (!order) return res.status(404).json({ message: "Order not found" });
   try {
-    await cancelOrder(order, "customer");
+    await cancelOrder(order, "customer", { reason: req.body?.reason, note: req.body?.note });
     res.json({ order });
   } catch (e) {
     res.status(400).json({ message: e.message });
@@ -89,7 +101,9 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
 // ---- Admin fulfillment center ----
 export const adminListOrders = asyncHandler(async (req, res) => {
   const filter = {};
-  if (req.query.status && ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;
+  // The admin "Processing" tab groups Confirmed + Packed (Daraz-style).
+  if (req.query.status === "Processing") filter.status = { $in: ["Confirmed", "Packed"] };
+  else if (req.query.status && ORDER_STATUSES.includes(req.query.status)) filter.status = req.query.status;
   if (req.query.search) {
     // Literal substring match only: escape regex metacharacters and cap
     // the length so the search text can never act as a caller-controlled
@@ -97,26 +111,49 @@ export const adminListOrders = asyncHandler(async (req, res) => {
     const literal = String(req.query.search).slice(0, 64).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     filter.orderId = { $regex: literal, $options: "i" };
   }
-  const orders = await Order.find(filter).populate("user", "name email phone")
+  const orders = await Order.find(filter).populate("user", "name email phone secondaryPhone")
     .sort({ createdAt: -1 }).limit(200);
-  res.json({ orders });
+  // Per-tab counts for the fulfillment center (respect the search text,
+  // ignore the status filter itself).
+  const countFilter = { ...filter };
+  delete countFilter.status;
+  const grouped = await Order.aggregate([
+    { $match: countFilter },
+    { $group: { _id: "$status", n: { $sum: 1 } } },
+  ]);
+  const byStatus = Object.fromEntries(grouped.map((g) => [g._id, g.n]));
+  const counts = {
+    All: Object.values(byStatus).reduce((s, n) => s + n, 0),
+    Pending: byStatus.Pending || 0,
+    Processing: (byStatus.Confirmed || 0) + (byStatus.Packed || 0),
+    Shipped: byStatus.Shipped || 0,
+    Delivered: byStatus.Delivered || 0,
+    Cancelled: byStatus.Cancelled || 0,
+    Returned: byStatus.Returned || 0,
+  };
+  res.json({ orders, counts });
 });
 
 export const adminGetOrder = asyncHandler(async (req, res) => {
-  const order = await Order.findById(req.params.id).populate("user", "name email phone");
+  const order = await Order.findById(req.params.id).populate("user", "name email phone secondaryPhone");
   if (!order) return res.status(404).json({ message: "Order not found" });
   res.json({ order });
 });
 
 export const adminUpdateStatus = asyncHandler(async (req, res) => {
-  const { status } = req.body;
+  const { status, courier, trackingId, reason, note } = req.body;
   if (!ORDER_STATUSES.includes(status)) return res.status(400).json({ message: "Invalid status" });
+  // Courier must come from the known list when one is supplied.
+  if (courier !== undefined && courier !== "" && !COURIERS.includes(courier)) {
+    return res.status(400).json({ message: "Invalid courier" });
+  }
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ message: "Order not found" });
   if (status === "Cancelled") {
-    try { await cancelOrder(order, req.user.role); } catch (e) { return res.status(400).json({ message: e.message }); }
+    // Staff cancels also require a reason (admin list — enforced in service).
+    try { await cancelOrder(order, "admin", { reason, note }); } catch (e) { return res.status(400).json({ message: e.message }); }
   } else {
-    await setOrderStatus(order, status, req.user.role);
+    await setOrderStatus(order, status, req.user.role, { courier, trackingId });
   }
   res.json({ order });
 });

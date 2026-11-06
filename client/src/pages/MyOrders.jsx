@@ -5,18 +5,31 @@ import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
 
-const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
+// Badges are keyed by the customer-facing label; Confirmed/Packed show
+// as "Processing" (the server stores Confirmed/Packed — see customerStatus).
 const badge = {
   Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
   Shipped: "bg-violet-100 text-violet-700", Delivered: "bg-green-100 text-green-700",
-  Cancelled: "bg-red-100 text-red-600",
+  Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
 };
+const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
+const CUSTOMER_CANCEL_REASONS = [
+  "Changed my mind", "Ordered by mistake", "Found a better price elsewhere",
+  "Delivery is taking too long", "Need to change address or items",
+  "Payment issue", "Other",
+];
 
 export default function MyOrders() {
   useSeo({ title: "My Orders — MALAC", robots: "noindex" });
   const [tab, setTab] = useState("All");
   const [orders, setOrders] = useState([]);
   const [msg, setMsg] = useState("");
+  // Inline cancel panel: which order is being cancelled + chosen reason.
+  const [cancellingId, setCancellingId] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelNote, setCancelNote] = useState("");
+  const [cancelBusy, setCancelBusy] = useState(false);
 
   const load = () => {
     const params = tab === "All" ? {} : { status: tab };
@@ -24,12 +37,19 @@ export default function MyOrders() {
   };
   useEffect(load, [tab]);
 
-  const cancel = async (orderId) => {
-    setMsg("");
+  const openCancel = (orderId) => {
+    setCancellingId(orderId); setCancelReason(""); setCancelNote(""); setMsg("");
+  };
+
+  const confirmCancel = async () => {
+    if (!cancellingId || !cancelReason) return;
+    setCancelBusy(true); setMsg("");
     try {
-      await api.patch(`/orders/${orderId}/cancel`);
+      await api.patch(`/orders/${cancellingId}/cancel`, { reason: cancelReason, note: cancelNote });
+      setCancellingId(null);
       setMsg("Order cancelled."); load();
     } catch (e) { setMsg(e.response?.data?.message || "Could not cancel this order"); }
+    finally { setCancelBusy(false); }
   };
 
   return (
@@ -52,8 +72,11 @@ export default function MyOrders() {
           <article key={o._id} className="bg-white rounded-md p-4 text-sm">
             <div className="flex flex-wrap justify-between gap-2">
               <p><b>{o.orderId}</b> <span className="text-gray-400">· {new Date(o.createdAt).toLocaleString("en-PK")}</span></p>
-              <span className={`text-xs font-medium rounded-full px-2.5 py-1 ${badge[o.status]}`}>{o.status}</span>
+              <span className={`text-xs font-medium rounded-full px-2.5 py-1 ${badge[customerStatus(o.status)] || "bg-gray-100 text-gray-600"}`}>{customerStatus(o.status)}</span>
             </div>
+            {o.status === "Cancelled" && o.cancelReason && (
+              <p className="text-xs text-red-500 mt-1">Cancelled — {o.cancelReason}{o.cancelledBy ? ` (by ${o.cancelledBy})` : ""}</p>
+            )}
             <div className="mt-2 space-y-1">
               {o.items.map((i) => (
                 <div key={i._id} className="flex gap-2 items-center">
@@ -70,18 +93,46 @@ export default function MyOrders() {
                   : o.paymentVerificationStatus === "verified" ? "Verified"
                   : o.paymentVerificationStatus === "rejected" ? "Rejected - contact support" : ""}
                   {o.transactionId ? ` · Txn ${o.transactionId}` : ""}</>
+              )}
+              {(o.courier || o.trackingId) && ["Shipped", "Delivered", "Returned"].includes(o.status) && (
+                <> · Courier: <b>{o.courier || "-"}</b>{o.trackingId ? <> · Tracking: <b className="font-mono">{o.trackingId}</b></> : ""}</>
               )}</span>
               <span>Total: <b className="text-brand">{rs(o.total)}</b></span>
             </div>
             <ol className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-[11px] text-gray-400">
               {(o.statusHistory || []).map((h, idx) => (
-                <li key={idx}>{h.status} · {new Date(h.at).toLocaleDateString("en-PK")}</li>
+                <li key={idx}>{customerStatus(h.status)} · {new Date(h.at).toLocaleDateString("en-PK")}</li>
               ))}
             </ol>
-            {["Pending", "Processing"].includes(o.status) && (
-              <button onClick={() => cancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-2 sm:py-1.5 text-xs">
+            {["Pending", "Confirmed", "Packed"].includes(o.status) && cancellingId !== o.orderId && (
+              <button onClick={() => openCancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-2 sm:py-1.5 text-xs">
                 Cancel Order
               </button>
+            )}
+            {cancellingId === o.orderId && (
+              <div className="mt-3 border border-red-200 bg-red-50 rounded-lg p-3 fade-up">
+                <p className="font-semibold text-red-700">Why are you cancelling?</p>
+                <div className="mt-2 space-y-1.5">
+                  {CUSTOMER_CANCEL_REASONS.map((r) => (
+                    <label key={r} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name={`cancel-${o.orderId}`} value={r} checked={cancelReason === r}
+                        onChange={() => setCancelReason(r)} className="accent-red-500" />
+                      <span>{r}</span>
+                    </label>
+                  ))}
+                </div>
+                <input value={cancelNote} onChange={(e) => setCancelNote(e.target.value)}
+                  placeholder="Anything else? (optional)" className="mt-2 w-full border rounded px-3 py-2 bg-white" />
+                <div className="flex gap-2 mt-3">
+                  <button onClick={confirmCancel} disabled={!cancelReason || cancelBusy}
+                    className="bg-red-500 text-white rounded px-4 py-2 sm:py-1.5 text-xs disabled:opacity-50">
+                    {cancelBusy ? "Cancelling…" : "Confirm cancel"}
+                  </button>
+                  <button onClick={() => setCancellingId(null)} className="border rounded px-4 py-2 sm:py-1.5 text-xs bg-white">
+                    Back
+                  </button>
+                </div>
+              </div>
             )}
           </article>
         ))}
