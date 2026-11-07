@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Check, SlidersHorizontal, X } from "lucide-react";
+import { Check, SlidersHorizontal, Star, X } from "lucide-react";
 import api from "../api/client.js";
 import ProductCard from "../components/ProductCard.jsx";
 import { useSeo } from "../utils/seo.js";
@@ -10,8 +10,8 @@ import { useSeo } from "../utils/seo.js";
 // Highest Rating is applied client-side to the fetched results.
 const API_SORTS = ["price-asc", "price-desc", "newest", "popular"];
 
-// The sort options offered everywhere (desktop bar, mobile bar, mobile
-// filter sheet) — values mirror the <option>s the shop has always had.
+// The sort options offered in the desktop bar and the mobile bar select —
+// one combined list, values mirror the <option>s the shop has always had.
 const SORT_OPTIONS = [
   { value: "", label: "Featured" },
   { value: "price-asc", label: "Price: Low to High" },
@@ -20,6 +20,23 @@ const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "popular", label: "Most Sold" },
 ];
+
+// The mobile filter sheet groups the same single `sort` state into
+// separate sections, as Abdullah asked (2026-11-07): general sort,
+// price order, and "Highest Rating" which lives with the rating filter.
+const SHEET_SORT_OPTIONS = [
+  { value: "", label: "Featured" },
+  { value: "newest", label: "Newest" },
+  { value: "popular", label: "Most Sold" },
+];
+const SHEET_PRICE_OPTIONS = [
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+];
+
+// Minimum-rating filter choices for the sheet: "Any" plus 1–5 stars
+// (a product passes when its average rating is at least the choice).
+const RATING_OPTIONS = [0, 1, 2, 3, 4, 5];
 
 // Short, generic descriptions shown when a category is selected — written
 // from the category name only (no invented product specifics). Keys are
@@ -41,6 +58,7 @@ export default function Shop() {
   const [sort, setSort] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   const search = params.get("search") || "";
   const category = params.get("category") || "";
@@ -63,10 +81,12 @@ export default function Shop() {
           list = [...list].sort((a, b) =>
             (b.ratingAvg || 0) - (a.ratingAvg || 0) || (b.ratingCount || 0) - (a.ratingCount || 0));
         }
+        // Minimum-rating filter (client-side; the API has no rating param).
+        if (minRating > 0) list = list.filter((p) => (p.ratingAvg || 0) >= minRating);
         setProducts(list);
       })
       .catch(() => setProducts([]));
-  }, [search, category, sub, flash, sort, minPrice, maxPrice]);
+  }, [search, category, sub, flash, sort, minPrice, maxPrice, minRating]);
 
   // While the mobile filter sheet is open, lock page scroll and let
   // Escape close it (backdrop tap also closes).
@@ -82,10 +102,10 @@ export default function Shop() {
     };
   }, [filterOpen]);
 
-  const resetFilters = () => { setSort(""); setMinPrice(""); setMaxPrice(""); };
-  // Badge on the mobile Filter button: only the price bounds count —
-  // the active sort is already visible in the bar's own select.
-  const activeFilterCount = (minPrice ? 1 : 0) + (maxPrice ? 1 : 0);
+  const resetFilters = () => { setSort(""); setMinPrice(""); setMaxPrice(""); setMinRating(0); };
+  // Badge on the mobile Filter button: price bounds + an active rating
+  // filter count — the active sort is already visible in the bar's select.
+  const activeFilterCount = (minPrice ? 1 : 0) + (maxPrice ? 1 : 0) + (minRating > 0 ? 1 : 0);
 
   const title = search ? `Results for "${search}"` : category || (flash ? "Flash Sale" : "All Products");
   useSeo({
@@ -153,11 +173,39 @@ export default function Shop() {
               <section>
                 <p className="eyebrow mb-2">Sort by</p>
                 <div className="border border-cream-line rounded-xl overflow-hidden divide-y divide-cream-line">
-                  {SORT_OPTIONS.map((o) => (
+                  {SHEET_SORT_OPTIONS.map((o) => (
                     <button key={o.value} onClick={() => setSort(o.value)}
                       className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-left ${sort === o.value ? "text-lux-burnt font-semibold bg-cream-soft" : "text-gray-700"}`}>
                       {o.label}
                       {sort === o.value && <Check size={16} />}
+                    </button>
+                  ))}
+                </div>
+              </section>
+              <section>
+                <p className="eyebrow mb-2">Price order</p>
+                <div className="border border-cream-line rounded-xl overflow-hidden divide-y divide-cream-line">
+                  {SHEET_PRICE_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => setSort(sort === o.value ? "" : o.value)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-left ${sort === o.value ? "text-lux-burnt font-semibold bg-cream-soft" : "text-gray-700"}`}>
+                      {o.label}
+                      {sort === o.value && <Check size={16} />}
+                    </button>
+                  ))}
+                </div>
+              </section>
+              <section>
+                <p className="eyebrow mb-2">Rating</p>
+                <button onClick={() => setSort(sort === "rating" ? "" : "rating")}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-left border border-cream-line rounded-xl mb-2 ${sort === "rating" ? "text-lux-burnt font-semibold bg-cream-soft" : "text-gray-700"}`}>
+                  Highest Rating first
+                  {sort === "rating" && <Check size={16} />}
+                </button>
+                <div className="flex flex-wrap gap-1.5">
+                  {RATING_OPTIONS.map((r) => (
+                    <button key={r} onClick={() => setMinRating(r)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full border text-xs font-semibold ${minRating === r ? "border-lux-amber bg-cream-soft text-lux-burnt" : "border-cream-line text-gray-600"}`}>
+                      {r === 0 ? "Any rating" : (<>{r}<Star size={11} className="fill-lux-gold text-lux-gold" /> & up</>)}
                     </button>
                   ))}
                 </div>

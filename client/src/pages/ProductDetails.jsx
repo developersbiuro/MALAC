@@ -133,12 +133,14 @@ export default function ProductDetails() {
         <div>
           <div className="relative overflow-hidden rounded border" onMouseEnter={() => setZoom(true)} onMouseLeave={() => setZoom(false)}>
             <img src={product.images?.[img]} alt={`${product.title} — ${product.category}`}
+              onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
               className={`w-full aspect-square object-cover transition-transform duration-200 ${zoom ? "scale-150" : ""}`} />
           </div>
           <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar pb-1">
             {(product.images || []).map((src, i) => (
               <button key={i} onClick={() => setImg(i)} className={`border rounded overflow-hidden w-16 h-16 shrink-0 ${i === img ? "border-lux-amber" : ""}`}>
-                <img src={src} alt={`${product.title} — photo ${i + 1}`} className="w-full h-full object-cover" />
+                <img src={src} alt={`${product.title} — photo ${i + 1}`} className="w-full h-full object-cover"
+                  onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }} />
               </button>
             ))}
           </div>
