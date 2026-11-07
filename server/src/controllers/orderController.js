@@ -69,13 +69,24 @@ export const trackOrder = asyncHandler(async (req, res) => {
     if (!order) return notFound();
     return res.json({ order: limitedOrderView(order) });
   }
-  // Phone path — every recent order placed with that number (stored
-  // phones end with the national 10 digits in both +92… and 03… forms,
-  // so an ends-with match on those digits is the last-10 comparison).
+  // Phone path — every recent order placed with that number. Stored
+  // phones are canonical +92… for form-entered numbers, but checkout
+  // also accepts free-typed ones, so match tolerantly: try the plain
+  // ends-with form first, then a separator-tolerant pattern (the
+  // typed number's digits in order, any separators between them).
   if (phoneDigits.length === 10) {
-    const orders = await Order.find({ "address.phone": { $regex: `${phoneDigits}$` } })
+    let orders = await Order.find({ "address.phone": { $regex: `${phoneDigits}$` } })
       .sort({ createdAt: -1 })
       .limit(10);
+    if (!orders.length) {
+      const tolerant = phoneDigits.split("").join("\\D*");
+      orders = await Order.find({ "address.phone": { $regex: `${tolerant}$` } })
+        .sort({ createdAt: -1 })
+        .limit(50);
+      orders = orders
+        .filter((o) => last10Digits(o.address?.phone) === phoneDigits)
+        .slice(0, 10);
+    }
     if (!orders.length) return notFound();
     return res.json({ orders: orders.map(limitedOrderView) });
   }
