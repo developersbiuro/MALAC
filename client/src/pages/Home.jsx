@@ -47,8 +47,8 @@ const FAQS = [
 
 export default function Home() {
   useSeo({
-    title: "MALAC - M.A Luxury Apparel Collection",
-    description: "MALAC — M.A Luxury Apparel Collection. Shop fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+    title: "MALAC — Online Shopping in Pakistan | M.A Luxury Apparel Collection",
+    description: "Online shopping in Pakistan at MALAC — mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. 5,000.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "FAQPage",

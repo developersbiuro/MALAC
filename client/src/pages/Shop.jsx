@@ -57,10 +57,10 @@ export default function Shop() {
 
   const title = search ? `Results for "${search}"` : category || (flash ? "Flash Sale" : "All Products");
   useSeo({
-    title: `${title} — MALAC`,
+    title: !search && !category && !flash ? "Online Shopping in Pakistan — All Products | MALAC" : `${title} — MALAC`,
     description: category
       ? `Shop ${category} online in Pakistan at MALAC — M.A Luxury Apparel Collection, with Cash on Delivery and free shipping on orders over Rs. 5,000.`
-      : "Shop all products at MALAC — M.A Luxury Apparel Collection. Fashion, beauty, electronics and more online in Pakistan with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+      : "Online shopping in Pakistan at MALAC — shop all products: mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. 5,000.",
   });
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
