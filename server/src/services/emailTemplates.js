@@ -137,4 +137,32 @@ export function actionLinkEmail({ heading, intro, buttonLabel, url, expiryNote, 
   return { html: layout(body), text: plainText };
 }
 
-export default { otpEmail, actionLinkEmail };
+export function reviewInviteEmail({ name, orderId, items }) {
+  const firstName = esc(String(name || "Customer").split(" ")[0] || "Customer");
+  const rows = (items || []).map((item) => {
+    const url = esc(item.url);
+    return `            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px 0; border:1px solid ${CARD_BORDER};">
+              <tr>
+                <td style="padding:12px 14px; font-family:${FONT_BODY}; font-size:14px; color:${INK};">${esc(item.title)}</td>
+                <td align="right" style="padding:12px 14px;">
+                  <a href="${url}" style="font-family:${FONT_BODY}; font-size:13px; font-weight:bold; color:${BURNT}; text-decoration:none;">Write a review &rarr;</a>
+                </td>
+              </tr>
+            </table>`;
+  }).join("\n");
+  const body = [
+    headingRow("Your order has been delivered"),
+    paragraphRow(`Assalam-o-Alaikum ${firstName}, your order <strong style="color:${INK};">${esc(orderId)}</strong> has been delivered. We hope you love what you ordered!`),
+    paragraphRow("Your review helps other customers shop with confidence — it only takes a minute, and every review is checked by our team before it appears on the store:"),
+    rows,
+    paragraphRow("Thank you for shopping with MALAC.", "font-size:13px; color:" + MUTED + ";"),
+  ].join("\n");
+  const text =
+    `Your MALAC order ${orderId} has been delivered.\n` +
+    `We would love your review — every review is checked by our team before it appears on the store:\n` +
+    (items || []).map((i) => `- ${i.title}: ${i.url}`).join("\n") +
+    `\nThank you for shopping with MALAC.`;
+  return { html: layout(body), text };
+}
+
+export default { otpEmail, actionLinkEmail, reviewInviteEmail };

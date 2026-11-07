@@ -35,6 +35,7 @@ import AdminProductForm from "./pages/admin/AdminProductForm.jsx";
 import AdminCategories from "./pages/admin/AdminCategories.jsx";
 import AdminOrders from "./pages/admin/AdminOrders.jsx";
 import AdminCoupons from "./pages/admin/AdminCoupons.jsx";
+import AdminReviews from "./pages/admin/AdminReviews.jsx";
 import AdminRoles from "./pages/admin/AdminRoles.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 import AdminPassword from "./pages/admin/AdminPassword.jsx";
@@ -81,6 +82,7 @@ function AdminShell() {
         <Route path="categories" element={<SectionGuard permission="categories"><AdminCategories /></SectionGuard>} />
         <Route path="orders" element={<SectionGuard permission="orders"><AdminOrders /></SectionGuard>} />
         <Route path="coupons" element={<SectionGuard permission="coupons"><AdminCoupons /></SectionGuard>} />
+        <Route path="reviews" element={<SectionGuard permission="products"><AdminReviews /></SectionGuard>} />
         <Route path="roles" element={<SectionGuard superOnly><AdminRoles /></SectionGuard>} />
         <Route path="settings" element={<SectionGuard superOnly><AdminSettings /></SectionGuard>} />
         <Route path="password" element={<AdminPassword />} />

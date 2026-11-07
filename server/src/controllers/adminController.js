@@ -1,4 +1,6 @@
 import User from "../models/User.js";
+import Review from "../models/Review.js";
+import { syncProductRating } from "./productController.js";
 import Settings from "../models/Settings.js";
 import PasswordResetRequest from "../models/PasswordResetRequest.js";
 import env from "../config/env.js";
@@ -280,4 +282,34 @@ export const updateSettings = asyncHandler(async (req, res) => {
 export const publicSettings = asyncHandler(async (req, res) => {
   const settings = await Settings.getStore();
   res.json({ payments: settings.publicPayments() });
+});
+
+// ---- Review moderation (anti-defamation gate) ----
+// Every customer review starts "pending" and stays invisible on the store
+// until a staff member approves it here. Routes are gated by the
+// "products" permission, same as the catalogue the reviews belong to.
+export const listReviewsAdmin = asyncHandler(async (req, res) => {
+  const filter = {};
+  if (["pending", "approved", "rejected"].includes(req.query.status)) filter.status = req.query.status;
+  const reviews = await Review.find(filter)
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .populate("product", "title slug")
+    .populate("user", "name email phone");
+  const pendingCount = await Review.countDocuments({ status: "pending" });
+  res.json({ reviews, pendingCount });
+});
+
+export const setReviewStatus = asyncHandler(async (req, res) => {
+  const { status } = req.body;
+  if (!["approved", "rejected", "pending"].includes(status)) {
+    return res.status(400).json({ message: "status must be approved, rejected or pending" });
+  }
+  const review = await Review.findById(req.params.id);
+  if (!review) return res.status(404).json({ message: "Review not found" });
+  review.status = status;
+  await review.save();
+  const product = await syncProductRating(review.product);
+  const pendingCount = await Review.countDocuments({ status: "pending" });
+  res.json({ review, product, pendingCount });
 });

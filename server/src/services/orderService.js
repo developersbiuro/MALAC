@@ -1,5 +1,9 @@
 import Order, { CUSTOMER_CANCEL_REASONS, ADMIN_CANCEL_REASONS } from "../models/Order.js";
 import Product from "../models/Product.js";
+import User from "../models/User.js";
+import env from "../config/env.js";
+import { sendEmail } from "./emailService.js";
+import { reviewInviteEmail } from "./emailTemplates.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
 
@@ -128,6 +132,12 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
   }
   order.statusHistory.push({ status, by, note });
   if (status === "Delivered" && order.paymentMethod === "COD") order.paymentStatus = "Paid";
+  // First delivery: invite the customer to review what they received
+  // (email only, sent after the save below; failures never block the
+  // status update, and the stamp is only set when an email actually went
+  // out, so a later save can still deliver it after a transient failure).
+  const sendReviewInvite = status === "Delivered" && prev !== "Delivered" && !order.reviewEmailSentAt;
+  if (sendReviewInvite) order.reviewEmailSentAt = new Date();
   // A returned parcel goes back on the shelf (unless it already came back
   // once — moving within Returned must not double-restock).
   if (status === "Returned" && prev !== "Returned") {
@@ -136,5 +146,34 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
     }
   }
   await order.save();
+  if (sendReviewInvite) {
+    try { await sendDeliveredReviewInvite(order); }
+    catch { /* the invite is best-effort; delivery state is already saved */ }
+  }
   return order;
+}
+
+// "Your order was delivered — please review it" email. Only customers with
+// a REAL email get one: phone-method accounts carry a synthetic
+// …@malac.local placeholder that must never be mailed. Each purchased
+// product links straight to its page's review section.
+async function sendDeliveredReviewInvite(order) {
+  const user = await User.findById(order.user).select("name email");
+  const email = user?.email || "";
+  if (!email || email.endsWith("@malac.local")) return;
+  const productIds = [...new Set((order.items || []).filter((i) => i.product).map((i) => String(i.product)))];
+  const products = await Product.find({ _id: { $in: productIds } }).select("title slug");
+  const byId = new Map(products.map((p) => [String(p._id), p]));
+  const base = String(env.clientUrl || "").replace(/\/$/, "");
+  const seen = new Set();
+  const items = [];
+  for (const item of order.items || []) {
+    const p = item.product ? byId.get(String(item.product)) : null;
+    if (!p || seen.has(p.slug)) continue;
+    seen.add(p.slug);
+    items.push({ title: p.title, url: `${base}/product/${p.slug}#reviews` });
+  }
+  if (!items.length) return;
+  const { html, text } = reviewInviteEmail({ name: user?.name, orderId: order.orderId, items });
+  await sendEmail({ to: email, subject: `Your MALAC order ${order.orderId} was delivered — review your purchase`, html, text });
 }

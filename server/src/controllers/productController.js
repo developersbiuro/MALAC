@@ -1,5 +1,6 @@
 import Product from "../models/Product.js";
 import Review from "../models/Review.js";
+import Order from "../models/Order.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { slugify } from "../utils/slugify.js";
 
@@ -85,25 +86,50 @@ export const deleteProduct = asyncHandler(async (req, res) => {
   res.json({ message: "Product archived", product });
 });
 
+// Only APPROVED reviews are public. The $nin also matches reviews created
+// before moderation existed (those have no status field at all).
+const PUBLIC_REVIEW_FILTER = { status: { $nin: ["pending", "rejected"] } };
+
+// Recompute a product's public rating aggregates from its PUBLIC reviews
+// only — pending/rejected reviews never move the stars.
+export async function syncProductRating(productId) {
+  const product = await Product.findById(productId);
+  if (!product) return null;
+  const all = await Review.find({ product: productId, ...PUBLIC_REVIEW_FILTER });
+  product.ratingCount = all.length;
+  product.ratingAvg = all.length ? all.reduce((s, r) => s + r.rating, 0) / all.length : 0;
+  product.ratingBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  all.forEach((r) => { product.ratingBreakdown[r.rating] += 1; });
+  await product.save();
+  return product;
+}
+
 export const listReviews = asyncHandler(async (req, res) => {
-  const reviews = await Review.find({ product: req.params.id }).sort({ createdAt: -1 });
+  const reviews = await Review.find({ product: req.params.id, ...PUBLIC_REVIEW_FILTER }).sort({ createdAt: -1 });
   res.json({ reviews });
 });
 
 export const createReview = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ message: "Product not found" });
+  // Verified purchase: this customer has a Delivered order containing the
+  // product. Anyone logged in may still review (it stays pending for admin
+  // approval either way), but only buyers get the badge.
+  const bought = req.user?._id
+    ? await Order.exists({
+        user: req.user._id, status: "Delivered",
+        "items.product": product._id,
+      })
+    : null;
   const review = await Review.create({
     product: product._id, user: req.user?._id,
     authorName: req.user?.name || req.body.authorName || "MALAC Customer",
     rating: req.body.rating, comment: req.body.comment || "", images: req.body.images || [],
+    verifiedPurchase: !!bought,
+    status: "pending",
   });
-  const all = await Review.find({ product: product._id });
-  product.ratingCount = all.length;
-  product.ratingAvg = all.reduce((s, r) => s + r.rating, 0) / (all.length || 1);
-  product.ratingBreakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  all.forEach((r) => { product.ratingBreakdown[r.rating] += 1; });
-  await product.save();
+  // Public aggregates do NOT change yet — the review publishes only when
+  // an admin approves it (adminController.setReviewStatus re-syncs).
   res.status(201).json({ review, product });
 });
 

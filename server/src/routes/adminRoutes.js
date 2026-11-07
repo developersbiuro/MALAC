@@ -15,6 +15,9 @@ router.patch("/orders/:id/status", requirePermission("orders"), orders.adminUpda
 // "payments" permission: a Vice-Admin with "orders" but not "payments"
 // can update fulfillment status but cannot verify/reject payments.
 router.patch("/orders/:id/payment-verification", requirePermission("payments"), orders.adminVerifyPayment);
+// Review moderation: gated by "products" (reviews belong to the catalogue).
+router.get("/reviews", requirePermission("products"), admin.listReviewsAdmin);
+router.patch("/reviews/:id/status", requirePermission("products"), admin.setReviewStatus);
 router.get("/users", admin.listUsers);
 // Super Admin only: staff creation + role assignment + reset approvals +
 // per-Vice-Admin access (permissions), verification, setup resend,

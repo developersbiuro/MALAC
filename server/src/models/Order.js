@@ -81,6 +81,9 @@ const orderSchema = new mongoose.Schema({
   cancelReason: { type: String, default: "" },
   cancelNote: { type: String, default: "" },
   cancelledBy: { type: String, enum: ["", "customer", "admin"], default: "" },
+  // Set once when the "your order was delivered — please review" email goes
+  // out (first transition into Delivered), so status re-saves never re-send.
+  reviewEmailSentAt: { type: Date },
   status: { type: String, enum: ORDER_STATUSES, default: "Pending", index: true },
   statusHistory: [statusEntrySchema],
   address: {

@@ -26,6 +26,7 @@ export default function ProductDetails() {
   const [city, setCity] = useState("Lahore");
   const [openQa, setOpenQa] = useState(null);
   const [question, setQuestion] = useState("");
+  const [reviewMsg, setReviewMsg] = useState("");
   const [myRating, setMyRating] = useState(5);
   const [myComment, setMyComment] = useState("");
 
@@ -115,8 +116,15 @@ export default function ProductDetails() {
   const submitReview = async (e) => {
     e.preventDefault();
     if (!user) return navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`);
-    const r = await api.post(`/products/${product._id}/reviews`, { rating: myRating, comment: myComment });
-    setReviews((prev) => [r.data.review, ...prev]); setProduct(r.data.product); setMyComment("");
+    try {
+      await api.post(`/products/${product._id}/reviews`, { rating: myRating, comment: myComment });
+      // Reviews publish only after admin approval (anti-defamation gate),
+      // so the new review is NOT added to the public list here.
+      setMyComment("");
+      setReviewMsg("Thank you! Your review has been submitted — it will appear here after our team approves it.");
+    } catch {
+      setReviewMsg("Sorry, your review could not be submitted. Please try again.");
+    }
   };
   const submitQuestion = async (e) => {
     e.preventDefault();
@@ -231,7 +239,7 @@ export default function ProductDetails() {
       </div>
 
       {/* Ratings & reviews */}
-      <section className="bg-white rounded-md mt-3 p-4 grid md:grid-cols-[220px_1fr] gap-6">
+      <section id="reviews" className="bg-white rounded-md mt-3 p-4 grid md:grid-cols-[220px_1fr] gap-6">
         <div>
           <p className="font-semibold">Ratings & Reviews</p>
           <p className="text-3xl font-bold mt-2">{(product.ratingAvg || 0).toFixed(1)}<span className="text-base text-gray-400">/5</span></p>
@@ -251,6 +259,8 @@ export default function ProductDetails() {
             </select>
             <textarea value={myComment} onChange={(e) => setMyComment(e.target.value)} placeholder="Write a review..." className="border rounded px-2 py-1.5 w-full text-sm" rows={2} />
             <button className="bg-lux-gradient text-white text-sm rounded-full px-4 py-1.5 w-full font-semibold">Submit Review</button>
+            {reviewMsg && <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-2.5 py-2">{reviewMsg}</p>}
+            <p className="text-[11px] text-gray-400">Reviews are checked by our team before they appear, to keep them genuine.</p>
           </form>
         </div>
         <div className="space-y-3">

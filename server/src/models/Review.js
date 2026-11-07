@@ -8,6 +8,12 @@ const reviewSchema = new mongoose.Schema({
   comment: { type: String, default: "" },
   images: [{ type: String }],
   verifiedPurchase: { type: Boolean, default: false },
+  // Moderation (Abdullah, 2026-11-07): every review needs admin approval
+  // before it is public — no defamation surprises. New reviews start
+  // "pending". Documents created before this field existed have no status
+  // and stay public: all public queries use status $nin ["pending",
+  // "rejected"], which matches a missing field too.
+  status: { type: String, enum: ["pending", "approved", "rejected"], index: true },
 }, { timestamps: true });
 
 export default mongoose.model("Review", reviewSchema);
