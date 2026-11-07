@@ -13,6 +13,7 @@ import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import whatsappRoutes from "./routes/whatsappRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
 import appAssetRoutes from "./routes/appAssetRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
@@ -125,6 +126,7 @@ app.use("/api/coupons", couponRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

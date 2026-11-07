@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>MALAC — Connect WhatsApp (Embedded Signup)</title>
+<style>
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #faf6ef; color: #16233f; }
+  main { max-width: 680px; margin: 0 auto; padding: 32px 20px 64px; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  p { line-height: 1.55; font-size: 15px; }
+  .card { background: #fff; border: 1px solid #e7ddc9; border-radius: 14px; padding: 20px; margin: 18px 0; }
+  button { background: linear-gradient(90deg, #f97316, #f59e0b); color: #fff; border: 0; border-radius: 10px;
+           padding: 13px 22px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; }
+  button:disabled { opacity: .55; cursor: not-allowed; }
+  .warn { background: #fff7ed; border: 1px solid #fdba74; color: #7c2d12; border-radius: 10px; padding: 12px 14px; font-size: 14px; margin: 12px 0; display: none; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
+         background: #0f172a; color: #dbeafe; border-radius: 10px; padding: 14px; min-height: 120px; overflow-x: auto; }
+  .small { font-size: 13px; color: #5b6478; }
+  ol { line-height: 1.6; font-size: 15px; padding-left: 20px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Connect WhatsApp number to MALAC (one-time setup)</h1>
+  <p>
+    This page runs Meta&rsquo;s <strong>Embedded Signup with coexistence</strong>: it connects the
+    WhatsApp Business <em>app</em> number <strong>+92 323 6016684</strong> to the Cloud API
+    <em>without</em> removing it from the app. Meta converts the account during this flow —
+    linking it from Business Settings alone does <strong>not</strong> do that.
+  </p>
+
+  <div id="warn-config" class="warn">
+    The Embedded Signup <strong>configuration ID is not set</strong>. Open this page with
+    <code>?config_id=YOUR_ID</code> in the URL, or paste the ID into the CONFIG_ID constant in
+    this file. The ID is created in the Meta app dashboard (see
+    <code>docs/whatsapp-embedded-signup-runbook.md</code>).
+  </div>
+  <div id="warn-auth" class="warn">
+    You are <strong>not signed in as Super Admin</strong> in this browser. Sign in at
+    <a href="/admin">/admin</a> first (same browser), then come back — the result of this flow
+    contains a live access token, so the server only accepts it from the Super Admin account.
+  </div>
+
+  <div class="card">
+    <ol>
+      <li>Click <strong>Connect WhatsApp</strong> below.</li>
+      <li>In the Meta popup, log in with the Facebook account that owns MALAC Store.</li>
+      <li>Choose the option to connect your <strong>existing WhatsApp Business app account</strong>,
+          and <strong>type the number +92 323 6016684 manually</strong> if asked
+          (do not pick a dropdown entry that says &ldquo;Ineligible&rdquo;).</li>
+      <li>Confirm in your <strong>WhatsApp Business app</strong> (enter the code / tap
+          &ldquo;Connect to the Business Platform&rdquo; &rarr; Confirm) and finish the popup.</li>
+      <li>Keep this tab open — the result appears below automatically.</li>
+    </ol>
+    <button id="connectBtn" disabled>Loading Facebook SDK&hellip;</button>
+    <p class="small">Do NOT close the popup early and do NOT use the classic SMS
+      &ldquo;Verify&rdquo; flow anywhere — coexistence numbers are already registered and must
+      never be migrated or deregistered.</p>
+  </div>
+
+  <div id="log">Waiting to start…</div>
+</main>
+
+<script>
+"use strict";
+/* ================================================================
+   OPERATOR: set the Embedded Signup configuration ID here.
+   Create it in the Meta app dashboard:
+     developers.facebook.com → MALAC app (3071438539856171) →
+     WhatsApp → Embedded Signup → Configurations → Create
+   (full checklist: docs/whatsapp-embedded-signup-runbook.md)
+   A ?config_id=... query parameter overrides this constant, so the
+   page also works before the ID is pasted in permanently.
+   ================================================================ */
+const META_APP_ID = "3071438539856171";
+const CONFIG_ID = "1170607445530563";
+
+const params = new URLSearchParams(location.search);
+const configId = params.get("config_id") || CONFIG_ID;
+const logEl = document.getElementById("log");
+const btn = document.getElementById("connectBtn");
+
+function log(line) {
+  logEl.textContent += "\n" + line;
+}
+function setLog(line) {
+  logEl.textContent = line;
+}
+
+// State shared between the FB.login callback and the session-event
+// listener: the code arrives via the callback, the waba/phone IDs
+// arrive via the WA_EMBEDDED_SIGNUP session message. Either can land
+// first, so both feed trySubmit().
+const state = { code: null, wabaId: null, phoneNumberId: null, event: null, submitted: false };
+
+if (!configId || configId === "PASTE_WHATSAPP_CONFIG_ID_HERE") {
+  document.getElementById("warn-config").style.display = "block";
+}
+if (!localStorage.getItem("malac_token")) {
+  document.getElementById("warn-auth").style.display = "block";
+}
+
+// Session logging (required by Meta for coexistence onboarding):
+// the embedded flow posts WA_EMBEDDED_SIGNUP messages to this page.
+window.addEventListener("message", (event) => {
+  if (event.origin !== "https://www.facebook.com" && event.origin !== "https://web.facebook.com") return;
+  let data;
+  try { data = JSON.parse(event.data); } catch { return; }
+  if (!data || data.type !== "WA_EMBEDDED_SIGNUP") return;
+  log("Signup event: " + data.event + (data.data ? " — " + JSON.stringify(data.data) : ""));
+  if (data.event === "CANCEL") {
+    log("Flow was cancelled" + (data.data && data.data.current_step ? " at step: " + data.data.current_step : "") + ". Nothing was connected.");
+    return;
+  }
+  if (data.event === "ERROR") {
+    log("Flow error: " + JSON.stringify(data.data || {}));
+    return;
+  }
+  if (data.event === "FINISH" || data.event === "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING") {
+    state.event = data.event;
+    if (data.data) {
+      state.wabaId = data.data.waba_id || state.wabaId;
+      state.phoneNumberId = data.data.phone_number_id || state.phoneNumberId;
+    }
+    trySubmit();
+  }
+});
+
+function trySubmit() {
+  if (state.submitted || !state.code) return;
+  // The session event usually arrives within a moment of the login
+  // callback; give it a short grace period so the IDs are included.
+  if (!state.wabaId) {
+    setTimeout(trySubmit, 1500);
+    setTimeout(() => { if (!state.submitted) submit(); }, 8000);
+    return;
+  }
+  submit();
+}
+
+async function submit() {
+  if (state.submitted) return;
+  state.submitted = true;
+  btn.disabled = true;
+  log("Sending the result to the MALAC server for token exchange + app subscription…");
+  const token = localStorage.getItem("malac_token");
+  try {
+    const res = await fetch("/api/whatsapp/embedded-signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: "Bearer " + token } : {}),
+      },
+      body: JSON.stringify({
+        code: state.code,
+        waba_id: state.wabaId,
+        phone_number_id: state.phoneNumberId,
+        event: state.event,
+      }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      log("SERVER ERROR (" + res.status + "): " + (body.message || "unknown error"));
+      log("If this says the code expired, just run the flow again — codes are single-use.");
+      state.submitted = false;
+      btn.disabled = false;
+      return;
+    }
+    setLog("SUCCESS — copy these into the deployment env vars (Vercel), then follow the next_steps:\n\n" + JSON.stringify(body, null, 2));
+  } catch (err) {
+    log("Network error talking to the MALAC server: " + err.message);
+    state.submitted = false;
+    btn.disabled = false;
+  }
+}
+
+function launchSignup() {
+  if (!window.FB) { log("Facebook SDK not loaded yet — wait a moment and try again."); return; }
+  if (!configId || configId === "PASTE_WHATSAPP_CONFIG_ID_HERE") {
+    log("Configuration ID is not set — see the warning at the top of this page.");
+    return;
+  }
+  setLog("Launching Meta Embedded Signup (coexistence)…");
+  state.code = null; state.wabaId = null; state.phoneNumberId = null; state.event = null; state.submitted = false;
+  FB.login(
+    (response) => {
+      if (response && response.authResponse && response.authResponse.code) {
+        state.code = response.authResponse.code;
+        log("Received the signup code. Waiting for the session event with the account IDs…");
+        trySubmit();
+      } else {
+        log("Login did not return a code (popup closed or not authorized). Nothing was connected — you can try again.");
+        btn.disabled = false;
+      }
+    },
+    {
+      config_id: configId,
+      response_type: "code",
+      override_default_response_type: true,
+      extras: {
+        setup: {},
+        sessionInfoVersion: 3,
+        // Coexistence: onboard the EXISTING WhatsApp Business app
+        // account/number instead of creating a fresh API-only one.
+        featureType: "whatsapp_business_app_onboarding",
+      },
+    }
+  );
+}
+
+btn.addEventListener("click", launchSignup);
+
+// Facebook JS SDK bootstrap.
+window.fbAsyncInit = function () {
+  FB.init({ appId: META_APP_ID, autoLogAppEvents: true, xfbml: true, version: "v20.0" });
+  btn.disabled = false;
+  btn.textContent = "Connect WhatsApp";
+  setLog("Ready. Configuration ID: " + (configId === "PASTE_WHATSAPP_CONFIG_ID_HERE" ? "(not set)" : configId));
+};
+(function (d, s, id) {
+  const fjs = d.getElementsByTagName(s)[0];
+  if (d.getElementById(id)) return;
+  const js = d.createElement(s);
+  js.id = id;
+  js.src = "https://connect.facebook.net/en_US/sdk.js";
+  fjs.parentNode.insertBefore(js, fjs);
+})(document, "script", "facebook-jssdk");
+</script>
+</body>
+</html>

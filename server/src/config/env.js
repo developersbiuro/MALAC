@@ -48,6 +48,15 @@ export const env = {
     clientId: process.env.GOOGLE_CLIENT_ID || "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
   },
+  // Meta app credentials — used ONLY by the one-off Embedded Signup
+  // endpoint (POST /api/whatsapp/embedded-signup) that connects the
+  // owner's WhatsApp Business app number to the Cloud API. The app
+  // secret is a real secret: it lives in the deployment environment
+  // only, is never sent to the client, and never appears in responses.
+  meta: {
+    appId: process.env.META_APP_ID || "",
+    appSecret: process.env.META_APP_SECRET || "",
+  },
   // Manual mobile-wallet payments. Defaults below are the store accounts
   // provided by the owner (the SAME account for JazzCash and Easypaisa).
   // They stay configurable via .env or Admin -> Settings — never hard-code
