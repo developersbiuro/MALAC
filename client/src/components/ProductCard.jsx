@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
       <div className="p-1.5 pb-0 sm:p-2 sm:pb-0">
         <div className="relative rounded-lg overflow-hidden aspect-square">
           <Link to={`/product/${product.slug}`}>
-            <img src={product.images?.[0]} alt={product.category ? `${product.title} — ${product.category}` : product.title} loading="lazy"
+            <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.category ? `${product.title} — ${product.category}` : product.title} loading="lazy"
               onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
           </Link>

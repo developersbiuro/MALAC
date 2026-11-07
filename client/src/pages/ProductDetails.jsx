@@ -140,7 +140,7 @@ export default function ProductDetails() {
         {/* Gallery */}
         <div>
           <div className="relative overflow-hidden rounded border" onMouseEnter={() => setZoom(true)} onMouseLeave={() => setZoom(false)}>
-            <img src={product.images?.[img]} alt={`${product.title} — ${product.category}`}
+            <img src={product.images?.[img] || "/icons/icon.svg"} alt={`${product.title} — ${product.category}`}
               onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
               className={`w-full aspect-square object-cover transition-transform duration-200 ${zoom ? "scale-150" : ""}`} />
           </div>

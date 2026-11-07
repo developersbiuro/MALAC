@@ -15,6 +15,19 @@ favicon.type = "image/png";
 favicon.href = LOGO_MARK;
 document.head.appendChild(favicon);
 
+// Every image on the site falls back to the MALAC placeholder
+// (Abdullah, 2026-11-07: "hr image ka placeholder MALAC hi ho"). One
+// capture-phase listener covers every <img> — product photos, cart,
+// orders, reviews, avatars — including images added later; a failed
+// image swaps to the monogram tile instead of a broken-image icon.
+// The endsWith guard stops any loop if the placeholder itself fails.
+document.addEventListener("error", (e) => {
+  const t = e.target;
+  if (t && t.tagName === "IMG" && !String(t.src || "").endsWith("/icons/icon.svg")) {
+    t.src = "/icons/icon.svg";
+  }
+}, true);
+
 // PWA: register the service worker (production builds only). Progressive
 // enhancement — the store works exactly the same if registration fails.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {
