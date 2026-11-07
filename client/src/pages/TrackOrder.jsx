@@ -2,14 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PackageSearch, ArrowLeft, CheckCircle2, Circle, Truck } from "lucide-react";
 import api from "../api/client.js";
-import PhoneInput from "../components/PhoneInput.jsx";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
 
-// Public order tracking (no login): the buyer enters the order ID from
-// their confirmation plus the phone number used for the order. The
-// server (POST /api/orders/track) only answers when both match and
-// returns a limited view of the order.
+// Public order tracking (no login): the buyer enters ONLY the order ID
+// from their confirmation — one field (Abdullah, 2026-11-07). The server
+// (POST /api/orders/track) returns a limited view of the order.
 const FLOW = ["Pending", "Processing", "Shipped", "Delivered"];
 const badge = {
   Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
@@ -21,33 +19,32 @@ const inputCls = "w-full border border-cream-line rounded-full px-4 py-2.5 text-
 export default function TrackOrder() {
   useSeo({
     title: "Track Your Order — MALAC",
-    description: "Track your MALAC order with your order ID and phone number — see live delivery status, items and totals.",
+    description: "Track your MALAC order with just your order ID — see live delivery status, items and totals.",
   });
   const [params] = useSearchParams();
   const [orderId, setOrderId] = useState(params.get("orderId") || "");
-  const [phone, setPhone] = useState(params.get("phone") || "");
   const [order, setOrder] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const autoRan = useRef(false);
 
-  const track = useCallback(async (id, ph) => {
-    if (!id.trim() || !ph.trim()) { setError("Enter both your order ID and the phone number used for the order."); return; }
+  const track = useCallback(async (id) => {
+    if (!id.trim()) { setError("Enter your order ID."); return; }
     setLoading(true); setError(""); setOrder(null);
     try {
-      const r = await api.post("/orders/track", { orderId: id.trim(), phone: ph.trim() });
+      const r = await api.post("/orders/track", { orderId: id.trim() });
       setOrder(r.data.order);
     } catch (e) {
-      setError(e.response?.data?.message || "We could not find that order. Please check the order ID and phone number and try again.");
+      setError(e.response?.data?.message || "We could not find that order. Please check the order ID and try again.");
     } finally { setLoading(false); }
   }, []);
 
-  // Arriving from the homepage band (or a shared link) with both values
+  // Arriving from the homepage band (or a shared link) with the order ID
   // in the query string runs the lookup straight away.
   useEffect(() => {
     if (autoRan.current) return;
-    const id = params.get("orderId"); const ph = params.get("phone");
-    if (id && ph) { autoRan.current = true; track(id, ph); }
+    const id = params.get("orderId");
+    if (id) { autoRan.current = true; track(id); }
   }, [params, track]);
 
   const history = order?.statusHistory?.length
@@ -63,16 +60,15 @@ export default function TrackOrder() {
       <p className="eyebrow mt-6">Order Tracking</p>
       <h1 className="font-display text-3xl sm:text-4xl font-bold mt-1.5">Track Your Order</h1>
       <p className="text-sm text-gray-500 leading-relaxed mt-3">
-        Enter the order ID from your confirmation (for example MLC-XXXXXX-1234) and the phone
-        number you used when placing the order. No sign-in needed.
+        Enter the order ID from your confirmation (for example MLC-XXXXXX-1234). No sign-in
+        and no phone number needed.
       </p>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); track(orderId, phone); }}
-        className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 p-4 sm:p-5 grid sm:grid-cols-[1fr_1fr_auto] gap-3"
+        onSubmit={(e) => { e.preventDefault(); track(orderId); }}
+        className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 p-4 sm:p-5 grid sm:grid-cols-[1fr_auto] gap-3"
       >
         <input value={orderId} onChange={(e) => setOrderId(e.target.value)} placeholder="Order ID (MLC-...)" className={inputCls} />
-        <PhoneInput value={phone} onChange={setPhone} className="w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus-within:border-lux-amber" />
         <button disabled={loading} className="btn-lux px-6 py-2.5 text-sm">
           <PackageSearch size={16} /> {loading ? "Tracking..." : "Track Order"}
         </button>

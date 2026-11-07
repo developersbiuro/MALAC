@@ -7,7 +7,7 @@ import { useAppMode } from "../utils/appMode.js";
 // MALAC Assistant — a small rule-based, fully client-side chat (v1: no AI
 // backend). It can:
 //   - search products via GET /products/suggest and link to product pages,
-//   - track an order via the public POST /orders/track (order ID + phone),
+//   - track an order via the public POST /orders/track (order ID only),
 //   - answer store FAQs (delivery, payment, returns, contact) by keyword,
 //     in English + Roman Urdu.
 // Conversation lives in component state only; nothing is persisted and no
@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     keys: ["track", "order kahan", "mera order", "order status", "parcel kahan"],
-    text: "Order track karne ke liye apna order ID likhein (jaise MLC-XXXXXX-1234) — main aap se wo phone number bhi maango ga jo order par diya tha. Ya seedha Track Order page use karein.",
+    text: "Order track karne ke liye sirf apna order ID likhein (jaise MLC-XXXXXX-1234) — bas, phone number ki zaroorat nahi. Ya seedha Track Order page use karein.",
     link: { to: "/track-order", label: "Track Order page kholein" },
   },
   {
@@ -76,7 +76,6 @@ export default function ChatWidget() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
-  const [pendingOrderId, setPendingOrderId] = useState(null);
   const scrollRef = useRef(null);
 
   // The admin suite has its own chrome — never float over it.
@@ -97,10 +96,10 @@ export default function ChatWidget() {
 
   const goTo = (to) => { setOpen(false); navigate(to); };
 
-  const trackWith = async (orderId, phone) => {
+  const trackWith = async (orderId) => {
     setBusy(true);
     try {
-      const r = await api.post("/orders/track", { orderId, phone });
+      const r = await api.post("/orders/track", { orderId });
       const o = r.data.order;
       push(botSay(
         `Order ${o.orderId} ka status: ${o.status}. Payment: ${o.paymentMethod} (${o.paymentStatus})` +
@@ -114,10 +113,9 @@ export default function ChatWidget() {
         { link: { to: "/track-order", label: "Poori tafseel dekhein" } }
       ));
     } catch {
-      push(botSay("Is order ID aur phone number se koi order match nahi hua. Dono dobara check karke likhein — order ID aap ki confirmation par hota hai (jaise MLC-XXXXXX-1234)."));
+      push(botSay("Is order ID se koi order match nahi hua. Order ID dobara check karke likhein — ye aap ki confirmation par hota hai (jaise MLC-XXXXXX-1234)."));
     } finally {
       setBusy(false);
-      setPendingOrderId(null);
     }
   };
 
@@ -128,31 +126,16 @@ export default function ChatWidget() {
     push({ id: nextId(), from: "user", text });
     const lower = text.toLowerCase();
 
-    // --- Order tracking state machine ---
+    // --- Order tracking: the order ID alone is enough now ---
     const idMatch = text.match(/MLC[-\s]?[A-Z0-9][A-Z0-9-]{3,}/i);
-    const phoneDigits = text.replace(/\D/g, "");
-    if (pendingOrderId && phoneDigits.length >= 10) {
-      trackWith(pendingOrderId, text);
-      return;
-    }
     if (idMatch) {
-      const orderId = idMatch[0].toUpperCase();
-      if (phoneDigits.replace(/^92/, "").length >= 10 && phoneDigits !== orderId.replace(/\D/g, "")) {
-        trackWith(orderId, text);
-      } else {
-        setPendingOrderId(orderId);
-        push(botSay("Shukriya! Ab wo phone number likhein jo is order par diya tha (jaise 0300 1234567)."));
-      }
-      return;
-    }
-    if (pendingOrderId) {
-      push(botSay("Ye phone number samajh nahi aya — mukammal number likhein, jaise 0300 1234567. Ya sirf order ID dobara likh kar nayi search shuru kar sakte hain."));
+      trackWith(idMatch[0].toUpperCase());
       return;
     }
 
     // --- FAQ intents ---
     if (FAQS[1].keys.some((k) => lower.includes(k))) { // tracking intent
-      push(botSay("Zaroor! Apna order ID likhein (jaise MLC-XXXXXX-1234) — phir main aap se order wala phone number maango ga."));
+      push(botSay("Zaroor! Sirf apna order ID likhein (jaise MLC-XXXXXX-1234) — main foran status bata deta hoon."));
       return;
     }
     for (const faq of FAQS) {

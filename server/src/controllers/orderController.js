@@ -17,28 +17,23 @@ export const placeOrder = asyncHandler(async (req, res) => {
 });
 
 // -- Public order tracking (no login) --
-// Guests track with the two facts only the buyer knows: the human order
-// ID from their confirmation AND the phone number placed on the order.
-// The phone is compared on its last 10 digits so +92 / 0 / bare formats
-// all match. A single generic 404 covers both "no such order" and
-// "phone does not match" so the endpoint never reveals which failed.
-// The response is a LIMITED view: no user account data, no address, no
-// payment screenshots/transaction details.
-const last10Digits = (value) => String(value || "").replace(/\D/g, "").slice(-10);
-
+// Guests track with the human order ID alone (Abdullah, 2026-11-07: one
+// field, not order ID + phone). The ID carries a Date.now() base36 stamp
+// plus a random suffix, so it is not enumerable in practice; this endpoint
+// is IP rate-limited in app.js as a second guard. The response is a
+// LIMITED view: no user account data, no address, no payment
+// screenshots/transaction details.
 export const trackOrder = asyncHandler(async (req, res) => {
   const orderId = String(req.body.orderId || "").trim();
-  const phoneDigits = last10Digits(req.body.phone);
   const notFound = () => res.status(404).json({
-    message: "We could not find an order matching that order ID and phone number. Please check both and try again.",
+    message: "We could not find an order with that order ID. Please check the ID and try again.",
   });
-  if (!orderId || phoneDigits.length < 10) return notFound();
+  if (!orderId) return notFound();
   let order = await Order.findOne({ orderId });
   if (!order && orderId !== orderId.toUpperCase()) {
     order = await Order.findOne({ orderId: orderId.toUpperCase() });
   }
   if (!order) return notFound();
-  if (last10Digits(order.address?.phone) !== phoneDigits) return notFound();
   const customerStatus = CUSTOMER_STATUS(order.status);
   const shipped = ["Shipped", "Delivered"].includes(order.status);
   res.json({
