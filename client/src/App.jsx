@@ -11,6 +11,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 
 import Home from "./pages/Home.jsx";
 import Shop from "./pages/Shop.jsx";
+import Categories from "./pages/Categories.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
 import CartPage from "./pages/CartPage.jsx";
 import Checkout from "./pages/Checkout.jsx";
@@ -104,6 +105,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
+        <Route path="/categories" element={<Categories />} />
         <Route path="/product/:slug" element={<ProductDetails />} />
         <Route path="/cart" element={<CartPage />} />
         {/* Checkout + orders require login (no guest ordering) */}

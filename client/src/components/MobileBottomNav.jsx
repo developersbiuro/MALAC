@@ -10,7 +10,7 @@ import { useAppMode } from "../utils/appMode.js";
 // every width.
 const items = [
   { to: "/", label: "Home", Icon: Home },
-  { to: "/shop", label: "Categories", Icon: Grid2x2 },
+  { to: "/categories", label: "Categories", Icon: Grid2x2, match: ["/categories", "/shop"] },
   { to: "/track-order", label: "Track Order", Icon: PackageSearch },
   { to: "/cart", label: "Cart", Icon: ShoppingCart, badge: "cart" },
   { to: "/account", label: "Account", Icon: User, match: ["/account", "/orders"] },

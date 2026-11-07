@@ -21,6 +21,11 @@ img, video { max-width: 100%; }
 .no-scrollbar { scrollbar-width: none; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .fade-up { animation: fadeUp .25s ease both; }
+/* Mobile filter sheet (Shop): backdrop fade + right-drawer slide-in. */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.animate-fade-in { animation: fadeIn .2s ease both; }
+@keyframes slideInRight { from { transform: translateX(100%); } to { transform: none; } }
+.animate-slide-in-right { animation: slideInRight .25s ease both; }
 
 /* Printing (admin order detail, My Orders, order confirmation): every
    printable block carries .print-area plus a mode class

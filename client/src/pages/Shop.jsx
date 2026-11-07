@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Check, SlidersHorizontal, X } from "lucide-react";
 import api from "../api/client.js";
 import ProductCard from "../components/ProductCard.jsx";
 import { useSeo } from "../utils/seo.js";
@@ -8,6 +9,17 @@ import { useSeo } from "../utils/seo.js";
 // them (server sortMap has price-asc / price-desc / newest / popular), so
 // Highest Rating is applied client-side to the fetched results.
 const API_SORTS = ["price-asc", "price-desc", "newest", "popular"];
+
+// The sort options offered everywhere (desktop bar, mobile bar, mobile
+// filter sheet) — values mirror the <option>s the shop has always had.
+const SORT_OPTIONS = [
+  { value: "", label: "Featured" },
+  { value: "price-asc", label: "Price: Low to High" },
+  { value: "price-desc", label: "Price: High to Low" },
+  { value: "rating", label: "Highest Rating" },
+  { value: "newest", label: "Newest" },
+  { value: "popular", label: "Most Sold" },
+];
 
 // Short, generic descriptions shown when a category is selected — written
 // from the category name only (no invented product specifics). Keys are
@@ -29,6 +41,7 @@ export default function Shop() {
   const [sort, setSort] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [filterOpen, setFilterOpen] = useState(false);
   const search = params.get("search") || "";
   const category = params.get("category") || "";
   const sub = params.get("sub") || "";
@@ -55,6 +68,25 @@ export default function Shop() {
       .catch(() => setProducts([]));
   }, [search, category, sub, flash, sort, minPrice, maxPrice]);
 
+  // While the mobile filter sheet is open, lock page scroll and let
+  // Escape close it (backdrop tap also closes).
+  useEffect(() => {
+    if (!filterOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => { if (e.key === "Escape") setFilterOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [filterOpen]);
+
+  const resetFilters = () => { setSort(""); setMinPrice(""); setMaxPrice(""); };
+  // Badge on the mobile Filter button: only the price bounds count —
+  // the active sort is already visible in the bar's own select.
+  const activeFilterCount = (minPrice ? 1 : 0) + (maxPrice ? 1 : 0);
+
   const title = search ? `Results for "${search}"` : category || (flash ? "Flash Sale" : "All Products");
   useSeo({
     title: !search && !category && !flash ? "Online Shopping in Pakistan — All Products | MALAC" : `${title} — MALAC`,
@@ -70,7 +102,9 @@ export default function Shop() {
       {category && CATEGORY_DESCRIPTIONS[category] && (
         <p className="text-sm text-gray-500 leading-relaxed mt-2 max-w-3xl">{CATEGORY_DESCRIPTIONS[category]}</p>
       )}
-      <div className="bg-white rounded-2xl border border-cream-line shadow-sm p-3 mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center text-sm">
+      {/* Desktop filter bar — the original always-visible panel, lg and up
+          only. Below lg the same controls live in the bar + sheet below. */}
+      <div className="bg-white rounded-2xl border border-cream-line shadow-sm p-3 mt-3 hidden lg:flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center text-sm">
         <label className="flex items-center gap-2 sm:gap-0">Sort
           <select value={sort} onChange={(e) => setSort(e.target.value)} className="border border-cream-line rounded-full sm:ml-2 px-3 py-2 sm:py-1.5 bg-white flex-1 sm:flex-none min-w-0">
             <option value="">Featured</option>
@@ -87,6 +121,65 @@ export default function Shop() {
         </div>
         <span className="sm:ml-auto text-gray-400">Showing {products.length} products</span>
       </div>
+      {/* Mobile top bar (Daraz layout pattern, MALAC theme): result count,
+          a compact sort select and a Filter button — the full filter set
+          is contained in the slide-in sheet, never an always-open panel. */}
+      <div className="lg:hidden bg-white rounded-2xl border border-cream-line shadow-sm px-3 py-2 mt-3 flex items-center gap-2 text-sm">
+        <span className="text-gray-400 text-xs whitespace-nowrap">{products.length} products</span>
+        <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort products"
+          className="flex-1 min-w-0 border border-cream-line rounded-full px-3 py-2 bg-white">
+          {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <button onClick={() => setFilterOpen(true)} className="btn-lux relative px-4 py-2 text-sm shrink-0">
+          <SlidersHorizontal size={16} /> Filter
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-lux-ink text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-0.5 flex items-center justify-center">{activeFilterCount}</span>
+          )}
+        </button>
+      </div>
+      {/* Mobile filter sheet: right-side drawer holding the same sort +
+          price state as the desktop bar (live-applied, as before). */}
+      {filterOpen && (
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Filters">
+          <div className="absolute inset-0 bg-black/40 animate-fade-in" onClick={() => setFilterOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-[86%] max-w-sm bg-white shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-cream-line">
+              <span className="font-display text-lg font-bold">Filters</span>
+              <button onClick={() => setFilterOpen(false)} aria-label="Close filters" className="p-1.5 text-gray-500">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+              <section>
+                <p className="eyebrow mb-2">Sort by</p>
+                <div className="border border-cream-line rounded-xl overflow-hidden divide-y divide-cream-line">
+                  {SORT_OPTIONS.map((o) => (
+                    <button key={o.value} onClick={() => setSort(o.value)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-sm text-left ${sort === o.value ? "text-lux-burnt font-semibold bg-cream-soft" : "text-gray-700"}`}>
+                      {o.label}
+                      {sort === o.value && <Check size={16} />}
+                    </button>
+                  ))}
+                </div>
+              </section>
+              <section>
+                <p className="eyebrow mb-2">Price (Rs.)</p>
+                <div className="flex items-center gap-2">
+                  <input value={minPrice} onChange={(e) => setMinPrice(e.target.value)} type="number" inputMode="numeric" placeholder="Min"
+                    className="flex-1 min-w-0 border border-cream-line rounded-xl px-3 py-2.5 bg-white" />
+                  <span className="text-gray-300">—</span>
+                  <input value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} type="number" inputMode="numeric" placeholder="Max"
+                    className="flex-1 min-w-0 border border-cream-line rounded-xl px-3 py-2.5 bg-white" />
+                </div>
+              </section>
+            </div>
+            <div className="border-t border-cream-line p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex gap-2">
+              <button onClick={resetFilters} className="px-5 py-2.5 rounded-full border border-cream-line text-sm font-semibold text-gray-600">Reset</button>
+              <button onClick={() => setFilterOpen(false)} className="btn-lux flex-1 py-2.5 text-sm">Show {products.length} results</button>
+            </div>
+          </aside>
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mt-3">
         {products.map((p) => <ProductCard key={p._id} product={p} />)}
       </div>
