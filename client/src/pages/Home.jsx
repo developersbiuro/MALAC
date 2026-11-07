@@ -99,22 +99,23 @@ export default function Home() {
           </span>
         ))}
       </div>
-      {/* Track Your Order band — guests track with the order ID alone */}
+      {/* Track Your Order band — guests track with order ID ya phone number */}
       <section className="bg-lux-ink text-white rounded-2xl mt-3 px-4 py-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="shrink-0">
           <p className="eyebrow !text-lux-pale">Order Tracking</p>
           <h2 className="font-serif text-2xl font-semibold leading-tight">Track Your Order</h2>
-          <p className="text-xs text-white/60">Sirf apna order ID likhein — bas.</p>
+          <p className="text-xs text-white/60">Order ID ya phone number — jo bhi likhein, order mil jayega.</p>
         </div>
         <form
           className="flex flex-col sm:flex-row gap-2 flex-1"
           onSubmit={(e) => {
             e.preventDefault();
-            const q = new URLSearchParams({ orderId: trackId.trim() });
+            const v = trackId.trim();
+            const q = /^mlc/i.test(v) ? new URLSearchParams({ orderId: v }) : new URLSearchParams({ phone: v });
             navigate(`/track-order?${q.toString()}`);
           }}
         >
-          <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required placeholder="Order ID (MLC-...)"
+          <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required placeholder="Order ID (MLC-...) ya phone number"
             className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
           <button className="btn-lux px-6 py-2.5 text-sm shrink-0"><PackageSearch size={16} /> Track Order</button>
         </form>

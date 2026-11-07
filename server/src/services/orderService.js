@@ -69,7 +69,12 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     }
     const shipping = deliveryMethod === "Express" ? 399 : (subtotal - discount >= 5000 ? 0 : 199);
   const total = subtotal - discount + shipping;
-  const order = await Order.create({
+  // Short IDs (MLC-XXXXXX) can in principle collide — regenerate on the
+  // unique-index error instead of failing the customer's order.
+  let order = null;
+  for (let attempt = 0; attempt < 5 && !order; attempt++) {
+    try {
+      order = await Order.create({
     orderId: generateOrderId(), user: user._id, items: orderItems,
     subtotal, discount, couponCode: appliedCoupon ? appliedCoupon.code : "",
     shipping, total,
@@ -84,7 +89,11 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     address: sanitizeAddressSnapshot(address),
     estimatedDelivery: new Date(Date.now() + (deliveryMethod === "Express" ? 2 : 4) * 86400000),
     statusHistory: [{ status: "Pending", by: "customer", note: "Order placed" }],
-  });
+      });
+    } catch (e) {
+      if (e?.code !== 11000 || attempt === 4) throw e; // not a collision: fail as before
+    }
+  }
   for (const item of orderItems) {
     await Product.updateOne({ _id: item.product },
       { $inc: { stock: -item.qty, sold: item.qty } });

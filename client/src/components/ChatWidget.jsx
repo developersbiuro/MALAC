@@ -7,7 +7,7 @@ import { useAppMode } from "../utils/appMode.js";
 // MALAC Assistant — a small rule-based, fully client-side chat (v1: no AI
 // backend). It can:
 //   - search products via GET /products/suggest and link to product pages,
-//   - track an order via the public POST /orders/track (order ID only),
+//   - track an order via the public POST /orders/track (order ID ya phone),
 //   - answer store FAQs (delivery, payment, returns, contact) by keyword,
 //     in English + Roman Urdu.
 // Conversation lives in component state only; nothing is persisted and no
@@ -38,7 +38,7 @@ const FAQS = [
   },
   {
     keys: ["track", "order kahan", "mera order", "order status", "parcel kahan"],
-    text: "Order track karne ke liye sirf apna order ID likhein (jaise MLC-XXXXXX-1234) — bas, phone number ki zaroorat nahi. Ya seedha Track Order page use karein.",
+    text: "Order track karne ke liye apna order ID (jaise MLC-ABC123) ya wo phone number likhein jo order par diya tha — dono me se jo bhi likhein, order mil jayega. Ya seedha Track Order page use karein.",
     link: { to: "/track-order", label: "Track Order page kholein" },
   },
   {
@@ -96,11 +96,15 @@ export default function ChatWidget() {
 
   const goTo = (to) => { setOpen(false); navigate(to); };
 
-  const trackWith = async (orderId) => {
+  // body: { orderId } ya { phone } — server dono me se aik se dhoond leta hai.
+  const trackWith = async (body) => {
     setBusy(true);
     try {
-      const r = await api.post("/orders/track", { orderId });
-      const o = r.data.order;
+      const r = await api.post("/orders/track", body);
+      const o = r.data.order || (r.data.orders || [])[0];
+      const extra = !r.data.order && (r.data.orders || []).length > 1
+        ? ` Is number par kul ${r.data.orders.length} orders hain — ye sab se recent hai; baqi Track Order page par milenge.`
+        : "";
       push(botSay(
         `Order ${o.orderId} ka status: ${o.status}. Payment: ${o.paymentMethod} (${o.paymentStatus})` +
         (o.status === "Cancelled" && o.cancelReason ? ` — wajah: ${o.cancelReason}.` : "") +
@@ -109,11 +113,11 @@ export default function ChatWidget() {
           : "") +
         (o.estimatedDelivery && o.status !== "Delivered" && o.status !== "Cancelled"
           ? ` — expected delivery ${new Date(o.estimatedDelivery).toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}.`
-          : "."),
+          : ".") + extra,
         { link: { to: "/track-order", label: "Poori tafseel dekhein" } }
       ));
     } catch {
-      push(botSay("Is order ID se koi order match nahi hua. Order ID dobara check karke likhein — ye aap ki confirmation par hota hai (jaise MLC-XXXXXX-1234)."));
+      push(botSay("Is se koi order match nahi hua. Order ID (jaise MLC-ABC123) ya order wala mukammal phone number dobara check karke likhein."));
     } finally {
       setBusy(false);
     }
@@ -126,16 +130,21 @@ export default function ChatWidget() {
     push({ id: nextId(), from: "user", text });
     const lower = text.toLowerCase();
 
-    // --- Order tracking: the order ID alone is enough now ---
+    // --- Order tracking: order ID ya phone number, jo bhi likha jay ---
     const idMatch = text.match(/MLC[-\s]?[A-Z0-9][A-Z0-9-]{3,}/i);
     if (idMatch) {
-      trackWith(idMatch[0].toUpperCase());
+      trackWith({ orderId: idMatch[0].toUpperCase() });
+      return;
+    }
+    const digitsOnly = text.replace(/\D/g, "");
+    if (digitsOnly.length >= 10 && digitsOnly.length <= 13 && !/[a-z]/i.test(text.replace(/mlc/i, ""))) {
+      trackWith({ phone: text });
       return;
     }
 
     // --- FAQ intents ---
     if (FAQS[1].keys.some((k) => lower.includes(k))) { // tracking intent
-      push(botSay("Zaroor! Sirf apna order ID likhein (jaise MLC-XXXXXX-1234) — main foran status bata deta hoon."));
+      push(botSay("Zaroor! Apna order ID (jaise MLC-ABC123) ya order wala phone number likhein — main foran status bata deta hoon."));
       return;
     }
     for (const faq of FAQS) {

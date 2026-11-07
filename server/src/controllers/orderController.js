@@ -17,50 +17,69 @@ export const placeOrder = asyncHandler(async (req, res) => {
 });
 
 // -- Public order tracking (no login) --
-// Guests track with the human order ID alone (Abdullah, 2026-11-07: one
-// field, not order ID + phone). The ID carries a Date.now() base36 stamp
-// plus a random suffix, so it is not enumerable in practice; this endpoint
-// is IP rate-limited in app.js as a second guard. The response is a
-// LIMITED view: no user account data, no address, no payment
+// Guests track with EITHER the order ID OR the phone number used on the
+// order (Abdullah, 2026-11-07: "jo type kr le, order mil jay"). A phone
+// lookup returns that number's recent orders (latest first, max 10).
+// IDs are short (MLC-XXXXXX) but random across a 36^6 space and this
+// endpoint is IP rate-limited in the routes file. The response is a
+// LIMITED view either way: no user account data, no address, no payment
 // screenshots/transaction details.
-export const trackOrder = asyncHandler(async (req, res) => {
-  const orderId = String(req.body.orderId || "").trim();
-  const notFound = () => res.status(404).json({
-    message: "We could not find an order with that order ID. Please check the ID and try again.",
-  });
-  if (!orderId) return notFound();
-  let order = await Order.findOne({ orderId });
-  if (!order && orderId !== orderId.toUpperCase()) {
-    order = await Order.findOne({ orderId: orderId.toUpperCase() });
-  }
-  if (!order) return notFound();
+const last10Digits = (value) => String(value || "").replace(/\D/g, "").slice(-10);
+
+function limitedOrderView(order) {
   const customerStatus = CUSTOMER_STATUS(order.status);
   const shipped = ["Shipped", "Delivered"].includes(order.status);
-  res.json({
-    order: {
-      orderId: order.orderId,
-      // Shoppers see the collapsed vocabulary (Confirmed/Packed →
-      // "Processing"); courier + tracking ID appear once dispatched.
-      status: customerStatus,
-      courier: shipped ? (order.courier || "") : "",
-      trackingId: shipped ? (order.trackingId || "") : "",
-      cancelReason: order.status === "Cancelled" ? (order.cancelReason || "") : "",
-      statusHistory: (order.statusHistory || []).map((h) => ({ status: CUSTOMER_STATUS(h.status), at: h.at })),
-      items: order.items.map((i) => ({
-        title: i.title, variantLabel: i.variantLabel || "", qty: i.qty, price: i.price, image: i.image || "",
-      })),
-      subtotal: order.subtotal,
-      discount: order.discount,
-      shipping: order.shipping,
-      total: order.total,
-      paymentMethod: order.paymentMethod,
-      paymentStatus: order.paymentStatus,
-      paymentVerificationStatus: order.paymentVerificationStatus,
-      deliveryMethod: order.deliveryMethod,
-      estimatedDelivery: order.estimatedDelivery || null,
-      createdAt: order.createdAt,
-    },
+  return {
+    orderId: order.orderId,
+    // Shoppers see the collapsed vocabulary (Confirmed/Packed →
+    // "Processing"); courier + tracking ID appear once dispatched.
+    status: customerStatus,
+    courier: shipped ? (order.courier || "") : "",
+    trackingId: shipped ? (order.trackingId || "") : "",
+    cancelReason: order.status === "Cancelled" ? (order.cancelReason || "") : "",
+    statusHistory: (order.statusHistory || []).map((h) => ({ status: CUSTOMER_STATUS(h.status), at: h.at })),
+    items: order.items.map((i) => ({
+      title: i.title, variantLabel: i.variantLabel || "", qty: i.qty, price: i.price, image: i.image || "",
+    })),
+    subtotal: order.subtotal,
+    discount: order.discount,
+    shipping: order.shipping,
+    total: order.total,
+    paymentMethod: order.paymentMethod,
+    paymentStatus: order.paymentStatus,
+    paymentVerificationStatus: order.paymentVerificationStatus,
+    deliveryMethod: order.deliveryMethod,
+    estimatedDelivery: order.estimatedDelivery || null,
+    createdAt: order.createdAt,
+  };
+}
+
+export const trackOrder = asyncHandler(async (req, res) => {
+  const orderId = String(req.body.orderId || "").trim();
+  const phoneDigits = last10Digits(req.body.phone);
+  const notFound = () => res.status(404).json({
+    message: "We could not find an order with that order ID or phone number. Please check and try again.",
   });
+  // Order ID path — a single order.
+  if (orderId) {
+    let order = await Order.findOne({ orderId });
+    if (!order && orderId !== orderId.toUpperCase()) {
+      order = await Order.findOne({ orderId: orderId.toUpperCase() });
+    }
+    if (!order) return notFound();
+    return res.json({ order: limitedOrderView(order) });
+  }
+  // Phone path — every recent order placed with that number (stored
+  // phones end with the national 10 digits in both +92… and 03… forms,
+  // so an ends-with match on those digits is the last-10 comparison).
+  if (phoneDigits.length === 10) {
+    const orders = await Order.find({ "address.phone": { $regex: `${phoneDigits}$` } })
+      .sort({ createdAt: -1 })
+      .limit(10);
+    if (!orders.length) return notFound();
+    return res.json({ orders: orders.map(limitedOrderView) });
+  }
+  return notFound();
 });
 
 export const myOrders = asyncHandler(async (req, res) => {
