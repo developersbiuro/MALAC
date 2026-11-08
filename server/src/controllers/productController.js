@@ -1,6 +1,10 @@
 import Product from "../models/Product.js";
 import Review from "../models/Review.js";
 import Order from "../models/Order.js";
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
+import env from "../config/env.js";
+import { effectivePermissions } from "../utils/permissions.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { slugify } from "../utils/slugify.js";
 
@@ -11,7 +15,23 @@ const escapeRegex = (s) => String(s).slice(0, 64).replace(/[.*+?^${}()|[\]\\]/g,
 
 export const listProducts = asyncHandler(async (req, res) => {
   const { search, category, subCategory, minPrice, maxPrice, flashSale, page = 1, limit = 20, sort } = req.query;
-  const filter = { status: { $in: ["Active", "Out of Stock"] } };
+  // The admin panel manages the whole catalog through this same endpoint
+  // (its calls carry an admin token): staff with the "products" permission
+  // see every status, including Archived, so an archived product can be
+  // restored from its edit screen. Public callers only ever see
+  // Active / Out of Stock.
+  let staff = false;
+  const auth = req.headers.authorization || "";
+  if (auth.startsWith("Bearer ")) {
+    try {
+      const decoded = jwt.verify(auth.slice(7), env.jwtSecret);
+      const user = await User.findById(decoded.id).select("role permissions permissionsSet");
+      if (user && (user.role === "admin" || user.role === "vice-admin")) {
+        staff = effectivePermissions(user).includes("products");
+      }
+    } catch { staff = false; }
+  }
+  const filter = staff ? {} : { status: { $in: ["Active", "Out of Stock"] } };
   if (category) filter.category = category;
   if (subCategory) filter.subCategory = subCategory;
   if (flashSale === "true") filter.flashSale = true;
