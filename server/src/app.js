@@ -15,6 +15,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
+import feedRoutes from "./routes/feedRoutes.js";
 import appAssetRoutes from "./routes/appAssetRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
@@ -114,6 +115,9 @@ app.use("/uploads", express.static(uploadsDir));
 // above — the handler itself tolerates a down database and always answers
 // 200 (see routes/sitemapRoutes.js).
 app.use(sitemapRoutes);
+// Merchant Center product feed at /google-feed.xml — same outside-the-gate
+// mounting and always-200 reasoning as the sitemap.
+app.use(feedRoutes);
 
 // Public API — mounted under /api, matching the /api/(.*) rewrite to this
 // service in vercel.json and the client's baseURL ("/api").

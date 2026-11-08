@@ -63,6 +63,12 @@
       }
     },
     {
+      "source": "/google-feed.xml",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/download/(.*)",
       "destination": {
         "service": "server"
