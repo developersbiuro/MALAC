@@ -91,6 +91,18 @@ export const uploadAvatarImage = multer({
   limits: { fileSize: AVATAR_MAX_BYTES },
   fileFilter: imageFileFilter,
 });
+
+// Review photo upload — MEMORY storage for the same serverless reason
+// as avatars: the photo becomes a base64 data URI stored on the Review
+// document itself, so it can never 404 the way /uploads files do when
+// the function instance is recycled. 1 MB cap; the client downscales
+// before upload. Up to 3 photos per review (route uses .array).
+export const REVIEW_IMAGE_MAX_BYTES = 1024 * 1024;
+export const uploadReviewImages = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: REVIEW_IMAGE_MAX_BYTES },
+  fileFilter: imageFileFilter,
+});
 export default uploadPaymentScreenshot;
 
 // -- Magic-byte verification (runs AFTER multer has stored the file) --
@@ -157,5 +169,19 @@ export function verifyImageBufferMagicBytes(req, res, next) {
     return res.status(400).json({ message: "Uploaded file is not a valid PNG, JPG or WEBP image" });
   }
   req.file.detectedImage = detected;
+  return next();
+}
+
+// Multi-file variant for the review-photo upload (multer .array): every
+// file must carry real image bytes; one forged file rejects the batch.
+export function verifyReviewImageBuffers(req, res, next) {
+  const files = req.files || [];
+  for (const f of files) {
+    const detected = detectImageType(f.buffer);
+    if (!detected) {
+      return res.status(400).json({ message: "Uploaded file is not a valid PNG, JPG or WEBP image" });
+    }
+    f.detectedImage = detected;
+  }
   return next();
 }

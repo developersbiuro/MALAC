@@ -147,10 +147,16 @@ export const createReview = asyncHandler(async (req, res) => {
         "items.product": product._id,
       })
     : null;
+  // Review images: only data URIs produced by POST /api/uploads/review-images
+  // (max 3, ~1.4 MB each incl. base64 overhead). Arbitrary URLs are dropped
+  // so a review can never hot-link or embed an external address.
+  const reviewImages = (Array.isArray(req.body.images) ? req.body.images : [])
+    .filter((s) => typeof s === "string" && /^data:image\/(png|jpe?g|webp);base64,/.test(s) && s.length < 1500000)
+    .slice(0, 3);
   const review = await Review.create({
     product: product._id, user: req.user?._id,
     authorName: req.user?.name || req.body.authorName || "MALAC Customer",
-    rating: req.body.rating, comment: req.body.comment || "", images: req.body.images || [],
+    rating: req.body.rating, comment: req.body.comment || "", images: reviewImages,
     verifiedPurchase: !!bought,
     status: "pending",
   });

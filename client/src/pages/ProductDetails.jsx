@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Heart, Truck, ShieldCheck, BadgeCheck, ChevronDown, Minus, Plus, MessageCircle, Lock } from "lucide-react";
+import { Heart, Truck, ShieldCheck, BadgeCheck, ChevronDown, Minus, Plus, MessageCircle, Lock, ImagePlus, X } from "lucide-react";
 import api from "../api/client.js";
 import RatingStars from "../components/RatingStars.jsx";
 import ProductCard from "../components/ProductCard.jsx";
@@ -29,6 +29,8 @@ export default function ProductDetails() {
   const [reviewMsg, setReviewMsg] = useState("");
   const [myRating, setMyRating] = useState(5);
   const [myComment, setMyComment] = useState("");
+  const [reviewPhotos, setReviewPhotos] = useState([]); // data URIs from /uploads/review-images
+  const [photoBusy, setPhotoBusy] = useState(false);
 
   useEffect(() => {
     api.get(`/products/${slug}`).then(async (r) => {
@@ -113,14 +115,47 @@ export default function ProductDetails() {
     else navigate("/checkout");
   };
 
+  // Downscale a picked photo to at most 1024px (JPEG) before upload, so
+  // review photos stay small on the server and on the product page.
+  const downscalePhoto = (file) => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, 1024 / Math.max(image.width, image.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(image.width * scale);
+      canvas.height = Math.round(image.height * scale);
+      canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("photo"))), "image/jpeg", 0.82);
+    };
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error("photo")); };
+    image.src = url;
+  });
+
+  const pickReviewPhotos = async (e) => {
+    const files = [...(e.target.files || [])].slice(0, 3 - reviewPhotos.length);
+    e.target.value = "";
+    if (!files.length) return;
+    setPhotoBusy(true);
+    try {
+      const fd = new FormData();
+      for (const f of files) fd.append("images", await downscalePhoto(f), "review.jpg");
+      const r = await api.post("/uploads/review-images", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setReviewPhotos((prev) => [...prev, ...(r.data.images || [])].slice(0, 3));
+    } catch {
+      setReviewMsg("Photo upload failed — you can still submit the review without photos.");
+    } finally { setPhotoBusy(false); }
+  };
+
   const submitReview = async (e) => {
     e.preventDefault();
     if (!user) return navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`);
     try {
-      await api.post(`/products/${product._id}/reviews`, { rating: myRating, comment: myComment });
+      await api.post(`/products/${product._id}/reviews`, { rating: myRating, comment: myComment, images: reviewPhotos });
       // Reviews publish only after admin approval (anti-defamation gate),
       // so the new review is NOT added to the public list here.
-      setMyComment("");
+      setMyComment(""); setReviewPhotos([]);
       setReviewMsg("Thank you! Your review has been submitted — it will appear here after our team approves it.");
     } catch {
       setReviewMsg("Sorry, your review could not be submitted. Please try again.");
@@ -258,6 +293,20 @@ export default function ProductDetails() {
               {[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{n} stars</option>)}
             </select>
             <textarea value={myComment} onChange={(e) => setMyComment(e.target.value)} placeholder="Write a review..." className="border rounded px-2 py-1.5 w-full text-sm" rows={2} />
+            <div className="flex items-center gap-2 flex-wrap">
+              {reviewPhotos.map((src, i) => (
+                <span key={i} className="relative inline-block">
+                  <img src={src} alt="Your review photo" className="w-12 h-12 object-cover rounded" />
+                  <button type="button" aria-label="Remove photo" onClick={() => setReviewPhotos((prev) => prev.filter((_, j) => j !== i))} className="absolute -top-1.5 -right-1.5 bg-white border rounded-full p-0.5 shadow"><X size={11} /></button>
+                </span>
+              ))}
+              {user && reviewPhotos.length < 3 && (
+                <label className="inline-flex items-center gap-1 text-xs text-lux-burnt border border-dashed border-cream-line rounded-full px-3 py-1.5 cursor-pointer hover:bg-cream-50">
+                  <ImagePlus size={13} /> {photoBusy ? "Uploading..." : "Add photos"}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" multiple className="hidden" onChange={pickReviewPhotos} />
+                </label>
+              )}
+            </div>
             <button className="bg-lux-gradient text-white text-sm rounded-full px-4 py-1.5 w-full font-semibold">Submit Review</button>
             {reviewMsg && <p className="text-xs text-green-700 bg-green-50 border border-green-200 rounded-lg px-2.5 py-2">{reviewMsg}</p>}
             <p className="text-[11px] text-gray-400">Reviews are checked by our team before they appear, to keep them genuine.</p>
