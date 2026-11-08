@@ -11,7 +11,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import { createGzip } from "node:zlib";
+import { gzipSync } from "node:zlib";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
@@ -75,14 +75,13 @@ app.use((req, res, next) => {
     let payload;
     try { payload = JSON.stringify(body); } catch { return origJson(body); }
     if (!payload || payload.length < 1024) return origJson(body);
+    let buf;
+    try { buf = gzipSync(Buffer.from(payload)); } catch { return origJson(body); }
     res.setHeader("Content-Encoding", "gzip");
     res.setHeader("Vary", "Accept-Encoding");
     res.removeHeader("Content-Length");
-    createGzip().end(payload, (err, buf) => {
-      if (err) return origJson(body);
-      res.setHeader("Content-Length", buf.length);
-      return res.send(buf);
-    });
+    res.setHeader("Content-Length", buf.length);
+    return res.send(buf);
   };
   return next();
 });
