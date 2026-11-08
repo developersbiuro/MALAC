@@ -6,6 +6,7 @@ import ImageUploadField from "../../components/ImageUploadField.jsx";
 const empty = {
   title: "", description: "", images: [""], category: "", subCategory: "",
   basePrice: "", salePrice: "", stock: "", sku: "", tags: "", status: "Active", flashSale: false,
+  variants: [],
 };
 
 export default function AdminProductForm() {
@@ -21,7 +22,7 @@ export default function AdminProductForm() {
     // The admin list is catalog-based; fetch all and pick this product.
     api.get("/products", { params: { limit: 100 } }).then((r) => {
       const p = r.data.products.find((x) => x._id === id);
-      if (p) setForm({ ...p, images: p.images?.length ? p.images : [""], tags: (p.tags || []).join(", ") });
+      if (p) setForm({ ...empty, ...p, images: p.images?.length ? p.images : [""], tags: (p.tags || []).join(", "), variants: p.variants || [] });
     }).catch(() => {});
   }, [id]);
 
@@ -34,6 +35,9 @@ export default function AdminProductForm() {
       basePrice: Number(form.basePrice), salePrice: Number(form.salePrice || 0),
       stock: Number(form.stock || 0),
       tags: String(form.tags).split(",").map((t) => t.trim()).filter(Boolean),
+      variants: (form.variants || [])
+        .filter((v) => v.name.trim() && v.value.trim())
+        .map((v) => ({ name: v.name.trim(), value: v.value.trim(), priceDelta: Number(v.priceDelta || 0), stock: Number(v.stock || 0) })),
     };
     try {
       if (id) await api.put(`/products/${id}`, payload);
@@ -86,12 +90,29 @@ export default function AdminProductForm() {
             {["Active", "Draft", "Out of Stock", "Archived"].map((s) => <option key={s}>{s}</option>)}
           </select></label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.flashSale} onChange={(e) => set("flashSale", e.target.checked)} /> Include in Flash Sale</label>
+        <div className="sm:col-span-2 text-sm">Variants (Size / Color — har variant ki apni price adjustment aur stock)
+          {(form.variants || []).map((v, i) => (
+            <div key={i} className="mt-1.5 flex flex-wrap items-center gap-2">
+              <input className="border rounded px-2 py-1.5 text-sm w-28" placeholder="Name (Size)" value={v.name}
+                onChange={(e) => set("variants", form.variants.map((x, j) => j === i ? { ...x, name: e.target.value } : x))} />
+              <input className="border rounded px-2 py-1.5 text-sm w-28" placeholder="Value (XL)" value={v.value}
+                onChange={(e) => set("variants", form.variants.map((x, j) => j === i ? { ...x, value: e.target.value } : x))} />
+              <input type="number" className="border rounded px-2 py-1.5 text-sm w-32" placeholder="Price +/- (Rs.)" value={v.priceDelta}
+                onChange={(e) => set("variants", form.variants.map((x, j) => j === i ? { ...x, priceDelta: e.target.value } : x))} />
+              <input type="number" className="border rounded px-2 py-1.5 text-sm w-24" placeholder="Stock" value={v.stock}
+                onChange={(e) => set("variants", form.variants.map((x, j) => j === i ? { ...x, stock: e.target.value } : x))} />
+              <button type="button" aria-label={`Remove variant ${i + 1}`}
+                onClick={() => set("variants", form.variants.filter((_, j) => j !== i))}
+                className="text-red-400 hover:text-red-600 text-xs shrink-0">Remove</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => set("variants", [...(form.variants || []), { name: "", value: "", priceDelta: 0, stock: 0 }])} className="text-brand text-xs mt-1">+ Add variant</button>
+        </div>
         {error && <p className="text-red-500 text-sm sm:col-span-2">{error}</p>}
         <div className="sm:col-span-2 flex gap-2">
           <button className="bg-brand text-white rounded px-6 py-2 text-sm font-medium">{id ? "Save Changes" : "Create Product"}</button>
           <button type="button" onClick={() => navigate("/admin/products")} className="border rounded px-5 py-2 text-sm">Cancel</button>
         </div>
-        <p className="text-[11px] text-gray-400 sm:col-span-2">Variants (size/color with price deltas) can be sent via the API (POST /api/products, field: variants) — see README.</p>
       </form>
     </div>
   );

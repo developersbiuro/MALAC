@@ -19,6 +19,8 @@ export default function AdminReviews() {
   const [reviews, setReviews] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
   const [error, setError] = useState("");
+  const [qaItems, setQaItems] = useState([]);
+  const [qaDrafts, setQaDrafts] = useState({});
 
   const load = () => {
     const q = tab ? `?status=${tab}` : "";
@@ -27,6 +29,31 @@ export default function AdminReviews() {
       .catch(() => setError("Could not load reviews."));
   };
   useEffect(load, [tab]);
+
+  // Product Q&A answering (Daraz-style): customers ask on the product page;
+  // until now the staff answer endpoint existed but no screen called it, so
+  // questions could never be answered. Flattened from the catalogue here.
+  const loadQuestions = () => {
+    api.get("/products", { params: { limit: 100 } })
+      .then((r) => {
+        const items = [];
+        (r.data.products || []).forEach((p) => (p.questions || []).forEach((q) => items.push({ product: p, q })));
+        items.sort((a, b) => new Date(b.q.createdAt || 0) - new Date(a.q.createdAt || 0));
+        setQaItems(items);
+      })
+      .catch(() => {});
+  };
+  useEffect(loadQuestions, []);
+
+  const answerQuestion = async (productId, qid) => {
+    const text = (qaDrafts[qid] || "").trim();
+    if (!text) return;
+    try {
+      await api.post(`/products/${productId}/questions/${qid}/answer`, { answer: text });
+      setQaDrafts((d) => ({ ...d, [qid]: "" }));
+      loadQuestions();
+    } catch { setError("Could not post that answer."); }
+  };
 
   const setStatus = async (id, status) => {
     try {
@@ -102,6 +129,37 @@ export default function AdminReviews() {
           <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-cream-line">
             {tab === "pending" ? "No reviews are waiting — all caught up." : "No reviews here yet."}
           </p>
+        )}
+      </div>
+
+      <h2 className="text-lg font-bold mt-10">Customer Questions (Q&amp;A)</h2>
+      <p className="text-sm text-gray-500 mt-1">
+        Questions customers asked on product pages. Answered ones show on the product page with your name.
+        {qaItems.some((x) => !x.q.answer) && <> <b className="text-amber-700">{qaItems.filter((x) => !x.q.answer).length} waiting for an answer.</b></>}
+      </p>
+      <div className="space-y-3 mt-4">
+        {qaItems.map(({ product, q }) => (
+          <article key={q._id} className="bg-white rounded-md border border-cream-line p-4">
+            <p className="text-sm"><b>Q:</b> {q.question}</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Product: <Link className="text-lux-burnt underline" to={`/product/${product.slug}`}>{product.title}</Link>
+              {q.askedBy ? ` · asked by ${q.askedBy}` : ""}
+              {q.createdAt ? ` · ${new Date(q.createdAt).toLocaleString()}` : ""}
+            </p>
+            {q.answer ? (
+              <p className="text-sm mt-2 text-gray-700"><b>A:</b> {q.answer} <span className="text-gray-400">— {q.answeredBy || "MALAC"}</span></p>
+            ) : (
+              <div className="flex gap-2 mt-3">
+                <input value={qaDrafts[q._id] || ""} onChange={(e) => setQaDrafts((d) => ({ ...d, [q._id]: e.target.value }))}
+                  placeholder="Write the answer..." className="border rounded px-3 py-2 text-sm flex-1 min-w-0" />
+                <button onClick={() => answerQuestion(product._id, q._id)}
+                  className="px-4 py-1.5 rounded-full text-sm font-semibold bg-lux-gradient text-white shrink-0">Answer</button>
+              </div>
+            )}
+          </article>
+        ))}
+        {qaItems.length === 0 && (
+          <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-cream-line">No customer questions yet.</p>
         )}
       </div>
     </div>
