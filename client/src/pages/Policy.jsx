@@ -56,7 +56,12 @@ export default function Policy() {
         <p>We may update this policy from time to time. The current version will always be available on this page, and significant changes will be reflected here before they take effect for new orders.</p>
       </LegalSection>
 
-      <LegalSection title="9. Contact Us">
+      <LegalSection title="9. Returns & Exchanges">
+        <p>If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (developersbiuro@gmail.com) with your order number. After we inspect the returned item, we will arrange a replacement or a refund.</p>
+        <p>Items must be unused and in their original packaging. For hygiene and safety reasons, certain items may not be returnable, and change-of-mind returns are not accepted. The full returns terms are in section 5 of our <Link to="/terms" className="text-lux-burnt font-medium hover:underline">Terms of Service</Link>.</p>
+      </LegalSection>
+
+      <LegalSection title="10. Contact Us">
         <p>Questions about this policy or your data: developersbiuro@gmail.com · WhatsApp +92 3236016684. See also our <Link to="/terms" className="text-lux-burnt font-medium hover:underline">Terms of Service</Link>.</p>
       </LegalSection>
     </LegalPage>
