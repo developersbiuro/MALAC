@@ -14,4 +14,5 @@ router.post("/", orders.placeOrder);
 router.get("/my", orders.myOrders);
 router.get("/:orderId", orders.getOrder);
 router.patch("/:orderId/cancel", orders.cancelMyOrder);
+router.post("/:orderId/return-request", orders.requestReturn);
 export default router;

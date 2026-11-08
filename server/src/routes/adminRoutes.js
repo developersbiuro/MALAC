@@ -6,6 +6,11 @@ import * as orders from "../controllers/orderController.js";
 const router = Router();
 router.use(protect, isStaff); // whole /admin API requires staff
 router.get("/analytics", admin.analytics);
+// Staff notifications (bell in the panel/app): every staff account —
+// order events matter to whoever is on duty, whatever their section
+// permissions are.
+router.get("/notifications", orders.listNotifications);
+router.post("/notifications/read", orders.markNotificationsRead);
 // Order work is gated by the "orders" permission; the Dashboard
 // (analytics) above stays visible to every staff account.
 router.get("/orders", requirePermission("orders"), orders.adminListOrders);

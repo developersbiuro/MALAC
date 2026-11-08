@@ -189,6 +189,15 @@ export default function AdminOrders() {
                   {selected.cancelNote ? <span className="block text-xs mt-0.5">Note: {selected.cancelNote}</span> : null}
                 </p>
               )}
+              {selected.returnRequestedAt && (
+                <p className="bg-orange-50 border border-orange-200 text-orange-700 rounded p-3">
+                  <b>Return requested by the customer</b>
+                  {selected.returnReason ? ` — ${selected.returnReason}` : ""}
+                  <span className="block text-xs mt-0.5">{new Date(selected.returnRequestedAt).toLocaleString("en-PK")}</span>
+                  {selected.returnNote ? <span className="block text-xs mt-0.5">Note: {selected.returnNote}</span> : null}
+                  <span className="block text-xs mt-1">Contact the customer to arrange the return; when the parcel comes back, set the status to Returned.</span>
+                </p>
+              )}
               {showLabel && (
                 <section className="border-2 border-dashed border-gray-300 rounded p-4">
                   {/* The .print-label-block below is what actually prints. */}

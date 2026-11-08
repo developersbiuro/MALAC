@@ -40,6 +40,7 @@ import AdminReviews from "./pages/admin/AdminReviews.jsx";
 import AdminRoles from "./pages/admin/AdminRoles.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 import AdminPassword from "./pages/admin/AdminPassword.jsx";
+import AdminNotifications from "./pages/admin/AdminNotifications.jsx";
 
 // Shown when a staff account opens a section URL directly without the
 // access for it (the sidebar already hides those sections; this covers
@@ -87,6 +88,7 @@ function AdminShell() {
         <Route path="roles" element={<SectionGuard superOnly><AdminRoles /></SectionGuard>} />
         <Route path="settings" element={<SectionGuard superOnly><AdminSettings /></SectionGuard>} />
         <Route path="password" element={<AdminPassword />} />
+        <Route path="notifications" element={<AdminNotifications />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </AdminLayout>

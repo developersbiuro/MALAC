@@ -1,6 +1,8 @@
-import Order, { ORDER_STATUSES, CUSTOMER_STATUS, COURIERS } from "../models/Order.js";
+import Order, { ORDER_STATUSES, CUSTOMER_STATUS, COURIERS, RETURN_REASONS } from "../models/Order.js";
+import Notification from "../models/Notification.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
+import { onOrderPlaced, onReturnRequested } from "../services/notifyService.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
 
 export const placeOrder = asyncHandler(async (req, res) => {
@@ -13,6 +15,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: "Please complete sign-up verification before placing an order." });
   }
   const order = await createOrder({ user: req.user, ...req.body });
+  onOrderPlaced(order); // confirmation email + staff bell (best-effort)
   res.status(201).json({ order });
 });
 
@@ -121,6 +124,49 @@ export const cancelMyOrder = asyncHandler(async (req, res) => {
   } catch (e) {
     res.status(400).json({ message: e.message });
   }
+});
+
+// Self-service return request: DELIVERED orders only, one request per
+// order, with a reason from the return list. The request is recorded on
+// the order (staff see it in the order detail), staff get a bell
+// notification, and the customer gets a confirmation email. Staff
+// complete the return by moving the order to "Returned" in the panel.
+export const requestReturn = asyncHandler(async (req, res) => {
+  const order = await Order.findOne({ orderId: req.params.orderId, user: req.user._id });
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  if (order.status !== "Delivered") {
+    return res.status(400).json({ message: "Returns can only be requested for delivered orders." });
+  }
+  if (order.returnRequestedAt) {
+    return res.status(400).json({ message: "A return has already been requested for this order." });
+  }
+  const reason = String(req.body?.reason || "");
+  if (!RETURN_REASONS.includes(reason)) {
+    return res.status(400).json({ message: "Please choose a return reason." });
+  }
+  order.returnRequestedAt = new Date();
+  order.returnReason = reason;
+  order.returnNote = String(req.body?.note || "").slice(0, 300);
+  order.statusHistory.push({ status: "Delivered", by: "customer", note: `Return requested: ${reason}` });
+  await order.save();
+  onReturnRequested(order);
+  res.json({ order });
+});
+
+// ---- Staff notifications (the admin panel / admin app bell) ----
+// Readable by every staff account (they are the store's shared event
+// queue); marking read is shared too.
+export const listNotifications = asyncHandler(async (req, res) => {
+  const [notifications, unreadCount] = await Promise.all([
+    Notification.find().sort({ createdAt: -1 }).limit(50).lean(),
+    Notification.countDocuments({ read: false }),
+  ]);
+  res.json({ notifications, unreadCount });
+});
+
+export const markNotificationsRead = asyncHandler(async (req, res) => {
+  await Notification.updateMany({ read: false }, { $set: { read: true } });
+  res.json({ ok: true });
 });
 
 // ---- Admin fulfillment center ----

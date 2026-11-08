@@ -165,4 +165,36 @@ export function reviewInviteEmail({ name, orderId, items }) {
   return { html: layout(body), text };
 }
 
-export default { otpEmail, actionLinkEmail, reviewInviteEmail };
+// One order-lifecycle email for the customer: placed / shipped /
+// delivered / cancelled. Same branded shell as every MALAC email; the
+// caller supplies the heading, intro line and the order's own figures.
+export function orderStatusEmail({ name, orderId, heading, intro, items, total, extra }) {
+  const firstName = esc(String(name || "Customer").split(" ")[0] || "Customer");
+  const rows = (items || []).map((i) =>
+    `            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px 0; border:1px solid ${CARD_BORDER};">
+              <tr>
+                <td style="padding:10px 14px; font-family:${FONT_BODY}; font-size:14px; color:${INK};">${esc(i.title)}${i.variantLabel ? ` (${esc(i.variantLabel)})` : ""} &times; ${Number(i.qty) || 1}</td>
+                <td align="right" style="padding:10px 14px; font-family:${FONT_BODY}; font-size:14px; color:${INK};">Rs. ${Number(i.price * i.qty).toLocaleString("en-PK")}</td>
+              </tr>
+            </table>`).join("\n");
+  const body = [
+    headingRow(heading),
+    paragraphRow(`Assalam-o-Alaikum ${firstName}, ${intro}`),
+    rows,
+    total !== undefined && total !== null
+      ? paragraphRow(`<strong style="color:${INK};">Order total: Rs. ${Number(total).toLocaleString("en-PK")}</strong>`)
+      : "",
+    extra ? paragraphRow(esc(extra)) : "",
+    paragraphRow(`Track your order any time with your order ID <strong style="color:${INK};">${esc(orderId)}</strong> on the MALAC store's Track Order page.`, "font-size:13px; color:" + MUTED + ";"),
+  ].join("\n");
+  const text =
+    `${heading}\n` +
+    `Order ${orderId}: ${intro.replace(/<[^>]+>/g, "")}\n` +
+    (items || []).map((i) => `- ${i.title}${i.variantLabel ? ` (${i.variantLabel})` : ""} x ${i.qty} — Rs. ${Number(i.price * i.qty).toLocaleString("en-PK")}`).join("\n") +
+    (total !== undefined && total !== null ? `\nOrder total: Rs. ${Number(total).toLocaleString("en-PK")}` : "") +
+    (extra ? `\n${extra}` : "") +
+    `\nTrack your order on the MALAC store with order ID ${orderId}.`;
+  return { html: layout(body), text };
+}
+
+export default { otpEmail, actionLinkEmail, reviewInviteEmail, orderStatusEmail };

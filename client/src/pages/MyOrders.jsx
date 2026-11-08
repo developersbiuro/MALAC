@@ -21,6 +21,10 @@ const CUSTOMER_CANCEL_REASONS = [
   "Delivery is taking too long", "Need to change address or items",
   "Payment issue", "Other",
 ];
+const RETURN_REASONS = [
+  "Damaged item received", "Defective / not working", "Wrong item delivered",
+  "Wrong size or colour", "Missing parts or accessories", "Other",
+];
 
 export default function MyOrders() {
   useSeo({ title: "My Orders — MALAC", robots: "noindex" });
@@ -32,6 +36,11 @@ export default function MyOrders() {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelNote, setCancelNote] = useState("");
   const [cancelBusy, setCancelBusy] = useState(false);
+  // Return request panel (delivered orders): mirrors the cancel pattern.
+  const [returningId, setReturningId] = useState(null);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnNote, setReturnNote] = useState("");
+  const [returnBusy, setReturnBusy] = useState(false);
   // Invoice printing: the chosen order renders one hidden invoice block;
   // seq makes re-printing the same order re-trigger the effect.
   const [printState, setPrintState] = useState({ order: null, seq: 0 });
@@ -63,6 +72,21 @@ export default function MyOrders() {
     finally { setCancelBusy(false); }
   };
 
+  const openReturn = (orderId) => {
+    setReturningId(orderId); setReturnReason(""); setReturnNote(""); setMsg("");
+  };
+
+  const confirmReturn = async () => {
+    if (!returningId || !returnReason) return;
+    setReturnBusy(true); setMsg("");
+    try {
+      await api.post(`/orders/${returningId}/return-request`, { reason: returnReason, note: returnNote });
+      setReturningId(null);
+      setMsg("Return request sent — our team will contact you to arrange it."); load();
+    } catch (e) { setMsg(e.response?.data?.message || "Could not send the return request"); }
+    finally { setReturnBusy(false); }
+  };
+
   return (
     <main className="max-w-5xl mx-auto px-3 pt-4">
       <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
@@ -87,6 +111,9 @@ export default function MyOrders() {
             </div>
             {o.status === "Cancelled" && o.cancelReason && (
               <p className="text-xs text-red-500 mt-1">Cancelled — {o.cancelReason}{o.cancelledBy ? ` (by ${o.cancelledBy})` : ""}</p>
+            )}
+            {o.returnRequestedAt && (
+              <p className="text-xs text-orange-600 mt-1">Return requested — {o.returnReason} · our team will contact you</p>
             )}
             <div className="mt-2 space-y-1">
               {o.items.map((i) => (
@@ -122,6 +149,37 @@ export default function MyOrders() {
               <button onClick={() => openCancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-2 sm:py-1.5 text-xs">
                 Cancel Order
               </button>
+            )}
+            {o.status === "Delivered" && !o.returnRequestedAt && returningId !== o.orderId && (
+              <button onClick={() => openReturn(o.orderId)} className="mt-2 ml-2 border border-orange-300 text-orange-600 rounded px-4 py-2 sm:py-1.5 text-xs">
+                Request Return
+              </button>
+            )}
+            {returningId === o.orderId && (
+              <div className="mt-3 border border-orange-200 bg-orange-50 rounded-lg p-3 fade-up">
+                <p className="font-semibold text-orange-700">Request a return</p>
+                <p className="text-xs text-gray-500 mt-1">Returns are accepted within 7 days of delivery for damaged, defective or incorrect items. Items must be unused and in their original packaging.</p>
+                <div className="mt-2 space-y-1.5">
+                  {RETURN_REASONS.map((r) => (
+                    <label key={r} className="flex items-center gap-2 cursor-pointer">
+                      <input type="radio" name={`return-${o.orderId}`} value={r} checked={returnReason === r}
+                        onChange={() => setReturnReason(r)} className="accent-orange-500" />
+                      <span>{r}</span>
+                    </label>
+                  ))}
+                </div>
+                <input value={returnNote} onChange={(e) => setReturnNote(e.target.value)}
+                  placeholder="Anything else? (optional)" className="mt-2 w-full border rounded px-3 py-2 bg-white" />
+                <div className="flex gap-2 mt-3">
+                  <button onClick={confirmReturn} disabled={!returnReason || returnBusy}
+                    className="bg-orange-500 text-white rounded px-4 py-2 sm:py-1.5 text-xs disabled:opacity-50">
+                    {returnBusy ? "Sending…" : "Send return request"}
+                  </button>
+                  <button onClick={() => setReturningId(null)} className="border rounded px-4 py-2 sm:py-1.5 text-xs bg-white">
+                    Back
+                  </button>
+                </div>
+              </div>
             )}
             {cancellingId === o.orderId && (
               <div className="mt-3 border border-red-200 bg-red-50 rounded-lg p-3 fade-up">

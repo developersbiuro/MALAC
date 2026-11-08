@@ -28,6 +28,17 @@ export const ADMIN_CANCEL_REASONS = [
   "Other",
 ];
 export const COURIERS = ["TCS", "Leopards", "Trax", "PostEx", "Other"];
+// Customer return-request reasons (delivered orders only; the store's
+// returns policy — 7 days, damaged/defective/incorrect — is stated on
+// the request panel and in the confirmation email).
+export const RETURN_REASONS = [
+  "Damaged item received",
+  "Defective / not working",
+  "Wrong item delivered",
+  "Wrong size or colour",
+  "Missing parts or accessories",
+  "Other",
+];
 export const PAYMENT_METHODS = ["COD", "Card", "JazzCash", "Easypaisa"];
 export const PAYMENT_VERIFICATION_STATUSES =
   ["not_applicable", "pending_verification", "verified", "rejected"];
@@ -81,6 +92,12 @@ const orderSchema = new mongoose.Schema({
   cancelReason: { type: String, default: "" },
   cancelNote: { type: String, default: "" },
   cancelledBy: { type: String, enum: ["", "customer", "admin"], default: "" },
+  // Customer return request (delivered orders): the request is recorded
+  // on the order, staff are notified, and staff complete the return by
+  // moving the order to "Returned" once the parcel comes back.
+  returnRequestedAt: { type: Date },
+  returnReason: { type: String, default: "" },
+  returnNote: { type: String, default: "" },
   // Set once when the "your order was delivered — please review" email goes
   // out (first transition into Delivered), so status re-saves never re-send.
   reviewEmailSentAt: { type: Date },

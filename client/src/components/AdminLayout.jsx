@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LOGO_MARK } from "../assets/logo.js";
 import { NavLink, Link } from "react-router-dom";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Star, Users, Settings as SettingsIcon, KeyRound, LogOut, Store, Smartphone } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Star, Users, Settings as SettingsIcon, KeyRound, LogOut, Store, Smartphone, Bell } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import api from "../api/client.js";
 import { useSeo } from "../utils/seo.js";
@@ -27,6 +27,20 @@ export default function AdminLayout({ children }) {
   const { user, logout, isSuperAdmin, hasPermission } = useAuth();
   const [appDlBusy, setAppDlBusy] = useState(false);
   const [appDlError, setAppDlError] = useState("");
+  // Notification bell: poll the unread count so a new order, customer
+  // cancellation or return request shows a badge within ~30 seconds,
+  // Daraz-style — in the web panel and in the admin app alike (the app
+  // is this same panel in a WebView).
+  const [unread, setUnread] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    const fetchCount = () => api.get("/admin/notifications")
+      .then((r) => { if (alive) setUnread(r.data.unreadCount || 0); })
+      .catch(() => {});
+    fetchCount();
+    const t = setInterval(fetchCount, 30000);
+    return () => { alive = false; clearInterval(t); };
+  }, []);
 
   // The admin Android app is served ONLY by the staff-authenticated
   // endpoint /api/admin/app-download — fetch it as a blob with the staff
@@ -64,6 +78,15 @@ export default function AdminLayout({ children }) {
           <p className="text-[11px] text-white/60 hidden sm:block mt-1">
             {user?.name} · {user?.role === "admin" ? "Super Admin" : "Vice-Admin"}
           </p>
+          <Link to="/admin/notifications" className="relative mt-2.5 inline-flex items-center gap-2 text-white/80 hover:text-white text-sm" aria-label="Notifications">
+            <span className="relative">
+              <Bell size={18} />
+              {unread > 0 && (
+                <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 px-0.5 flex items-center justify-center">{unread > 99 ? "99+" : unread}</span>
+              )}
+            </span>
+            <span className="hidden sm:inline">Notifications</span>
+          </Link>
         </div>
         <nav className="flex-1 py-2">
           {links.filter((l) => (!l.superOnly || isSuperAdmin) && (!l.permission || hasPermission(l.permission))).map(({ to, label, Icon, end }) => (
