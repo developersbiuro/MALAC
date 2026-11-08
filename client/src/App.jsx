@@ -25,6 +25,7 @@ import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
 import ResetPassword from "./pages/ResetPassword.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
+import NotFound from "./pages/NotFound.jsx";
 import Terms from "./pages/Terms.jsx";
 import Policy from "./pages/Policy.jsx";
 
@@ -129,7 +130,7 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/policy" element={<Policy />} />
         <Route path="/admin/*" element={<AdminShell />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       </div>
       {!isAdmin && !appMode && <Footer />}

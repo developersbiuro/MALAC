@@ -11,6 +11,7 @@ const CATEGORIES = [
   "Mobiles & Tablets",
   "Electronics",
   "Fashion",
+  "Kids",
   "Home & Living",
   "Beauty & Health",
   "Groceries",
