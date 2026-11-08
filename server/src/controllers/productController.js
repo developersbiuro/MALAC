@@ -56,7 +56,7 @@ export const listProducts = asyncHandler(async (req, res) => {
   const sortMap = { "price-asc": { _eff: 1 }, "price-desc": { _eff: -1 }, newest: { createdAt: -1 }, popular: { sold: -1 } };
   const total = await Product.countDocuments(filter);
   const byPrice = sort === "price-asc" || sort === "price-desc";
-  const query = byPrice ? Product.aggregate([effectiveAsc, { $match: filter }]) : Product.find(filter);
+  const query = byPrice ? Product.aggregate([effectiveAsc, { $match: filter }]) : Product.find(filter).lean();
   const products = await (byPrice ? query.sort(sortMap[sort]) : query.sort(sortMap[sort] || { createdAt: -1 }))
     .skip((page - 1) * limit).limit(Number(limit));
   res.json({ products, total, page: Number(page), pages: Math.ceil(total / limit) });

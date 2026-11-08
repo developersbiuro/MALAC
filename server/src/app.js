@@ -11,6 +11,7 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import { createGzip } from "node:zlib";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
@@ -60,6 +61,31 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "2mb" }));
+
+// Gzip JSON API responses (built-in zlib, no dependency). Product lists
+// carry long image URLs and descriptions; compressing them cuts the bytes
+// a phone on a slow connection must download before the page can render.
+// Only /api JSON answers are touched — APK downloads, uploaded images and
+// the XML feeds keep their own handling. Small bodies pass through as-is.
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/api")) return next();
+  if (!(req.headers["accept-encoding"] || "").includes("gzip")) return next();
+  const origJson = res.json.bind(res);
+  res.json = (body) => {
+    let payload;
+    try { payload = JSON.stringify(body); } catch { return origJson(body); }
+    if (!payload || payload.length < 1024) return origJson(body);
+    res.setHeader("Content-Encoding", "gzip");
+    res.setHeader("Vary", "Accept-Encoding");
+    res.removeHeader("Content-Length");
+    createGzip().end(payload, (err, buf) => {
+      if (err) return origJson(body);
+      res.setHeader("Content-Length", buf.length);
+      return res.send(buf);
+    });
+  };
+  return next();
+});
 if (env.nodeEnv === "development") app.use(morgan("dev"));
 
 // App downloads + PWA icons (APKs/icons decoded from base64 text assets
