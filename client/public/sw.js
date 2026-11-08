@@ -2,7 +2,7 @@
    - App shell: network-first for navigations so deploys never serve a stale shell.
    - Static assets (JS/CSS/images/fonts): stale-while-revalidate.
    - /api/ and /uploads/ are NEVER cached; non-GET requests are never touched. */
-const CACHE_NAME = "malac-cache-v1";
+const CACHE_NAME = "malac-cache-v2";
 const PRECACHE_URLS = ["/", "/manifest.webmanifest", "/icons/icon.svg"];
 
 self.addEventListener("install", (event) => {
