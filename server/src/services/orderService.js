@@ -45,6 +45,7 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     const variant = item.variantLabel
       ? product.variants.find((v) => `${v.name}: ${v.value}` === item.variantLabel)
       : null;
+    if (variant && variant.stock < item.qty) throw new Error(`Only ${variant.stock} left for ${product.title} (${item.variantLabel})`);
     const price = product.salePrice > 0 ? product.salePrice : product.basePrice;
     const unit = price + (variant ? variant.priceDelta : 0);
     subtotal += unit * item.qty;
@@ -70,8 +71,54 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     }
     const shipping = deliveryMethod === "Express" ? 399 : (subtotal - discount >= 5000 ? 0 : 199);
   const total = subtotal - discount + shipping;
-  // Short IDs (MLC-XXXXXX) can in principle collide — regenerate on the
-  // unique-index error instead of failing the customer's order.
+  // Stock is claimed ATOMICALLY before the coupon is redeemed: each
+  // decrement is a single conditional update that only succeeds when
+  // enough stock remains, so two simultaneous checkouts can never both
+  // claim the last unit. If any claim fails, everything claimed so far
+  // for this order is released again and the order is never created.
+  const stockOps = [];
+  for (const item of orderItems) {
+    stockOps.push({ product: item.product, variantLabel: item.variantLabel || "", qty: item.qty, title: item.title, claimed: false });
+  }
+  const releaseStock = async () => {
+    for (const op of stockOps) {
+      if (!op.claimed) continue;
+      await Product.updateOne({ _id: op.product }, { $inc: { stock: op.qty, sold: -op.qty } }).catch(() => {});
+      if (op.variantLabel) {
+        await Product.updateOne(
+          { _id: op.product, "variants.name": op.variantLabel.split(": ")[0], "variants.value": op.variantLabel.split(": ").slice(1).join(": ") },
+          { $inc: { "variants.$.stock": op.qty } }
+        ).catch(() => {});
+      }
+    }
+  };
+  for (const op of stockOps) {
+    const claim = await Product.updateOne(
+      { _id: op.product, stock: { $gte: op.qty } },
+      { $inc: { stock: -op.qty, sold: op.qty } }
+    );
+    if (!claim.modifiedCount) {
+      await releaseStock();
+      throw new Error(`Only a few left for ${op.title} — please reduce the quantity`);
+    }
+    op.claimed = true;
+    if (op.variantLabel) {
+      const vName = op.variantLabel.split(": ")[0];
+      const vValue = op.variantLabel.split(": ").slice(1).join(": ");
+      const vClaim = await Product.updateOne(
+        { _id: op.product, variants: { $elemMatch: { name: vName, value: vValue, stock: { $gte: op.qty } } } },
+        { $inc: { "variants.$[v].stock": -op.qty } },
+        { arrayFilters: [{ "v.name": vName, "v.value": vValue }] }
+      );
+      if (!vClaim.modifiedCount) {
+        // Compensate this item's product-level claim, then release the rest.
+        await Product.updateOne({ _id: op.product }, { $inc: { stock: op.qty, sold: -op.qty } }).catch(() => {});
+        op.claimed = false;
+        await releaseStock();
+        throw new Error(`That variant of ${op.title} just went out of stock`);
+      }
+    }
+  }
   let order = null;
   for (let attempt = 0; attempt < 5 && !order; attempt++) {
     try {
@@ -92,14 +139,13 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     statusHistory: [{ status: "Pending", by: "customer", note: "Order placed" }],
       });
     } catch (e) {
-      if (e?.code !== 11000 || attempt === 4) throw e; // not a collision: fail as before
+      if (e?.code !== 11000 || attempt === 4) { await releaseStock(); throw e; } // not a collision: release claims, fail as before
     }
   }
-  for (const item of orderItems) {
-    await Product.updateOne({ _id: item.product },
-      { $inc: { stock: -item.qty, sold: item.qty } });
+  if (appliedCoupon) {
+    try { await redeemCoupon(appliedCoupon); }
+    catch (e) { await releaseStock(); await Order.deleteOne({ _id: order._id }).catch(() => {}); throw e; }
   }
-  if (appliedCoupon) await redeemCoupon(appliedCoupon);
   return order;
 }
 
@@ -119,10 +165,21 @@ export async function cancelOrder(order, by = "customer", { reason = "", note = 
   order.cancelReason = reason;
   order.cancelNote = String(note || "").slice(0, 300);
   order.cancelledBy = by === "customer" ? "customer" : "admin";
-  order.statusHistory.push({ status: "Cancelled", by, note: `Reason: ${reason}${order.cancelNote ? ` — ${order.cancelNote}` : ""}` });
+  const reasonText = `Reason: ${reason}${order.cancelNote ? ` — ${order.cancelNote}` : ""}`;
+  order.statusHistory.push({ status: "Cancelled", by, note: reasonText });
   await order.save();
   for (const item of order.items) {
-    if (item.product) await Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty, sold: -item.qty } });
+    if (!item.product) continue;
+    await Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty, sold: -item.qty } });
+    if (item.variantLabel) {
+      const vName = item.variantLabel.split(": ")[0];
+      const vValue = item.variantLabel.split(": ").slice(1).join(": ");
+      await Product.updateOne(
+        { _id: item.product, variants: { $elemMatch: { name: vName, value: vValue } } },
+        { $inc: { "variants.$[v].stock": item.qty } },
+        { arrayFilters: [{ "v.name": vName, "v.value": vValue }] }
+      ).catch(() => {});
+    }
   }
   onOrderCancelled(order, by); // customer email (+ staff bell for customer cancels)
   return order;
@@ -153,7 +210,17 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
   // once — moving within Returned must not double-restock).
   if (status === "Returned" && prev !== "Returned") {
     for (const item of order.items) {
-      if (item.product) await Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty, sold: -item.qty } });
+      if (!item.product) continue;
+      await Product.updateOne({ _id: item.product }, { $inc: { stock: item.qty, sold: -item.qty } });
+      if (item.variantLabel) {
+        const vName = item.variantLabel.split(": ")[0];
+        const vValue = item.variantLabel.split(": ").slice(1).join(": ");
+        await Product.updateOne(
+          { _id: item.product, variants: { $elemMatch: { name: vName, value: vValue } } },
+          { $inc: { "variants.$[v].stock": item.qty } },
+          { arrayFilters: [{ "v.name": vName, "v.value": vValue }] }
+        ).catch(() => {});
+      }
     }
   }
   await order.save();

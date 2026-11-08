@@ -64,7 +64,6 @@ export default function Footer() {
           <p className="text-gray-600 py-0.5">Cash on Delivery (COD)</p>
           <p className="text-gray-600 py-0.5">JazzCash — Muhammad Abdullah · 0303 6253428</p>
           <p className="text-gray-600 py-0.5">Easypaisa — Muhammad Abdullah · 0303 6253428</p>
-          <Link to="/admin" className="block text-gray-600 hover:text-lux-burnt py-0.5 mt-3">Admin Login</Link>
         </div>
       </div>
       <div className="border-t border-cream-line">

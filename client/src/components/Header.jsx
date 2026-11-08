@@ -133,7 +133,6 @@ export default function Header() {
                 <Link to="/" className="block px-3 py-2 hover:bg-gray-50">Home</Link>
                 <Link to="/login" className="block px-3 py-2 hover:bg-gray-50">Login</Link>
                 <Link to="/signup" className="block px-3 py-2 hover:bg-gray-50">Sign Up</Link>
-                <Link to="/admin" className="block px-3 py-2 hover:bg-gray-50">Admin Login</Link>
               </>}
             </div>
           )}
