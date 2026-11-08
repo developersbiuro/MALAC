@@ -43,15 +43,21 @@ export const listProducts = asyncHandler(async (req, res) => {
       { category: { $regex: literal, $options: "i" } },
     ];
   }
-  if (minPrice || maxPrice) {
-    filter.basePrice = {};
-    if (minPrice) filter.basePrice.$gte = Number(minPrice);
-    if (maxPrice) filter.basePrice.$lte = Number(maxPrice);
-  }
-  const sortMap = { "price-asc": { salePrice: 1 }, "price-desc": { salePrice: -1 }, newest: { createdAt: -1 }, popular: { sold: -1 } };
+  // Price filter and sort run on the EFFECTIVE price — what the customer
+  // actually pays (salePrice when a sale is live, else basePrice). Filtering
+  // on basePrice hid discounted products from their true price band (QA
+  // 2026-11-08: a Rs 1,699-on-sale serum vanished under a Rs 2,000 max).
+  // $expr needs the plain conditions split out first.
+  const and = [];
+  if (minPrice) and.push({ $expr: { $gte: [{ $cond: [{ $gt: ["$salePrice", 0] }, "$salePrice", "$basePrice"] }, Number(minPrice)] } });
+  if (maxPrice) and.push({ $expr: { $lte: [{ $cond: [{ $gt: ["$salePrice", 0] }, "$salePrice", "$basePrice"] }, Number(maxPrice)] } });
+  if (and.length) filter.$and = and;
+  const effectiveAsc = { $addFields: { _eff: { $cond: [{ $gt: ["$salePrice", 0] }, "$salePrice", "$basePrice"] } } };
+  const sortMap = { "price-asc": { _eff: 1 }, "price-desc": { _eff: -1 }, newest: { createdAt: -1 }, popular: { sold: -1 } };
   const total = await Product.countDocuments(filter);
-  const products = await Product.find(filter)
-    .sort(sortMap[sort] || { createdAt: -1 })
+  const byPrice = sort === "price-asc" || sort === "price-desc";
+  const query = byPrice ? Product.aggregate([effectiveAsc, { $match: filter }]) : Product.find(filter);
+  const products = await (byPrice ? query.sort(sortMap[sort]) : query.sort(sortMap[sort] || { createdAt: -1 }))
     .skip((page - 1) * limit).limit(Number(limit));
   res.json({ products, total, page: Number(page), pages: Math.ceil(total / limit) });
 });
