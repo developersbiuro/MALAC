@@ -27,6 +27,14 @@ img, video { max-width: 100%; }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: none; } }
 .animate-slide-in-right { animation: slideInRight .25s ease both; }
 
+/* Homepage hero: slow cinematic zoom on the active slide's photo, and a
+   filling progress bar inside the active pagination pill that tracks the
+   5s autoplay timer (pure CSS animation, restarted by React key change). */
+@keyframes heroZoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+.hero-zoom { animation: heroZoom 5.4s ease-out both; }
+@keyframes heroProgress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.hero-progress { transform-origin: left; animation: heroProgress 5s linear both; }
+
 /* Printing (admin order detail, My Orders, order confirmation): every
    printable block carries .print-area plus a mode class
    (.print-label-block for the shipping label, .print-invoice-block for
