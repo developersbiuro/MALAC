@@ -4,6 +4,7 @@ import { PackageSearch, ArrowLeft, CheckCircle2, Circle, Truck } from "lucide-re
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
+import { isManualMethod } from "../utils/payments.js";
 
 // Order tracking for signed-in customers (guest lock, 2026-11-09): ONE field — the buyer types either
 // the order ID from their confirmation OR the phone number used on the
@@ -232,7 +233,7 @@ export default function TrackOrder() {
           </dl>
           <p className="mt-4 text-xs text-gray-500 border-t border-cream-line pt-3">
             Payment: <b>{order.paymentMethod}</b> · {order.paymentStatus}
-            {["JazzCash", "Easypaisa"].includes(order.paymentMethod) && (
+            {isManualMethod(order.paymentMethod) && (
               <> · Transfer {order.paymentVerificationStatus === "pending_verification" ? "pending verification"
                 : order.paymentVerificationStatus === "verified" ? "verified"
                 : order.paymentVerificationStatus === "rejected" ? "rejected — please contact us on WhatsApp" : ""}</>

@@ -1,4 +1,5 @@
 import { rs } from "../utils/format.js";
+import { isManualMethod } from "../utils/payments.js";
 import { customerContact } from "../utils/customerContact.js";
 
 // Printable priced invoice (Daraz-style), shared by the admin order
@@ -22,7 +23,7 @@ function paymentLine(order) {
   if (order.paymentMethod === "COD") {
     return `Cash on Delivery — collect ${rs(order.total)} on delivery`;
   }
-  if (["JazzCash", "Easypaisa"].includes(order.paymentMethod)) {
+  if (isManualMethod(order.paymentMethod)) {
     const v = order.paymentVerificationStatus;
     if (v === "verified") return `${order.paymentMethod} — Paid (verified)`;
     if (v === "rejected") return `${order.paymentMethod} — Payment rejected`;

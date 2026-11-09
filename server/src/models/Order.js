@@ -39,7 +39,13 @@ export const RETURN_REASONS = [
   "Missing parts or accessories",
   "Other",
 ];
-export const PAYMENT_METHODS = ["COD", "JazzCash", "Easypaisa"];
+export const PAYMENT_METHODS = ["COD", "JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
+// Manual-transfer methods: the customer sends money to a store account
+// and uploads the screenshot + transaction details for staff
+// verification. Meezan Bank is the receiving bank account; NayaPay,
+// SadaPay and FirstPay HBL are the customer's SENDING apps — transfers
+// from all of them land in the SAME Meezan account (owner, 2026-11-09).
+export const MANUAL_PAYMENT_METHODS = ["JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
 export const PAYMENT_VERIFICATION_STATUSES =
   ["not_applicable", "pending_verification", "verified", "rejected"];
 
@@ -71,7 +77,7 @@ const orderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   paymentMethod: { type: String, enum: PAYMENT_METHODS, default: "COD" },
   paymentStatus: { type: String, enum: ["Unpaid", "Paid", "Refunded"], default: "Unpaid" },
-  // Manual wallet payments (JazzCash / Easypaisa): the customer transfers to
+  // Manual payments (wallets + Meezan bank transfer): the customer transfers to
   // the store account, uploads a screenshot and gives transaction details.
   paymentScreenshot: { type: String, default: "" },   // e.g. /uploads/payment-screenshots/<file>
   transactionId: { type: String, default: "" },

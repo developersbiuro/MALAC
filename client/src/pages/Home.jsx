@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: "How do I pay with JazzCash or Easypaisa?",
-    a: "At checkout, choose JazzCash or Easypaisa and transfer the order total to account title Muhammad Abdullah, number 0303 6253428. Then upload your payment screenshot and transaction details with your order. Our team verifies the payment before your order is processed; if a payment cannot be verified, we will contact you and the order will not be dispatched until it is resolved. Cash on Delivery is also available — pay in cash when your order arrives.",
+    a: "At checkout, choose JazzCash or Easypaisa and transfer the order total to account title Muhammad Abdullah, number 0303 6253428 — or choose Meezan Bank / NayaPay / SadaPay / FirstPay HBL and transfer to the store's Meezan Bank account (title Muhammad Abdullah, account 04820113003065). Then upload your payment screenshot and transaction details with your order. Our team verifies the payment before your order is processed; if a payment cannot be verified, we will contact you and the order will not be dispatched until it is resolved. Cash on Delivery is also available — pay in cash when your order arrives.",
   },
   {
     q: "When is shipping free?",
@@ -163,7 +163,7 @@ export default function Home() {
             check out.
           </p>
           <p>
-            Ordering is straightforward: pay with Cash on Delivery, or by JazzCash / Easypaisa transfer with a
+            Ordering is straightforward: pay with Cash on Delivery, or by JazzCash / Easypaisa / bank (Meezan, NayaPay, SadaPay, FirstPay) transfer with a
             payment screenshot our team verifies before dispatch. Standard delivery is Rs. 199 on most orders and
             free on orders over Rs. 5,000, and we deliver nationwide through courier partners including TCS,
             Leopards and Trax. Once your order is placed, you can follow it any time from the Track Your Order page.

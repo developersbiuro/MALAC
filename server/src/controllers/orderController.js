@@ -1,4 +1,4 @@
-import Order, { ORDER_STATUSES, CUSTOMER_STATUS, COURIERS, RETURN_REASONS } from "../models/Order.js";
+import Order, { ORDER_STATUSES, CUSTOMER_STATUS, COURIERS, RETURN_REASONS, MANUAL_PAYMENT_METHODS } from "../models/Order.js";
 import Notification from "../models/Notification.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
@@ -230,7 +230,7 @@ export const adminUpdateStatus = asyncHandler(async (req, res) => {
 });
 
 
-// ---- Manual payment verification (JazzCash / Easypaisa) ----
+// ---- Manual payment verification (wallets + bank transfer) ----
 // Route-guarded to Super Admin: billing/financial action per RBAC brief.
 export const adminVerifyPayment = asyncHandler(async (req, res) => {
   const { decision, note } = req.body; // decision: "verified" | "rejected"
@@ -238,7 +238,7 @@ export const adminVerifyPayment = asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "decision must be verified or rejected" });
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ message: "Order not found" });
-  if (!["JazzCash", "Easypaisa"].includes(order.paymentMethod))
+  if (!MANUAL_PAYMENT_METHODS.includes(order.paymentMethod))
     return res.status(400).json({ message: "This order was not paid by manual wallet transfer" });
   order.paymentVerificationStatus = decision;
   order.paymentVerificationNote = note || "";

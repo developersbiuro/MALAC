@@ -41,13 +41,16 @@ export default function AdminSettings() {
         </fieldset>
 
         <fieldset className="border rounded p-3">
-          <legend className="text-sm font-semibold px-1">JazzCash / Easypaisa (manual payments)</legend>
+          <legend className="text-sm font-semibold px-1">Manual payment accounts (JazzCash / Easypaisa / Meezan Bank)</legend>
           <div className="grid sm:grid-cols-2 gap-3">
             <label className="text-sm">JazzCash account title<input className={input} value={form.jazzcashAccountTitle || ""} onChange={(e) => set("jazzcashAccountTitle", e.target.value)} /></label>
             <label className="text-sm">JazzCash account number<input className={input} value={form.jazzcashAccountNumber || ""} onChange={(e) => set("jazzcashAccountNumber", e.target.value)} /></label>
             <label className="text-sm">Easypaisa account title<input className={input} value={form.easypaisaAccountTitle || ""} onChange={(e) => set("easypaisaAccountTitle", e.target.value)} /></label>
             <label className="text-sm">Easypaisa account number<input className={input} value={form.easypaisaAccountNumber || ""} onChange={(e) => set("easypaisaAccountNumber", e.target.value)} /></label>
+            <label className="text-sm">Meezan Bank account title<input className={input} value={form.meezanAccountTitle || ""} onChange={(e) => set("meezanAccountTitle", e.target.value)} /></label>
+            <label className="text-sm">Meezan Bank account number<input className={input} value={form.meezanAccountNumber || ""} onChange={(e) => set("meezanAccountNumber", e.target.value)} /></label>
           </div>
+          <p className="text-[11px] text-gray-400 mt-2">The Meezan account is ALSO the receiving account for the NayaPay, SadaPay and FirstPay HBL checkout methods — customers send from those apps into this one account.</p>
           <p className="text-[11px] text-gray-400 mt-2">These store accounts are shown to customers at checkout. Leave a number empty to mark that method as unavailable. Defaults come from JAZZCASH_* / EASYPAISA_* in .env (owner-provided shared account for both wallets).</p>
         </fieldset>
 

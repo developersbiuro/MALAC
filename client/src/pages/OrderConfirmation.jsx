@@ -4,6 +4,7 @@ import { CheckCircle2, Package, Printer } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
+import { isManualMethod } from "../utils/payments.js";
 import { printBlock } from "../utils/print.js";
 import OrderInvoice from "../components/OrderInvoice.jsx";
 
@@ -24,7 +25,7 @@ export default function OrderConfirmation() {
         <CheckCircle2 size={52} className="text-green-500 mx-auto" />
         <h1 className="text-xl font-bold mt-2">Thank you! Your order is confirmed.</h1>
         <p className="text-sm text-gray-500 mt-1">Order ID: <b className="text-gray-800">{order.orderId}</b></p>
-        {["JazzCash", "Easypaisa"].includes(order.paymentMethod) && (
+        {isManualMethod(order.paymentMethod) && (
           <p className="text-sm text-amber-600 mt-2">
             {order.paymentMethod} payment {order.paymentVerificationStatus === "verified" ? "verified ✓"
               : order.paymentVerificationStatus === "rejected" ? "was rejected — please contact support"

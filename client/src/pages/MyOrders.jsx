@@ -4,6 +4,7 @@ import { Settings2, Printer } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
+import { isManualMethod } from "../utils/payments.js";
 import { printBlock } from "../utils/print.js";
 import OrderInvoice from "../components/OrderInvoice.jsx";
 
@@ -132,7 +133,7 @@ export default function MyOrders() {
             </div>
             <div className="flex flex-wrap justify-between items-center gap-x-3 gap-y-1 border-t mt-2 pt-2">
               <span className="text-gray-500 min-w-0">{o.paymentMethod} · {o.deliveryMethod} delivery
-              {["JazzCash", "Easypaisa"].includes(o.paymentMethod) && (
+              {isManualMethod(o.paymentMethod) && (
                 <> · Payment: {o.paymentVerificationStatus === "pending_verification" ? "Pending verification"
                   : o.paymentVerificationStatus === "verified" ? "Verified"
                   : o.paymentVerificationStatus === "rejected" ? "Rejected - contact support" : ""}

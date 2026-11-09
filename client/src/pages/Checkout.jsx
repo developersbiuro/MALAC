@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud } from "lucide-react";
+import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud, Landmark } from "lucide-react";
 import api from "../api/client.js";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import LocationSelect from "../components/LocationSelect.jsx";
@@ -10,12 +10,13 @@ import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs, deliveryWindow } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
+import { MANUAL_METHODS, WALLET_KEY } from "../utils/payments.js";
 
 // NOTE: This page is wrapped in <ProtectedRoute> — guests are redirected to
 // /login?redirect=/checkout and return here after login. The server also
 // rejects unauthenticated POST /api/orders with 401 (no guest ordering).
 const steps = ["Shipping Address", "Delivery Method", "Payment"];
-const MANUAL = ["JazzCash", "Easypaisa"];
+const MANUAL = MANUAL_METHODS;
 
 export default function Checkout() {
   useSeo({ title: "Checkout — MALAC", robots: "noindex" });
@@ -95,7 +96,7 @@ export default function Checkout() {
   }, [items, deliveryMethod, subtotal, discount]);
   const total = subtotal - discount + shipping;
   const isManual = MANUAL.includes(paymentMethod);
-  const walletInfo = isManual && wallets ? wallets[paymentMethod.toLowerCase()] : null;
+  const walletInfo = isManual && wallets ? wallets[WALLET_KEY[paymentMethod]] : null;
 
   const applyCoupon = async () => {
     try {
@@ -235,6 +236,14 @@ export default function Checkout() {
               walletInfo && paymentMethod === "JazzCash" ? "" : "Send money to the store JazzCash account, then upload the screenshot.")}
             {methodCard("Easypaisa", Smartphone, "Easypaisa (Manual Transfer)",
               walletInfo && paymentMethod === "Easypaisa" ? "" : "Send money to the store Easypaisa account, then upload the screenshot.")}
+            {methodCard("Meezan Bank", Landmark, "Meezan Bank Transfer",
+              walletInfo && paymentMethod === "Meezan Bank" ? "" : "Transfer to the store's Meezan Bank account, then upload the screenshot.")}
+            {methodCard("NayaPay", Smartphone, "NayaPay",
+              walletInfo && paymentMethod === "NayaPay" ? "" : "Apne NayaPay app se store ke Meezan account me bhejein, phir screenshot upload karein.")}
+            {methodCard("SadaPay", Smartphone, "SadaPay",
+              walletInfo && paymentMethod === "SadaPay" ? "" : "Apne SadaPay app se store ke Meezan account me bhejein, phir screenshot upload karein.")}
+            {methodCard("FirstPay HBL", Landmark, "FirstPay — HBL Microfinance",
+              walletInfo && paymentMethod === "FirstPay HBL" ? "" : "Apne FirstPay (HBL Microfinance) app se store ke Meezan account me bhejein, phir screenshot upload karein.")}
 
             {isManual && (
               <div className="border rounded p-3 ml-0 sm:ml-8 space-y-3 bg-gray-50">

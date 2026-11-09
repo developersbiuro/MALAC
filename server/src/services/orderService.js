@@ -1,4 +1,4 @@
-import Order, { CUSTOMER_CANCEL_REASONS, ADMIN_CANCEL_REASONS } from "../models/Order.js";
+import Order, { CUSTOMER_CANCEL_REASONS, ADMIN_CANCEL_REASONS, MANUAL_PAYMENT_METHODS } from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import env from "../config/env.js";
@@ -61,7 +61,7 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     if (!check.valid) throw new Error(`Coupon: ${check.reason}`);
     discount = check.discount; appliedCoupon = check.coupon;
   }
-  const isManualWallet = ["JazzCash", "Easypaisa"].includes(paymentMethod);
+  const isManualWallet = MANUAL_PAYMENT_METHODS.includes(paymentMethod);
     if (isManualWallet) {
       // Manual transfer must be proven before the order is accepted:
       // screenshot + transaction ID + sender account are all required.
