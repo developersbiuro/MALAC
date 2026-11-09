@@ -1,8 +1,7 @@
 // Manual-transfer payment methods: the customer sends money to a store
 // account and uploads the screenshot + transaction details for staff
-// verification. Meezan Bank is the receiving bank account; NayaPay,
-// SadaPay and FirstPay HBL are the customer's sending apps — transfers
-// from all of them land in the SAME Meezan account (owner, 2026-11-09).
+// verification. Meezan Bank = direct bank transfer; NayaPay, SadaPay and
+// FirstPay HBL pay the owner's wallet number 03036253428 (owner, 2026-11-09).
 // Keep in sync with MANUAL_PAYMENT_METHODS in server/src/models/Order.js.
 export const MANUAL_METHODS = ["JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
 export const isManualMethod = (m) => MANUAL_METHODS.includes(m);

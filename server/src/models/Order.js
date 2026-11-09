@@ -42,9 +42,9 @@ export const RETURN_REASONS = [
 export const PAYMENT_METHODS = ["COD", "JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
 // Manual-transfer methods: the customer sends money to a store account
 // and uploads the screenshot + transaction details for staff
-// verification. Meezan Bank is the receiving bank account; NayaPay,
-// SadaPay and FirstPay HBL are the customer's SENDING apps — transfers
-// from all of them land in the SAME Meezan account (owner, 2026-11-09).
+// verification. Meezan Bank receives direct bank transfers; NayaPay,
+// SadaPay and FirstPay HBL pay the owner's wallet number 03036253428 —
+// the same number as JazzCash / Easypaisa (owner, 2026-11-09).
 export const MANUAL_PAYMENT_METHODS = ["JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
 export const PAYMENT_VERIFICATION_STATUSES =
   ["not_applicable", "pending_verification", "verified", "rejected"];

@@ -25,7 +25,7 @@ const FAQS = [
   },
   {
     q: "How do I pay with JazzCash or Easypaisa?",
-    a: "At checkout, choose JazzCash or Easypaisa and transfer the order total to account title Muhammad Abdullah, number 0303 6253428 — or choose Meezan Bank / NayaPay / SadaPay / FirstPay HBL and transfer to the store's Meezan Bank account (title Muhammad Abdullah, account 04820113003065). Then upload your payment screenshot and transaction details with your order. Our team verifies the payment before your order is processed; if a payment cannot be verified, we will contact you and the order will not be dispatched until it is resolved. Cash on Delivery is also available — pay in cash when your order arrives.",
+    a: "At checkout, choose JazzCash or Easypaisa and transfer the order total to account title Muhammad Abdullah, number 0303 6253428 — or choose Meezan Bank and transfer to the store's Meezan account (title Muhammad Abdullah, account 04820113003065), or NayaPay / SadaPay / FirstPay HBL to number 0303 6253428. Then upload your payment screenshot and transaction details with your order. Our team verifies the payment before your order is processed; if a payment cannot be verified, we will contact you and the order will not be dispatched until it is resolved. Cash on Delivery is also available — pay in cash when your order arrives.",
   },
   {
     q: "When is shipping free?",

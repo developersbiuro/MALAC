@@ -273,7 +273,10 @@ export const updateSettings = asyncHandler(async (req, res) => {
     "codEnabled", "cardPaymentsEnabled",
     "jazzcashAccountTitle", "jazzcashAccountNumber",
     "easypaisaAccountTitle", "easypaisaAccountNumber",
-    "meezanAccountTitle", "meezanAccountNumber"];
+    "meezanAccountTitle", "meezanAccountNumber",
+    "nayapayAccountTitle", "nayapayAccountNumber",
+    "sadapayAccountTitle", "sadapayAccountNumber",
+    "firstpayAccountTitle", "firstpayAccountNumber"];
   for (const key of allowed) if (req.body[key] !== undefined) settings[key] = req.body[key];
   await settings.save();
   res.json({ settings });

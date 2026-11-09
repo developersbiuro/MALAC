@@ -239,11 +239,11 @@ export default function Checkout() {
             {methodCard("Meezan Bank", Landmark, "Meezan Bank Transfer",
               walletInfo && paymentMethod === "Meezan Bank" ? "" : "Transfer to the store's Meezan Bank account, then upload the screenshot.")}
             {methodCard("NayaPay", Smartphone, "NayaPay",
-              walletInfo && paymentMethod === "NayaPay" ? "" : "Apne NayaPay app se store ke Meezan account me bhejein, phir screenshot upload karein.")}
+              walletInfo && paymentMethod === "NayaPay" ? "" : "Store ke NayaPay number par bhejein, phir screenshot upload karein.")}
             {methodCard("SadaPay", Smartphone, "SadaPay",
-              walletInfo && paymentMethod === "SadaPay" ? "" : "Apne SadaPay app se store ke Meezan account me bhejein, phir screenshot upload karein.")}
+              walletInfo && paymentMethod === "SadaPay" ? "" : "Store ke SadaPay number par bhejein, phir screenshot upload karein.")}
             {methodCard("FirstPay HBL", Landmark, "FirstPay — HBL Microfinance",
-              walletInfo && paymentMethod === "FirstPay HBL" ? "" : "Apne FirstPay (HBL Microfinance) app se store ke Meezan account me bhejein, phir screenshot upload karein.")}
+              walletInfo && paymentMethod === "FirstPay HBL" ? "" : "Store ke FirstPay (HBL Microfinance) number par bhejein, phir screenshot upload karein.")}
 
             {isManual && (
               <div className="border rounded p-3 ml-0 sm:ml-8 space-y-3 bg-gray-50">

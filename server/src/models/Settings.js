@@ -21,11 +21,19 @@ const settingsSchema = new mongoose.Schema({
   jazzcashAccountNumber: { type: String, default: env.jazzcash.accountNumber },
   easypaisaAccountTitle: { type: String, default: env.easypaisa.accountTitle },
   easypaisaAccountNumber: { type: String, default: env.easypaisa.accountNumber },
-  // Meezan Bank account (owner, 2026-11-09): direct bank transfers AND
-  // transfers sent from NayaPay / SadaPay / FirstPay HBL all land here —
-  // one account behind four checkout methods (see publicPayments).
+  // Bank + wallet accounts (owner, 2026-11-09): Meezan Bank direct
+  // transfers go to the Meezan account; NayaPay / SadaPay / FirstPay HBL
+  // go to the owner's wallet number 03036253428 — the SAME number as the
+  // JazzCash / Easypaisa account. (Corrects the first interpretation,
+  // which had routed the three apps into the Meezan account.)
   meezanAccountTitle: { type: String, default: "Muhammad Abdullah" },
   meezanAccountNumber: { type: String, default: "04820113003065" },
+  nayapayAccountTitle: { type: String, default: "Muhammad Abdullah" },
+  nayapayAccountNumber: { type: String, default: "03036253428" },
+  sadapayAccountTitle: { type: String, default: "Muhammad Abdullah" },
+  sadapayAccountNumber: { type: String, default: "03036253428" },
+  firstpayAccountTitle: { type: String, default: "Muhammad Abdullah" },
+  firstpayAccountNumber: { type: String, default: "03036253428" },
   // MALAC Assistant (chatbot) configuration — edited in Admin → Chatbot.
   // The widget reads ONLY the safe public subset (publicChatbot()).
   chatbotEnabled: { type: Boolean, default: true },
@@ -63,10 +71,9 @@ settingsSchema.methods.publicPayments = function () {
     jazzcash: wallet(this.jazzcashAccountTitle, this.jazzcashAccountNumber),
     easypaisa: wallet(this.easypaisaAccountTitle, this.easypaisaAccountNumber),
     meezan: wallet(this.meezanAccountTitle, this.meezanAccountNumber),
-    // Sending apps share the Meezan receiving account (owner, 2026-11-09).
-    nayapay: wallet(this.meezanAccountTitle, this.meezanAccountNumber),
-    sadapay: wallet(this.meezanAccountTitle, this.meezanAccountNumber),
-    firstpay: wallet(this.meezanAccountTitle, this.meezanAccountNumber),
+    nayapay: wallet(this.nayapayAccountTitle, this.nayapayAccountNumber),
+    sadapay: wallet(this.sadapayAccountTitle, this.sadapayAccountNumber),
+    firstpay: wallet(this.firstpayAccountTitle, this.firstpayAccountNumber),
   };
 };
 
