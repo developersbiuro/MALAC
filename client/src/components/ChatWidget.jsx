@@ -125,11 +125,14 @@ export default function ChatWidget() {
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [config, setConfig] = useState(null); // { enabled, name, welcome }
+  const [fees, setFees] = useState({ std: 199, exp: 399, free: 5000 }); // live Settings, fetched below
   const [takeover, setTakeover] = useState(false);
   const [addedKey, setAddedKey] = useState("");
   const scrollRef = useRef(null);
   const sessionRef = useRef(getSessionId());
   const lastPollRef = useRef(null);
+  const logQueueRef = useRef([]);
+  const logTimerRef = useRef(null);
 
   // The admin suite has its own chrome — never float over it.
   const isAdmin = pathname.startsWith("/admin");
@@ -139,6 +142,18 @@ export default function ChatWidget() {
     api.get("/assistant/config")
       .then((r) => setConfig(r.data.chatbot))
       .catch(() => setConfig({ enabled: true, name: "MALAC Assistant", welcome: "" }));
+    // Real delivery fees from the store Settings — the bot must quote
+    // the CURRENT charges, never a hard-coded copy.
+    api.get("/settings/public")
+      .then((r) => {
+        const p = r.data.payments || {};
+        setFees({
+          std: p.defaultShippingFee ?? 199,
+          exp: p.expressShippingFee ?? 399,
+          free: p.freeShippingThreshold ?? 5000,
+        });
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -181,7 +196,34 @@ export default function ChatWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open ]);
 
-  const push = (...msgs) => setMessages((prev) => [...prev, ...msgs]);
+  // Conversation persistence: every locally-produced turn (rule-based
+  // FAQ, tracking, browse, ticket steps…) is queued here and flushed to
+  // POST /assistant/log so Admin → Chatbot can read the WHOLE chat, not
+  // just AI turns. Turns the /assistant/chat route already stored are
+  // marked noLog by the caller; the server also de-duplicates repeats.
+  const flushLog = () => {
+    const entries = logQueueRef.current.splice(0, 50);
+    if (!entries.length) return;
+    api.post("/assistant/log", { sessionId: sessionRef.current, entries }).catch(() => {});
+  };
+  const queueLog = (m) => {
+    logQueueRef.current.push({
+      from: m.from, text: m.text,
+      products: (m.products || []).map((p) => ({
+        slug: p.slug, title: p.title, category: p.category,
+        image: p.image, price: p.price, wasPrice: p.wasPrice,
+      })),
+    });
+    if (logTimerRef.current) clearTimeout(logTimerRef.current);
+    logTimerRef.current = setTimeout(flushLog, 4000);
+  };
+
+  const push = (...msgs) => {
+    for (const m of msgs) {
+      if ((m.from === "user" || m.from === "bot") && !m.noLog) queueLog(m);
+    }
+    setMessages((prev) => [...prev, ...msgs]);
+  };
   const botSay = (text, extra = {}) => ({ id: nextId(), from: "bot", text, at: Date.now(), ...extra });
   const userSay = (text) => ({ id: nextId(), from: "user", text, at: Date.now() });
 
@@ -315,6 +357,7 @@ export default function ChatWidget() {
   const finishTicket = async (description) => {
     const t = ticketRef.current || {};
     setBusy(true);
+    let keepFlow = false; // phone-verification retry keeps the flow alive
     try {
       const body = { type: t.type || "general", description };
       if (t.orderId) body.orderId = t.orderId;
@@ -325,14 +368,17 @@ export default function ChatWidget() {
     } catch (e) {
       const msg = e?.response?.data?.message;
       if (msg && /phone number used at checkout/i.test(msg) && t.orderId && !t.phone) {
+        keepFlow = true;
         ticketRef.current = { ...t, step: "phone", pendingDescription: description };
         push(botSay("Order verify karne ke liye wo phone number likh dein jo checkout par diya tha — phir request bhej deta hoon."));
         return;
       }
       push(botSay(msg || "Request abhi save nahi ho saki. Thodi der baad dobara try karein, ya WhatsApp par bata dein.", { link: { href: WHATSAPP_URL, label: "WhatsApp par message karein" } }));
     } finally {
-      ticketRef.current = null;
-      awaitingRef.current = null;
+      if (!keepFlow) {
+        ticketRef.current = null;
+        awaitingRef.current = null;
+      }
       setBusy(false);
     }
   };
@@ -453,6 +499,15 @@ export default function ChatWidget() {
       startTicket();
       return;
     }
+    // --- Delivery fees: quoted from the LIVE store Settings ---
+    if (FAQS[5].keys.some((k) => lower.includes(k))) {
+      push(botSay(`Rs. ${fees.free.toLocaleString("en-PK")} ya us se zyada ke order par delivery bilkul FREE hai. Us se kam par standard delivery Rs. ${fees.std} hai.`));
+      return;
+    }
+    if (FAQS[4].keys.some((k) => lower.includes(k))) {
+      push(botSay(`Delivery pure Pakistan me 2–5 working days me ho jati hai (Express 1–2 din). Standard delivery Rs. ${fees.std} aur Express Rs. ${fees.exp} hai — aur Rs. ${fees.free.toLocaleString("en-PK")} se zyada ke orders par delivery bilkul FREE hai.`));
+      return;
+    }
     for (const faq of FAQS) {
       if (faq.keys.some((k) => lower.includes(k))) {
         push(botSay(faq.text, faq.link ? { link: faq.link } : {}));
@@ -491,10 +546,14 @@ export default function ChatWidget() {
       if (r.data?.takeover) {
         setTakeover(true);
         aiAnswered = true;
+        // The server stored the customer's message; this bot line is
+        // local-only, so it goes through the log queue (no noLog flag).
         push(botSay("Aap ki conversation ab hamare support member ke paas hai — wo yahin jawab dein ge."));
       } else if (r.data?.reply) {
         aiAnswered = true;
+        // Server already persisted this turn in /assistant/chat.
         push(botSay(r.data.reply, {
+          noLog: true,
           ...(r.data.products?.length ? { products: r.data.products } : {}),
           ...(r.data.compare ? { compare: r.data.compare } : {}),
         }));

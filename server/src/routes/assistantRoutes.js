@@ -124,6 +124,46 @@ router.post(
   })
 );
 
+// Local-turn logging: the widget's instant rule-based answers (FAQs,
+// tracking picker, browse/compare results, ticket steps) never pass
+// through /assistant/chat, so the widget batches them here to keep the
+// stored conversation complete for Admin → Chatbot. Entries identical
+// to one of the last few stored messages (same sender + text, within
+// two minutes) are skipped — that is the /assistant/chat copy of the
+// same turn arriving twice.
+router.post(
+  "/log",
+  optionalProtect,
+  rateLimit({ windowMs: 10 * 60 * 1000, max: 60, key: ipKey }),
+  asyncHandler(async (req, res) => {
+    const sessionId = validSession(req.body?.sessionId) ? req.body.sessionId : null;
+    if (!sessionId) return res.status(400).json({ message: "sessionId required" });
+    const raw = Array.isArray(req.body?.entries) ? req.body.entries.slice(0, 50) : [];
+    const entries = raw
+      .filter((e) => (e?.from === "user" || e?.from === "bot") && cleanText(e?.text, 2000))
+      .map((e) => ({
+        from: e.from,
+        text: cleanText(e.text, 2000),
+        products: (Array.isArray(e.products) ? e.products : []).slice(0, 6).map((p) => ({
+          slug: cleanText(p?.slug, 200), title: cleanText(p?.title, 200),
+          category: cleanText(p?.category, 80), image: cleanText(p?.image, 1000),
+          price: Number(p?.price) || 0, wasPrice: Number(p?.wasPrice) || 0,
+        })),
+      }));
+    if (!entries.length) return res.json({ ok: true, stored: 0 });
+    const convo = await conversationFor(sessionId, req.user || null);
+    const recent = (convo.messages || []).slice(-4);
+    const fresh = entries.filter((e) => !recent.some(
+      (m) => m.from === e.from && m.text === e.text && Date.now() - new Date(m.at).getTime() < 120000
+    ));
+    if (fresh.length) {
+      convo.appendMessages(fresh);
+      await convo.save();
+    }
+    return res.json({ ok: true, stored: fresh.length });
+  })
+);
+
 // The customer's widget polls this while open: any staff replies typed
 // in Admin → Chatbot arrive here, plus the takeover flag.
 router.get(
