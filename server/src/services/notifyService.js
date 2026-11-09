@@ -1,6 +1,6 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
-import { sendPushToStaff } from "./pushService.js";
+import { sendPushToStaff, sendPushToUser } from "./pushService.js";
 import { sendEmail } from "./emailService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
@@ -56,7 +56,13 @@ async function mailCustomer(order, build) {
   }
 }
 
+function pushCustomer(order, title, body) {
+  sendPushToUser(order.user, { title, body, data: { orderId: order.orderId || "" } }).catch(() => {});
+}
+
 export function onOrderPlaced(order) {
+  pushCustomer(order, "MALAC — Order confirm ho gaya",
+    `Aap ka order ${order.orderId} place ho gaya hai — Rs. ${Number(order.total).toLocaleString("en-PK")}. Hum jald confirm karke ship kar dein ge.`);
   notifyStaff("order_placed", order,
     `New order ${order.orderId} placed — Rs. ${Number(order.total).toLocaleString("en-PK")} · ${order.paymentMethod}`);
   mailCustomer(order, {
@@ -67,6 +73,8 @@ export function onOrderPlaced(order) {
 }
 
 export function onOrderCancelled(order, by) {
+  pushCustomer(order, "MALAC — Order cancelled",
+    `Aap ka order ${order.orderId} cancel ho gaya hai${order.cancelReason ? ` (${order.cancelReason})` : ""}.`);
   if (by === "customer") {
     notifyStaff("order_cancelled", order,
       `Order ${order.orderId} cancelled by the customer — ${order.cancelReason || "no reason given"}`);
@@ -82,6 +90,8 @@ export function onOrderCancelled(order, by) {
 }
 
 export function onOrderShipped(order) {
+  pushCustomer(order, "MALAC — Order ship ho gaya",
+    `Aap ka order ${order.orderId} rawaana ho gaya hai${order.courier ? ` via ${order.courier}` : ""}${order.trackingId ? ` — tracking ${order.trackingId}` : ""}.`);
   const courierLine = order.courier
     ? ` via ${order.courier}${order.trackingId ? ` (tracking ID ${order.trackingId})` : ""}`
     : "";
@@ -93,6 +103,11 @@ export function onOrderShipped(order) {
       ? `Please keep Rs. ${Number(order.total).toLocaleString("en-PK")} ready — you pay the courier when your parcel arrives.`
       : undefined,
   });
+}
+
+export function onOrderDelivered(order) {
+  pushCustomer(order, "MALAC — Order deliver ho gaya",
+    `Aap ka order ${order.orderId} deliver ho gaya hai. Shopping ke liye shukriya! Apna review zaroor dein.`);
 }
 
 export function onReturnRequested(order) {

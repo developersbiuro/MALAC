@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
 
-// FCM device tokens for the MALAC Admin app (staff phones). One row per
-// token; a staff account can have several devices. Tokens are refreshed
-// by the app itself (onNewToken → bridge → POST /admin/push/register).
+// FCM device tokens for the MALAC apps. app="admin" rows are staff phones
+// (registered via POST /admin/push/register); app="customer" rows belong
+// to shoppers (registered via POST /push/register with their customer
+// JWT). One row per token; an account can have several devices.
 // Rows are deactivated (active:false), never deleted, when FCM reports
 // the token dead — the owner's retention rule.
 const pushDeviceSchema = new mongoose.Schema({

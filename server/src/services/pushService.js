@@ -90,22 +90,39 @@ async function sendToToken(sa, auth, deviceToken, title, body, data) {
   if (!res.ok) throw new Error(`fcm send failed (${res.status})`);
 }
 
+async function sendToDevices(devices, { title, body, data }) {
+  const sa = serviceAccount();
+  if (!sa) return { sent: 0, skipped: "unconfigured" };
+  if (!devices.length) return { sent: 0, skipped: "no_devices" };
+  const auth = await accessToken(sa);
+  let sent = 0;
+  for (const d of devices) {
+    try { await sendToToken(sa, auth, d.token, title, body, data); sent += 1; }
+    catch (err) { console.error(`[MALAC] push to a device failed: ${err.message}`); }
+  }
+  return { sent };
+}
+
 // Fan out to every active staff device. No tokens yet = quiet no-op.
 export async function sendPushToStaff({ title, body, data } = {}) {
   try {
-    const sa = serviceAccount();
-    if (!sa) return { sent: 0, skipped: "unconfigured" };
-    const devices = await PushDevice.find({ active: true }).select("token").lean();
-    if (!devices.length) return { sent: 0, skipped: "no_devices" };
-    const auth = await accessToken(sa);
-    let sent = 0;
-    for (const d of devices) {
-      try { await sendToToken(sa, auth, d.token, title, body, data); sent += 1; }
-      catch (err) { console.error(`[MALAC] push to a device failed: ${err.message}`); }
-    }
-    return { sent };
+    const devices = await PushDevice.find({ active: true, app: "admin" }).select("token").lean();
+    return await sendToDevices(devices, { title, body, data });
   } catch (err) {
     console.error(`[MALAC] push failed: ${err.message}`);
+    return { sent: 0, error: err.message };
+  }
+}
+
+// Push to ONE customer's registered devices (customer app). Used for
+// order lifecycle updates (shipped / delivered / cancelled).
+export async function sendPushToUser(userId, { title, body, data } = {}) {
+  try {
+    if (!userId) return { sent: 0, skipped: "no_user" };
+    const devices = await PushDevice.find({ active: true, app: "customer", user: userId }).select("token").lean();
+    return await sendToDevices(devices, { title, body, data });
+  } catch (err) {
+    console.error(`[MALAC] customer push failed: ${err.message}`);
     return { sent: 0, error: err.message };
   }
 }

@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import env from "../config/env.js";
 import { sendEmail } from "./emailService.js";
 import { reviewInviteEmail } from "./emailTemplates.js";
-import { onOrderCancelled, onOrderShipped } from "./notifyService.js";
+import { onOrderCancelled, onOrderShipped, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
 
@@ -224,7 +224,8 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
     }
   }
   await order.save();
-  if (status === "Shipped" && prev !== "Shipped") onOrderShipped(order); // customer "on its way" email
+  if (status === "Shipped" && prev !== "Shipped") onOrderShipped(order); // customer "on its way" email + push
+  if (status === "Delivered" && prev !== "Delivered") onOrderDelivered(order); // customer push
   if (sendReviewInvite) {
     try { await sendDeliveredReviewInvite(order); }
     catch { /* the invite is best-effort; delivery state is already saved */ }
