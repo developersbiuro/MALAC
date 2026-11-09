@@ -57,6 +57,16 @@ export const env = {
     appId: process.env.META_APP_ID || "",
     appSecret: process.env.META_APP_SECRET || "",
   },
+  // Google Gemini (free tier) — powers the MALAC Assistant's AI answers.
+  // The key lives ONLY in the deployment environment; when it is absent
+  // the assistant endpoint answers 503 and the client silently falls
+  // back to the built-in rule-based replies, so the chat never breaks.
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || "",
+    // gemini-3.8-flash: current free-tier Flash model (Nov 2026);
+    // gemini-2.5-flash was retired for new users.
+    model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+  },
   // Manual mobile-wallet payments. Defaults below are the store accounts
   // provided by the owner (the SAME account for JazzCash and Easypaisa).
   // They stay configurable via .env or Admin -> Settings — never hard-code

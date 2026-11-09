@@ -4,14 +4,13 @@ import { MessageCircle, X, Send, PackageSearch } from "lucide-react";
 import api from "../api/client.js";
 import { useAppMode } from "../utils/appMode.js";
 
-// MALAC Assistant — a small rule-based, fully client-side chat (v1: no AI
-// backend). It can:
-//   - search products via GET /products/suggest and link to product pages,
-//   - track an order via the public POST /orders/track (order ID ya phone),
-//   - answer store FAQs (delivery, payment, returns, contact) by keyword,
-//     in English + Roman Urdu.
-// Conversation lives in component state only; nothing is persisted and no
-// calls are made besides suggest/track.
+// MALAC Assistant — rule-based core (FAQs, product search, order
+// tracking) with an AI layer on top (v2): when the keyword rules below
+// don't match, the message goes to POST /assistant/chat (Gemini, free
+// tier) for a natural-language answer grounded in the live catalogue.
+// Any failure there (offline, quota, not configured) silently falls
+// back to the product search + rule-based replies — the chat always
+// works. Conversation lives in component state only.
 
 const WHATSAPP_URL = "https://wa.me/923236016684";
 
@@ -94,6 +93,9 @@ export default function ChatWidget() {
   const push = (...msgs) => setMessages((prev) => [...prev, ...msgs]);
   const botSay = (text, extra = {}) => ({ id: nextId(), from: "bot", text, ...extra });
 
+  const messagesRef = useRef([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
+
   const goTo = (to) => { setOpen(false); navigate(to); };
 
   // body: { orderId } ya { phone } — server dono me se aik se dhoond leta hai.
@@ -154,7 +156,30 @@ export default function ChatWidget() {
       }
     }
 
-    // --- Product search ---
+    // --- AI layer (Gemini): natural-language questions the rules miss.
+    // Order tracking / FAQ answers above stay rule-based because they
+    // are exact; everything else gets one AI attempt, then the classic
+    // product-search fallback below.
+    setBusy(true);
+    let aiAnswered = false;
+    try {
+      const history = messagesRef.current
+        .slice(-8)
+        .map((m) => ({ from: m.from === "user" ? "user" : "bot", text: m.text }));
+      const r = await api.post("/assistant/chat", { message: text, history });
+      if (r.data?.reply) {
+        aiAnswered = true;
+        push(botSay(r.data.reply, r.data.products?.length ? { products: r.data.products } : {}));
+      }
+    } catch {
+      // AI unavailable (not configured / free quota / offline) — fall
+      // through to the rule-based behaviour below.
+    } finally {
+      setBusy(false);
+    }
+    if (aiAnswered) return;
+
+    // --- Product search (fallback jab AI jawab na de) ---
     if (["dhundh", "dhundo", "product", "chahiye", "dikhao", "show"].some((k) => lower.includes(k)) || text.split(/\s+/).length <= 4) {
       setBusy(true);
       try {

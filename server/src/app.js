@@ -17,6 +17,7 @@ import settingsRoutes from "./routes/settingsRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
 import feedRoutes from "./routes/feedRoutes.js";
+import assistantRoutes from "./routes/assistantRoutes.js";
 import appAssetRoutes from "./routes/appAssetRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
@@ -156,6 +157,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
+app.use("/api/assistant", assistantRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
