@@ -16,6 +16,9 @@ const badge = {
   Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
 };
 const inputCls = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
+// Customers see "Processing" for the stored Confirmed/Packed statuses
+// (same rule as My Orders and the chatbot).
+const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
 
 export default function TrackOrder() {
   useSeo({
@@ -26,9 +29,20 @@ export default function TrackOrder() {
   const [query, setQuery] = useState(params.get("orderId") || params.get("phone") || "");
   const [order, setOrder] = useState(null);
   const [matches, setMatches] = useState([]);
+  const [myOrders, setMyOrders] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const autoRan = useRef(false);
+
+  // Signed-in customers see their own recent orders right on this page
+  // (Abdullah, 2026-11-09: "recent order show kro"), with a View All
+  // Orders link to the full My Orders page.
+  useEffect(() => {
+    if (!localStorage.getItem("malac_token")) return;
+    api.get("/orders/my")
+      .then((r) => setMyOrders((r.data.orders || []).slice(0, 5)))
+      .catch(() => {});
+  }, []);
 
   // One field, two ways in (Abdullah, 2026-11-07): type the order ID
   // (MLC-…) OR the phone number used on the order — either finds it.
@@ -42,8 +56,16 @@ export default function TrackOrder() {
     try {
       const r = await api.post("/orders/track", isId ? { orderId: value } : { phone: value });
       if (r.data.order) setOrder(r.data.order);
-      else if ((r.data.orders || []).length === 1) setOrder(r.data.orders[0]);
-      else setMatches(r.data.orders || []);
+      else {
+        // Phone lookup: keep the WHOLE recent list on screen (newest
+        // first — the server sorts it) and open the newest order's
+        // detail under it. The list no longer disappears when one
+        // order is picked (Abdullah, 2026-11-09: "view all order add
+        // kr do, recent order show kro").
+        const list = r.data.orders || [];
+        setMatches(list);
+        if (list.length) setOrder(list[0]);
+      }
     } catch (e) {
       setError(e.response?.data?.message || "We could not find that order. Please check and try again.");
     } finally { setLoading(false); }
@@ -85,12 +107,40 @@ export default function TrackOrder() {
       </form>
       {error && <p className="text-sm text-red-500 mt-3">{error}</p>}
 
-      {matches.length > 1 && (
+      {myOrders.length > 0 && (
         <div className="mt-6 space-y-2">
-          <p className="text-sm text-gray-500">Is number par {matches.length} orders mile — apna order chunein:</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold">Aap ke Recent Orders</p>
+            <Link to="/orders" className="text-xs font-semibold text-lux-burnt underline underline-offset-2 shrink-0">View All Orders</Link>
+          </div>
+          {myOrders.map((o) => {
+            const st = customerStatus(o.status);
+            return (
+              <button key={o.orderId} onClick={() => { setQuery(o.orderId); track(o.orderId); }}
+                className="w-full text-left bg-white border border-cream-line rounded-2xl shadow-sm px-4 py-3 flex items-center gap-3">
+                <span className="flex-1 min-w-0">
+                  <span className="font-bold block">{o.orderId}</span>
+                  <span className="text-xs text-gray-400 block truncate">
+                    {(o.items || []).map((i) => `${i.title} × ${i.qty}`).join(", ")} · {rs(o.total)} · {new Date(o.createdAt).toLocaleDateString("en-PK")}
+                  </span>
+                </span>
+                <span className={`text-xs font-medium rounded-full px-3 py-1 shrink-0 ${badge[st] || "bg-gray-100 text-gray-600"}`}>{st}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {matches.length > 0 && (
+        <div id="recent-orders" className="mt-6 space-y-2 scroll-mt-4">
+          <p className="text-sm text-gray-500">
+            {matches.length > 1
+              ? `Recent Orders — is number par ${matches.length} orders mile (sab se naya pehle). Kisi par bhi click karke us ki tafseel dekhein:`
+              : "Is number ka recent order:"}
+          </p>
           {matches.map((o) => (
-            <button key={o.orderId} onClick={() => { setOrder(o); setMatches([]); }}
-              className="w-full text-left bg-white border border-cream-line rounded-2xl shadow-sm px-4 py-3 flex items-center gap-3">
+            <button key={o.orderId} onClick={() => setOrder(o)}
+              className={`w-full text-left bg-white border rounded-2xl shadow-sm px-4 py-3 flex items-center gap-3 ${order?.orderId === o.orderId ? "border-lux-amber ring-1 ring-lux-amber" : "border-cream-line"}`}>
               <span className="flex-1 min-w-0">
                 <span className="font-bold block">{o.orderId}</span>
                 <span className="text-xs text-gray-400 block truncate">
@@ -118,6 +168,13 @@ export default function TrackOrder() {
             </div>
             <span className={`text-xs font-medium rounded-full px-3 py-1 ${badge[order.status] || "bg-gray-100 text-gray-600"}`}>{order.status}</span>
           </div>
+          {matches.length > 1 && (
+            <button type="button"
+              onClick={() => document.getElementById("recent-orders")?.scrollIntoView({ behavior: "smooth" })}
+              className="mt-3 text-xs font-semibold border border-cream-line rounded-full px-4 py-1.5 hover:bg-cream-soft">
+              View All Orders ({matches.length})
+            </button>
+          )}
 
           {/* Status timeline */}
           {order.status === "Cancelled" ? (
