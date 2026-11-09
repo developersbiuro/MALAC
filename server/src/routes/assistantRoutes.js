@@ -10,14 +10,15 @@
 // POST /api/assistant/tickets      — open a support ticket from chat.
 // GET  /api/assistant/tickets/mine — the signed-in customer's tickets.
 //
-// Security: identity comes ONLY from optionalProtect (a verified JWT
-// when one is present). A guest conversation is keyed by a random
-// client sessionId; a signed-in customer's chat attaches to their
-// account. The AI model has no tools — every action here is plain
-// server code. Records are never deleted (owner's retention rule).
+// Security: identity comes ONLY from a verified JWT. Since 2026-11-09
+// (Abdullah's guest lock) the whole assistant API except /config needs
+// a signed-in account — browsing is public, functions are not. A
+// signed-in customer's chat attaches to their account. The AI model
+// has no tools — every action here is plain server code. Records are
+// never deleted (owner's retention rule).
 import { Router } from "express";
 import rateLimit, { ipKey } from "../middleware/rateLimit.js";
-import { optionalProtect } from "../middleware/auth.js";
+import { optionalProtect, protect } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { buildAssistantReply, parseBrowse, runBrowse, resolveCompare } from "../services/assistantService.js";
 import ChatConversation from "../models/ChatConversation.js";
@@ -54,7 +55,7 @@ router.get("/config", asyncHandler(async (req, res) => {
 
 router.post(
   "/chat",
-  optionalProtect,
+  protect,
   rateLimit({ windowMs: 10 * 60 * 1000, max: 30, key: ipKey }),
   asyncHandler(async (req, res) => {
     const message = cleanText(req.body?.message, 500);
@@ -103,6 +104,7 @@ router.post(
 // database even before/without an AI round-trip.
 router.post(
   "/browse",
+  protect,
   rateLimit({ windowMs: 10 * 60 * 1000, max: 30, key: ipKey }),
   asyncHandler(async (req, res) => {
     const message = cleanText(req.body?.message, 300);
@@ -115,6 +117,7 @@ router.post(
 
 router.post(
   "/compare",
+  protect,
   rateLimit({ windowMs: 10 * 60 * 1000, max: 30, key: ipKey }),
   asyncHandler(async (req, res) => {
     const message = cleanText(req.body?.message, 300);
@@ -133,7 +136,7 @@ router.post(
 // same turn arriving twice.
 router.post(
   "/log",
-  optionalProtect,
+  protect,
   rateLimit({ windowMs: 10 * 60 * 1000, max: 60, key: ipKey }),
   asyncHandler(async (req, res) => {
     const sessionId = validSession(req.body?.sessionId) ? req.body.sessionId : null;
@@ -168,7 +171,7 @@ router.post(
 // in Admin → Chatbot arrive here, plus the takeover flag.
 router.get(
   "/poll",
-  optionalProtect,
+  protect,
   rateLimit({ windowMs: 60 * 1000, max: 30, key: ipKey }),
   asyncHandler(async (req, res) => {
     const sessionId = validSession(req.query.sessionId) ? req.query.sessionId : null;
@@ -187,7 +190,7 @@ const TICKET_TYPES = ["return", "exchange", "refund", "damaged", "wrong_item", "
 
 router.post(
   "/tickets",
-  optionalProtect,
+  protect,
   rateLimit({ windowMs: 60 * 60 * 1000, max: 10, key: ipKey }),
   asyncHandler(async (req, res) => {
     const type = TICKET_TYPES.includes(req.body?.type) ? req.body.type : "general";
@@ -229,7 +232,7 @@ router.post(
 
 router.get(
   "/tickets/mine",
-  optionalProtect,
+  protect,
   asyncHandler(async (req, res) => {
     if (!req.user) return res.json({ tickets: [] });
     const tickets = await SupportTicket.find({ user: req.user._id })

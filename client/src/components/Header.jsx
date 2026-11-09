@@ -109,11 +109,11 @@ export default function Header() {
         )}
         <Link to="/wishlist" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Wishlist">
           <Heart size={22} />
-          {wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
+          {user && wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
         </Link>
-        <button onClick={() => setDrawerOpen(true)} className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
+        <button onClick={() => (user ? setDrawerOpen(true) : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
           <ShoppingCart size={22} />
-          {count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{count}</span>}
+          {user && count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{count}</span>}
         </button>
 
         <div className="relative">

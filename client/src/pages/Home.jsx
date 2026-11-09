@@ -99,12 +99,13 @@ export default function Home() {
           </span>
         ))}
       </div>
-      {/* Track Your Order band — guests track with order ID ya phone number */}
+      {/* Track Your Order band — tracking itself is a signed-in function;
+          submitting sends guests to login first, then back to tracking. */}
       <section className="bg-lux-ink text-white rounded-2xl mt-3 px-4 py-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="shrink-0">
           <p className="eyebrow !text-lux-pale">Order Tracking</p>
           <h2 className="font-serif text-2xl font-semibold leading-tight">Track Your Order</h2>
-          <p className="text-xs text-white/60">Order ID ya phone number — jo bhi likhein, order mil jayega.</p>
+          <p className="text-xs text-white/60">Order ID ya phone number — login ke baad jo bhi likhein, order mil jayega.</p>
         </div>
         <form
           className="flex flex-col sm:flex-row gap-2 flex-1"

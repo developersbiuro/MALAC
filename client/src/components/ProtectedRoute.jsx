@@ -1,7 +1,9 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 
-// Customer guard: browsing/cart are public, but checkout & orders need login.
+// Customer guard: browsing (home/shop/product pages) is public, but every
+// function — cart, wishlist, tracking, checkout, orders — needs login
+// (Abdullah, 2026-11-09).
 // Unauthenticated users go to /login and return afterwards via `redirect`.
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();

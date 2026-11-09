@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { loginPath } from "../utils/authGate.js";
 import { Heart } from "lucide-react";
 import RatingStars from "./RatingStars.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
@@ -8,9 +9,18 @@ import { rs, discountPct, priceOf } from "../utils/format.js";
 export default function ProductCard({ product }) {
   const { toggle, has } = useWishlist();
   const { add, setDrawerOpen } = useCart();
+  const navigate = useNavigate();
+  const location = useLocation();
   const pct = discountPct(product);
   const out = product.stock === 0;
-  const addToCart = () => { add(product); setDrawerOpen(true); };
+  const here = location.pathname + location.search;
+  const addToCart = () => {
+    if (!add(product)) { navigate(loginPath(`/product/${product.slug}`)); return; }
+    setDrawerOpen(true);
+  };
+  const toggleWish = () => {
+    if (!toggle(product)) navigate(loginPath(here));
+  };
   return (
     <div className="group relative flex flex-col h-full bg-white rounded-xl overflow-hidden border border-cream-line hover:shadow-xl hover:-translate-y-0.5 transition fade-up">
       <div className="p-1.5 pb-0 sm:p-2 sm:pb-0">
@@ -22,7 +32,7 @@ export default function ProductCard({ product }) {
           </Link>
           {pct > 0 && <span className="absolute top-1.5 left-1.5 bg-lux-gradient text-white text-[11px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">-{pct}%</span>}
           <button aria-label="Toggle wishlist"
-            onClick={() => toggle(product)}
+            onClick={toggleWish}
             className="absolute top-2 right-2 bg-white rounded-full p-2 sm:p-1.5 shadow-md">
             <Heart size={16} className={has(product._id) ? "fill-red-500 text-red-500" : "text-gray-500"} />
           </button>

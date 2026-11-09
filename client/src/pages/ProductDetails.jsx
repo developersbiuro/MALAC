@@ -107,12 +107,22 @@ export default function ProductDetails() {
   const variantStock = Object.values(selected).filter(Boolean).reduce((min, v) => Math.min(min, v.stock), product.stock);
   const shipping = product.shippingFee ?? 199;
 
-  const doAdd = () => { add(product, qty, variantLabel, unitPrice); setDrawerOpen(true); };
+  const doAdd = () => {
+    // Guest lock: cart is a signed-in function — send guests to login
+    // and bring them back to this product afterwards.
+    if (!add(product, qty, variantLabel, unitPrice)) {
+      navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`);
+      return;
+    }
+    setDrawerOpen(true);
+  };
   const buyNow = () => {
+    if (!user) { navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`); return; }
     add(product, qty, variantLabel, unitPrice);
-    // No guest ordering (Daraz-style): login first, then return to checkout.
-    if (!user) navigate(`/login?redirect=${encodeURIComponent("/checkout")}`);
-    else navigate("/checkout");
+    navigate("/checkout");
+  };
+  const toggleWish = () => {
+    if (!toggle(product)) navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`);
   };
 
   // Downscale a picked photo to at most 1024px (JPEG) before upload, so
@@ -134,6 +144,7 @@ export default function ProductDetails() {
   });
 
   const pickReviewPhotos = async (e) => {
+    if (!user) { e.target.value = ""; return navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`); }
     const files = [...(e.target.files || [])].slice(0, 3 - reviewPhotos.length);
     e.target.value = "";
     if (!files.length) return;
@@ -197,7 +208,7 @@ export default function ProductDetails() {
             <RatingStars value={product.ratingAvg} size={16} />
             <span className="text-sky-600">{product.ratingCount} ratings</span>
             <span className="text-gray-300">|</span><span className="text-gray-500">{product.sold} sold</span>
-            <button onClick={() => toggle(product)} className="ml-auto" aria-label="Wishlist">
+            <button onClick={toggleWish} className="ml-auto" aria-label="Wishlist">
               <Heart size={20} className={has(product._id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
             </button>
           </div>

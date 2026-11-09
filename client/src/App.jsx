@@ -114,16 +114,17 @@ export default function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/categories" element={<Categories />} />
         <Route path="/product/:slug" element={<ProductDetails />} />
-        <Route path="/cart" element={<CartPage />} />
+        <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
         {/* Checkout + orders require login (no guest ordering) */}
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
-        {/* Public tracking (order ID + phone, no login) and account pages */}
-        <Route path="/track-order" element={<TrackOrder />} />
+        {/* Tracking is a signed-in function now (Abdullah, 2026-11-09:
+            browsing is public, every function needs an account) */}
+        <Route path="/track-order" element={<ProtectedRoute><TrackOrder /></ProtectedRoute>} />
         <Route path="/account" element={<AccountHub />} />
         <Route path="/account/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
-        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         {/* Customer forgot password: request a reset link by email */}

@@ -4,6 +4,8 @@ import { MessageCircle, X, Send, PackageSearch, ShoppingCart, Minus, Plus, Trash
 import api from "../api/client.js";
 import { useAppMode } from "../utils/appMode.js";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
+import { hasSession, loginPath } from "../utils/authGate.js";
 
 // MALAC Assistant (v3 — master-prompt build).
 //
@@ -74,7 +76,7 @@ const FAQS = [
   },
   {
     keys: ["login", "sign up", "account", "order karna", "checkout", "password bhool", "forgot"],
-    text: "Order karne ke liye MALAC account me login hona zaroori hai (guest checkout nahi hota). Browsing aur cart baghair login ke bhi chal sakta hai — checkout ke waqt login maanga jata hai. Password bhool jayein to Login page par 'Forgot password' se reset ho jata hai.",
+    text: "MALAC par sirf browsing baghair account ke ho sakti hai — cart, wishlist, order tracking, chat aur order karna, har function ke liye login/sign up zaroori hai. Password bhool jayein to Login page par 'Forgot password' se reset ho jata hai.",
     link: { to: "/login", label: "Login page kholein" },
   },
   {
@@ -120,6 +122,10 @@ export default function ChatWidget() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const cart = useCart();
+  const { user } = useAuth();
+  // Guest lock (Abdullah, 2026-11-09): the assistant is a function, not
+  // browsing — guests tapping the bubble go to login and come back here.
+  const authed = !!user || hasSession();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -242,10 +248,13 @@ export default function ChatWidget() {
   // ---- Product cards: Add to Cart through the real cart ----
   const addToCart = (p) => {
     if (!p.id || p.outOfStock) return;
-    cart.add(
+    if (!cart.add(
       { _id: p.id, title: p.title, images: [p.image || ""], sku: p.sku || "", stock: p.stock ?? 99, salePrice: p.wasPrice > 0 ? p.price : 0, basePrice: p.wasPrice > 0 ? p.wasPrice : p.price },
       1
-    );
+    )) {
+      push(botSay("Cart me daalne ke liye pehle login/sign up kar lein — browsing baghair account ke ho sakti hai, baqi har function ke liye account chahiye.", { link: { to: "/login", label: "Login / Sign Up karein" } }));
+      return;
+    }
     setAddedKey(p.slug);
     setTimeout(() => setAddedKey(""), 1500);
   };
@@ -446,6 +455,12 @@ export default function ChatWidget() {
     const text = (raw ?? input).trim();
     if (!text || busy) return;
     setInput("");
+    if (!authed) {
+      // Guest lock: no chat function without an account (server agrees — 401).
+      push(userSay(text));
+      push(botSay("MALAC Assistant aur baqi tamam functions sirf signed-in customers ke liye hain. Pehle login ya sign up kar lein — browsing baghair account ke bhi ho sakti hai.", { link: { to: "/login", label: "Login / Sign Up karein" } }));
+      return;
+    }
     push(userSay(text));
     const lower = text.toLowerCase();
 
@@ -638,7 +653,7 @@ export default function ChatWidget() {
       {!open && (
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={() => (authed ? setOpen(true) : navigate(loginPath(pathname)))}
           aria-label="MALAC Assistant se chat karein"
           className={`fixed right-4 z-50 w-14 h-14 rounded-full bg-lux-gradient text-white shadow-lg flex items-center justify-center hover:brightness-105 active:brightness-95 transition ${appMode ? "bottom-20" : "bottom-20 sm:bottom-6"}`}
         >

@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Grid2x2, PackageSearch, ShoppingCart, User } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useAppMode } from "../utils/appMode.js";
 
 // Daraz-app-style 5-item bottom bar (Home / Categories / Track Order /
@@ -18,6 +19,7 @@ const items = [
 
 export default function MobileBottomNav() {
   const { count } = useCart();
+  const { user } = useAuth();
   const { pathname } = useLocation();
   const appMode = useAppMode();
   if (pathname.startsWith("/admin")) return null;
@@ -29,7 +31,7 @@ export default function MobileBottomNav() {
           <Link key={to} to={to}
             className={`flex-1 py-1.5 flex flex-col items-center gap-0.5 text-[10px] relative ${active ? "text-lux-burnt font-semibold" : "text-gray-500"}`}>
             <Icon size={20} />
-            {badge === "cart" && count > 0 &&
+            {badge === "cart" && user && count > 0 &&
               <span className="absolute top-0.5 right-1/2 translate-x-4 bg-lux-amber text-white text-[9px] font-bold rounded-full px-1">{count}</span>}
             {label}
           </Link>

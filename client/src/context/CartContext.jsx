@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { hasSession } from "../utils/authGate.js";
 
 const CartContext = createContext(null);
 const load = () => { try { return JSON.parse(localStorage.getItem("malac_cart")) || []; } catch { return []; } };
@@ -9,6 +10,7 @@ export function CartProvider({ children }) {
   useEffect(() => localStorage.setItem("malac_cart", JSON.stringify(items)), [items]);
 
   const add = (product, qty = 1, variantLabel = "", unitPrice = null) => {
+    if (!hasSession()) return false; // guest lock: cart is a signed-in function
     const price = unitPrice ?? (product.salePrice > 0 ? product.salePrice : product.basePrice);
     setItems((prev) => {
       const key = `${product._id}|${variantLabel}`;
@@ -20,12 +22,20 @@ export function CartProvider({ children }) {
         variantLabel, price, qty, stock: product.stock,
       }];
     });
+    return true;
   };
-  const updateQty = (key, qty) =>
+  const updateQty = (key, qty) => {
+    if (!hasSession()) return false;
     setItems((prev) => qty <= 0 ? prev.filter((i) => i.key !== key)
       : prev.map((i) => i.key === key ? { ...i, qty: Math.min(qty, i.stock || 99) } : i));
-  const remove = (key) => setItems((prev) => prev.filter((i) => i.key !== key));
-  const clear = () => setItems([]);
+    return true;
+  };
+  const remove = (key) => {
+    if (!hasSession()) return false;
+    setItems((prev) => prev.filter((i) => i.key !== key));
+    return true;
+  };
+  const clear = () => { if (hasSession()) setItems([]); };
   const count = useMemo(() => items.reduce((s, i) => s + i.qty, 0), [items]);
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.price * i.qty, 0), [items]);
 

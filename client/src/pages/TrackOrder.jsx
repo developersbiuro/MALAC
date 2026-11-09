@@ -5,7 +5,7 @@ import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
 
-// Public order tracking (no login): ONE field — the buyer types either
+// Order tracking for signed-in customers (guest lock, 2026-11-09): ONE field — the buyer types either
 // the order ID from their confirmation OR the phone number used on the
 // order (Abdullah, 2026-11-07). The server (POST /api/orders/track)
 // returns a limited view of the matching order(s).
@@ -93,7 +93,8 @@ export default function TrackOrder() {
       <h1 className="font-display text-3xl sm:text-4xl font-bold mt-1.5">Track Your Order</h1>
       <p className="text-sm text-gray-500 leading-relaxed mt-3">
         Apna <b>order ID</b> (jaise MLC-ABC123) <b>ya</b> wo <b>phone number</b> likhein jo order
-        par diya tha — dono me se jo bhi likhein, order mil jayega. No sign-in needed.
+        par diya tha — dono me se jo bhi likhein, order mil jayega. Ye page sirf signed-in
+        customers ke liye hai, taake aap ke orders koi aur na dekh sake.
       </p>
 
       <form

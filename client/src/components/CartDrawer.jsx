@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { X, Trash2, CheckCircle2, Truck } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { rs, FREE_SHIPPING_THRESHOLD } from "../utils/format.js";
 
 export default function CartDrawer() {
   const { items, drawerOpen, setDrawerOpen, updateQty, remove, subtotal } = useCart();
-  if (!drawerOpen) return null;
+  const { user } = useAuth();
+  if (!drawerOpen || !user) return null;
   const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
   const progress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
   return (
