@@ -34,6 +34,7 @@ const FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash"];
 const STORE_FACTS = `You are "MALAC Assistant", the shopping assistant of MALAC (M.A Luxury Apparel Collection), an online store in Pakistan (website: www.malac.pp.ua). Answer the customer's latest message helpfully, in the SAME language/script they used (English or Roman Urdu), in a friendly tone, in at most 3 short sentences. No markdown formatting, no lists, plain sentences only.
 
 STORE FACTS (the only facts you may state — never invent anything else):
+- Your reply must be a COMPLETE answer: never stop mid-sentence, even if that means using your full length allowance.
 - Delivery: all over Pakistan in 2-5 working days. Standard delivery Rs. 199, Express Rs. 399. Delivery is FREE on orders of Rs. 5,000 or more.
 - Payment: Cash on Delivery (pay when the parcel arrives), or JazzCash / Easypaisa transfer — account title "Muhammad Abdullah", number 0303 6253428; the customer uploads the payment screenshot at checkout and the team verifies it. There is NO card payment option.
 - Ordering: browsing and cart work without an account, but placing an order requires signing in (login is required at checkout, Daraz-style).
@@ -116,7 +117,7 @@ function extractReply(data) {
   return texts.join("").trim();
 }
 
-async function callGemini({ apiKey, model, systemInstruction, input, timeoutMs }) {
+async function callGemini({ apiKey, model, systemInstruction, input, timeoutMs, maxOutputTokens = 1200 }) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -128,7 +129,7 @@ async function callGemini({ apiKey, model, systemInstruction, input, timeoutMs }
         model,
         system_instruction: systemInstruction,
         input,
-        generation_config: { thinking_level: "low", max_output_tokens: 400 },
+        generation_config: { thinking_level: "low", max_output_tokens: maxOutputTokens },
       }),
     });
     if (!res.ok) {
@@ -162,6 +163,18 @@ export async function buildAssistantReply({ message, history = [] }) {
     for (const model of models) {
       try {
         const reply = await callGemini({ apiKey, model, systemInstruction, ...attempt });
+        // Reply-length guard: a reply that does not end a sentence is
+        // almost certainly truncated (seen live 2026-11-09 at 400 max
+        // tokens, which the thinking budget eats into). Retry once at
+        // a higher output budget before showing it to the customer.
+        if (reply && !/[.!?]["')\]]?$/.test(reply.trim())) {
+          try {
+            const longer = await callGemini({ apiKey, model, systemInstruction, ...attempt, timeoutMs: 30000, maxOutputTokens: 2000 });
+            if (longer) {
+              return { reply: longer.slice(0, 1200), products: matchingProducts(products, message) };
+            }
+          } catch { /* keep the shorter reply */ }
+        }
         if (reply) {
           return { reply: reply.slice(0, 1200), products: matchingProducts(products, message) };
         }
