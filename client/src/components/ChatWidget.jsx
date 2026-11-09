@@ -277,7 +277,11 @@ export default function ChatWidget() {
         const found = (r.data.suggestions || []).slice(0, 3);
         if (found.length > 0) {
           push(botSay(`"${text}" ke liye ye products mile:`, {
-            products: found.map((s) => ({ slug: s.slug, title: s.title, category: s.category })),
+            products: found.map((s) => ({
+              slug: s.slug, title: s.title, category: s.category,
+              image: s.image || "", price: s.price || 0,
+              wasPrice: s.wasPrice || 0, outOfStock: !!s.outOfStock,
+            })),
           }));
         } else {
           push(botSay(`"${text}" se koi product match nahi hua. Koi aur naam ya category likh kar try karein (jaise "lawn suit" ya "watch").`), { quick: true });
@@ -348,8 +352,29 @@ export default function ChatWidget() {
                           onClick={() => goTo(`/product/${p.slug}`)}
                           className="block w-full text-left bg-cream-soft hover:bg-cream-deep/70 border border-cream-line rounded-xl px-3 py-2 transition-colors"
                         >
-                          <span className="block text-[13px] font-medium text-lux-ink leading-snug">{p.title}</span>
-                          <span className="block text-[11px] text-lux-burnt">{p.category}</span>
+                          <span className="flex items-center gap-2.5">
+                            {p.image && (
+                              <img
+                                src={p.image}
+                                alt=""
+                                loading="lazy"
+                                className="w-11 h-11 rounded-lg object-cover border border-cream-line shrink-0"
+                              />
+                            )}
+                            <span className="min-w-0">
+                              <span className="block text-[13px] font-medium text-lux-ink leading-snug">{p.title}</span>
+                              <span className="block text-[11px] text-lux-burnt">{p.category}</span>
+                              {p.price > 0 && (
+                                <span className="block text-[12px] font-semibold text-lux-ink">
+                                  Rs. {p.price.toLocaleString("en-PK")}
+                                  {p.wasPrice > 0 && (
+                                    <span className="ml-1.5 font-normal text-gray-400 line-through">Rs. {p.wasPrice.toLocaleString("en-PK")}</span>
+                                  )}
+                                  {p.outOfStock && <span className="ml-1.5 font-semibold text-red-500">Out of stock</span>}
+                                </span>
+                              )}
+                            </span>
+                          </span>
                         </button>
                       ))}
                     </span>

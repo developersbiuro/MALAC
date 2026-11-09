@@ -66,10 +66,21 @@ export const suggest = asyncHandler(async (req, res) => {
   const q = String(req.query.q || "").trim();
   if (!q) return res.json({ suggestions: [] });
   const literal = escapeRegex(q);
-  const products = await Product.find({
+  const found = await Product.find({
     status: "Active",
     $or: [{ title: { $regex: literal, $options: "i" } }, { tags: { $regex: literal, $options: "i" } }],
-  }).select("title slug category").limit(8);
+  }).select("title slug category images basePrice salePrice stock").limit(8).lean();
+  // Card-ready shape (photo + price) so chat/search UIs can render
+  // real product cards, not just titles.
+  const products = found.map((p) => ({
+    title: p.title,
+    slug: p.slug,
+    category: p.category,
+    image: (p.images || [])[0] || "",
+    price: p.salePrice > 0 ? p.salePrice : p.basePrice,
+    wasPrice: p.salePrice > 0 ? p.basePrice : 0,
+    outOfStock: p.stock <= 0,
+  }));
   res.json({ suggestions: products });
 });
 
