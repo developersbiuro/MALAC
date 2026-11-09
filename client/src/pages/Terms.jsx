@@ -29,7 +29,7 @@ export default function Terms() {
           <li><b>Cash on Delivery (COD)</b> — pay in cash when your order arrives.</li>
           <li><b>JazzCash / Easypaisa (manual transfer)</b> — transfer the order total to account title <b>Muhammad Abdullah</b>, number <b>0303 6253428</b>, then upload your payment screenshot and transaction details with your order. Our team verifies the payment before the order is processed; if a payment cannot be verified, we will contact you and the order will not be dispatched until it is resolved.</li>
           <li><b>Meezan Bank</b> — transfer the order total to the store's Meezan Bank account, title <b>Muhammad Abdullah</b>, account number <b>04820113003065</b>, then upload your payment screenshot and transaction details with your order.</li>
-          <li><b>NayaPay / SadaPay / FirstPay HBL</b> — send the order total from your NayaPay, SadaPay or FirstPay (HBL Microfinance) account to <b>Muhammad Abdullah</b>, number <b>0303 6253428</b>, then upload your payment screenshot and transaction details with your order. The same verification applies to all manual payments.</li>
+          <li><b>NayaPay / SadaPay / FirstPay — HBL Microfinance Bank</b> — send the order total from your NayaPay, SadaPay or FirstPay (HBL Microfinance Bank) account to <b>Muhammad Abdullah</b>, number <b>0303 6253428</b>, then upload your payment screenshot and transaction details with your order. The same verification applies to all manual payments.</li>
         </ul>
         <p>Please never share your account password or one-time verification codes with anyone — MALAC will never ask for them outside the sign-in and checkout flow on this website.</p>
       </LegalSection>

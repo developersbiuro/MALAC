@@ -22,7 +22,7 @@ const settingsSchema = new mongoose.Schema({
   easypaisaAccountTitle: { type: String, default: env.easypaisa.accountTitle },
   easypaisaAccountNumber: { type: String, default: env.easypaisa.accountNumber },
   // Bank + wallet accounts (owner, 2026-11-09): Meezan Bank direct
-  // transfers go to the Meezan account; NayaPay / SadaPay / FirstPay HBL
+  // go to the Meezan account; NayaPay / SadaPay / FirstPay (HBL Microfinance Bank)
   // go to the owner's wallet number 03036253428 — the SAME number as the
   // JazzCash / Easypaisa account. (Corrects the first interpretation,
   // which had routed the three apps into the Meezan account.)

@@ -25,7 +25,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
         <div className="col-span-2 md:col-span-1">
           <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-24 w-auto" />
-          <p className="text-gray-500 mt-3 leading-relaxed">MALAC — M.A Luxury Apparel Collection. Online shopping in Pakistan for fashion, mobiles &amp; tablets, electronics, home &amp; living, beauty, groceries and more, delivered nationwide with Cash on Delivery, JazzCash / Easypaisa, or bank transfer (Meezan Bank, NayaPay, SadaPay, FirstPay HBL).</p>
+          <p className="text-gray-500 mt-3 leading-relaxed">MALAC — M.A Luxury Apparel Collection. Online shopping in Pakistan for fashion, mobiles &amp; tablets, electronics, home &amp; living, beauty, groceries and more, delivered nationwide with Cash on Delivery, JazzCash / Easypaisa, or bank transfer (Meezan Bank, NayaPay, SadaPay, FirstPay — HBL Microfinance Bank).</p>
           <p className="mt-3 space-y-1.5">
             <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
               <MessageCircle size={15} className="text-[#059669]" /> WhatsApp: +92 3236016684

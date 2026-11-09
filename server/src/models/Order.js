@@ -39,13 +39,13 @@ export const RETURN_REASONS = [
   "Missing parts or accessories",
   "Other",
 ];
-export const PAYMENT_METHODS = ["COD", "JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
+export const PAYMENT_METHODS = ["COD", "JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay — HBL Microfinance Bank"];
 // Manual-transfer methods: the customer sends money to a store account
 // and uploads the screenshot + transaction details for staff
 // verification. Meezan Bank receives direct bank transfers; NayaPay,
-// SadaPay and FirstPay HBL pay the owner's wallet number 03036253428 —
+// SadaPay and FirstPay — HBL Microfinance Bank pay the owner's wallet number 03036253428 —
 // the same number as JazzCash / Easypaisa (owner, 2026-11-09).
-export const MANUAL_PAYMENT_METHODS = ["JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay HBL"];
+export const MANUAL_PAYMENT_METHODS = ["JazzCash", "Easypaisa", "Meezan Bank", "NayaPay", "SadaPay", "FirstPay — HBL Microfinance Bank"];
 export const PAYMENT_VERIFICATION_STATUSES =
   ["not_applicable", "pending_verification", "verified", "rejected"];
 

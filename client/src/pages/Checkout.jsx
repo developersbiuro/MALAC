@@ -242,8 +242,8 @@ export default function Checkout() {
               walletInfo && paymentMethod === "NayaPay" ? "" : "Store ke NayaPay number par bhejein, phir screenshot upload karein.")}
             {methodCard("SadaPay", Smartphone, "SadaPay",
               walletInfo && paymentMethod === "SadaPay" ? "" : "Store ke SadaPay number par bhejein, phir screenshot upload karein.")}
-            {methodCard("FirstPay HBL", Landmark, "FirstPay — HBL Microfinance",
-              walletInfo && paymentMethod === "FirstPay HBL" ? "" : "Store ke FirstPay (HBL Microfinance) number par bhejein, phir screenshot upload karein.")}
+            {methodCard("FirstPay — HBL Microfinance Bank", Landmark, "FirstPay — HBL Microfinance Bank",
+              walletInfo && paymentMethod === "FirstPay — HBL Microfinance Bank" ? "" : "Store ke FirstPay — HBL Microfinance Bank number par bhejein, phir screenshot upload karein.")}
 
             {isManual && (
               <div className="border rounded p-3 ml-0 sm:ml-8 space-y-3 bg-gray-50">

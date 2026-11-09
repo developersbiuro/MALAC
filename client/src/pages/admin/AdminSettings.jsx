@@ -53,8 +53,8 @@ export default function AdminSettings() {
             <label className="text-sm">NayaPay number<input className={input} value={form.nayapayAccountNumber || ""} onChange={(e) => set("nayapayAccountNumber", e.target.value)} /></label>
             <label className="text-sm">SadaPay account title<input className={input} value={form.sadapayAccountTitle || ""} onChange={(e) => set("sadapayAccountTitle", e.target.value)} /></label>
             <label className="text-sm">SadaPay number<input className={input} value={form.sadapayAccountNumber || ""} onChange={(e) => set("sadapayAccountNumber", e.target.value)} /></label>
-            <label className="text-sm">FirstPay HBL account title<input className={input} value={form.firstpayAccountTitle || ""} onChange={(e) => set("firstpayAccountTitle", e.target.value)} /></label>
-            <label className="text-sm">FirstPay HBL number<input className={input} value={form.firstpayAccountNumber || ""} onChange={(e) => set("firstpayAccountNumber", e.target.value)} /></label>
+            <label className="text-sm">FirstPay — HBL Microfinance Bank account title<input className={input} value={form.firstpayAccountTitle || ""} onChange={(e) => set("firstpayAccountTitle", e.target.value)} /></label>
+            <label className="text-sm">FirstPay — HBL Microfinance Bank number<input className={input} value={form.firstpayAccountNumber || ""} onChange={(e) => set("firstpayAccountNumber", e.target.value)} /></label>
           </div>
           <p className="text-[11px] text-gray-400 mt-2">These store accounts are shown to customers at checkout. Leave a number empty to mark that method as unavailable. Defaults come from JAZZCASH_* / EASYPAISA_* in .env (owner-provided shared account for both wallets).</p>
         </fieldset>

@@ -64,7 +64,7 @@ const FAQS = [
   },
   {
     keys: ["payment", "jazzcash", "easypaisa", "paise", "cod", "cash on delivery", "advance"],
-    text: "Payment ke tareeqay ye hain: (1) Cash on Delivery — paise parcel milne par; (2) JazzCash / Easypaisa — pehle transfer karke screenshot checkout par upload kar dein; (3) Meezan Bank transfer, ya NayaPay / SadaPay / FirstPay (HBL Microfinance) se store ke number par bhejein aur screenshot upload kar dein. Hamari team payment verify karke order confirm kar degi.",
+    text: "Payment ke tareeqay ye hain: (1) Cash on Delivery — paise parcel milne par; (2) JazzCash / Easypaisa — pehle transfer karke screenshot checkout par upload kar dein; (3) Meezan Bank transfer, ya NayaPay / SadaPay / FirstPay — HBL Microfinance Bank se store ke number par bhejein aur screenshot upload kar dein. Hamari team payment verify karke order confirm kar degi.",
   },
   {
     keys: ["delivery", "shipping", "charges", "kitne din", "kab milega", "kab ayega", "ship"],
