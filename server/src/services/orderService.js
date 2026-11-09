@@ -127,7 +127,7 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     subtotal, discount, couponCode: appliedCoupon ? appliedCoupon.code : "",
     shipping, total,
     paymentMethod: paymentMethod || "COD",
-    paymentStatus: paymentMethod === "Card" ? "Paid" : "Unpaid",
+    paymentStatus: "Unpaid",
     paymentScreenshot: isManualWallet ? paymentScreenshot : "",
     transactionId: isManualWallet ? transactionId : "",
     senderAccount: isManualWallet ? senderAccount : "",

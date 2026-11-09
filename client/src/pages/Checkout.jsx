@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Truck, CreditCard, Banknote, Smartphone, UploadCloud } from "lucide-react";
+import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud } from "lucide-react";
 import api from "../api/client.js";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import LocationSelect from "../components/LocationSelect.jsx";
@@ -31,7 +31,6 @@ export default function Checkout() {
   const [savedId, setSavedId] = useState(""); // "" = typing a new address
   const [deliveryMethod, setDeliveryMethod] = useState("Standard");
   const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [card, setCard] = useState({ number: "", expiry: "", cvc: "" });
   const [wallets, setWallets] = useState(null); // from GET /settings/public
   const [manual, setManual] = useState({ screenshotPath: "", transactionId: "", senderAccount: "", senderTitle: "" });
   const [uploading, setUploading] = useState(false);
@@ -232,20 +231,10 @@ export default function Checkout() {
         {step === 2 && (
           <div className="space-y-3 text-sm">
             {methodCard("COD", Banknote, "Cash on Delivery", "Pay in cash when your order arrives.")}
-            {methodCard("Card", CreditCard, "Debit / Credit Card", "Simulated in demo — no real payment is processed.")}
             {methodCard("JazzCash", Smartphone, "JazzCash (Manual Transfer)",
               walletInfo && paymentMethod === "JazzCash" ? "" : "Send money to the store JazzCash account, then upload the screenshot.")}
             {methodCard("Easypaisa", Smartphone, "Easypaisa (Manual Transfer)",
               walletInfo && paymentMethod === "Easypaisa" ? "" : "Send money to the store Easypaisa account, then upload the screenshot.")}
-
-            {paymentMethod === "Card" && (
-              <div className="grid sm:grid-cols-3 gap-2 pl-8">
-                <input placeholder="Card number" className={`${input} sm:col-span-3`} value={card.number} onChange={(e) => setCard({ ...card, number: e.target.value })} />
-                <input placeholder="MM/YY" className={input} value={card.expiry} onChange={(e) => setCard({ ...card, expiry: e.target.value })} />
-                <input placeholder="CVC" className={input} value={card.cvc} onChange={(e) => setCard({ ...card, cvc: e.target.value })} />
-                <p className="text-[11px] text-gray-400 sm:col-span-3">Demo only — card details are not stored.</p>
-              </div>
-            )}
 
             {isManual && (
               <div className="border rounded p-3 ml-0 sm:ml-8 space-y-3 bg-gray-50">
@@ -253,7 +242,7 @@ export default function Checkout() {
                 : !walletInfo?.configured ? (
                   <p className="text-amber-600">
                     The store has not configured its {paymentMethod} account yet, so this method is
-                    unavailable right now. Please choose COD or Card.
+                    unavailable right now. Please choose COD.
                   </p>
                 ) : (
                   <>

@@ -39,7 +39,7 @@ export const RETURN_REASONS = [
   "Missing parts or accessories",
   "Other",
 ];
-export const PAYMENT_METHODS = ["COD", "Card", "JazzCash", "Easypaisa"];
+export const PAYMENT_METHODS = ["COD", "JazzCash", "Easypaisa"];
 export const PAYMENT_VERIFICATION_STATUSES =
   ["not_applicable", "pending_verification", "verified", "rejected"];
 
