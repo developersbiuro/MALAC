@@ -9,7 +9,7 @@ const JSON_LD_ID = "malac-page-jsonld";
 // Default share image: the branded 1200x630 MALAC share image (official
 // logo artwork on the site's cream background), served by the API at
 // /og-image.png. Mirrors the og:image in index.html.
-export const SITE_IMAGE = "https://malac1.vercel.app/og-image.png";
+export const SITE_IMAGE = "https://www.malac.pp.ua/og-image.png";
 
 function upsertMeta(name, content) {
   let tag = document.head.querySelector(`meta[name="${name}"]`);

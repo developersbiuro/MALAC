@@ -11,7 +11,7 @@ import Product from "../models/Product.js";
 // database is down or still reconnecting. Any DB failure therefore falls
 // back to the static routes only, and the dynamic sections are added
 // whenever the connection is (or becomes) available.
-const SITE_URL = "https://malac1.vercel.app";
+const SITE_URL = "https://www.malac.pp.ua";
 
 const router = Router();
 

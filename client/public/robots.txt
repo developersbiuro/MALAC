@@ -31,4 +31,4 @@ Disallow: /signup
 Disallow: /forgot-password
 Disallow: /reset-password
 
-Sitemap: https://malac1.vercel.app/sitemap.xml
+Sitemap: https://www.malac.pp.ua/sitemap.xml
