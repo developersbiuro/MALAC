@@ -11,6 +11,13 @@ import { useAppMode } from "../utils/appMode.js";
 // Any failure there (offline, quota, not configured) silently falls
 // back to the product search + rule-based replies — the chat always
 // works. Conversation lives in component state only.
+//
+// Order tracking is Daraz-style: a signed-in customer is shown their
+// own recent orders as tappable cards ("in me se konsa track karna
+// hai?"); a guest is asked for the order ID or phone number, and a
+// phone number matching several orders gets the same picker. While a
+// picker is open, unclear replies re-show it instantly (rule-based)
+// instead of waiting on the AI layer.
 
 const WHATSAPP_URL = "https://wa.me/923236016684";
 
@@ -96,17 +103,45 @@ export default function ChatWidget() {
   const messagesRef = useRef([]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
+  // Daraz-style order picker state: while a tracking picker/input is
+  // pending, the candidate orders live here so an unclear reply
+  // ("konsa?") re-shows them instantly instead of hitting the AI layer.
+  const awaitingRef = useRef(null); // null | "track-choice" | "track-input"
+  const choicesRef = useRef(null);
+
   const goTo = (to) => { setOpen(false); navigate(to); };
+
+  // Picker card for one order: customers see "Processing" for the
+  // stored Confirmed/Packed statuses (same rule as My Orders).
+  const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
+  const choiceOf = (o) => ({
+    orderId: o.orderId,
+    status: customerStatus(o.status),
+    title: o.items?.[0]?.title || "",
+    date: o.createdAt
+      ? new Date(o.createdAt).toLocaleDateString("en-PK", { day: "numeric", month: "short" })
+      : "",
+  });
 
   // body: { orderId } ya { phone } — server dono me se aik se dhoond leta hai.
   const trackWith = async (body) => {
     setBusy(true);
     try {
       const r = await api.post("/orders/track", body);
-      const o = r.data.order || (r.data.orders || [])[0];
-      const extra = !r.data.order && (r.data.orders || []).length > 1
-        ? ` Is number par kul ${r.data.orders.length} orders hain — ye sab se recent hai; baqi Track Order page par milenge.`
-        : "";
+      const list = r.data.orders || [];
+      // Phone number matched several orders: Daraz-style picker —
+      // "in me se konsa track karna hai?" — instead of silently
+      // reporting only the most recent one.
+      if (!r.data.order && list.length > 1) {
+        const cs = list.slice(0, 5).map(choiceOf);
+        choicesRef.current = cs;
+        awaitingRef.current = "track-choice";
+        push(botSay(`Is number par ${list.length} orders mile hain. In me se konsa track karna hai? Neeche tap karein, ya apna order ID likh dein.`, { choices: cs }));
+        return;
+      }
+      const o = r.data.order || list[0];
+      awaitingRef.current = null;
+      choicesRef.current = null;
       push(botSay(
         `Order ${o.orderId} ka status: ${o.status}. Payment: ${o.paymentMethod} (${o.paymentStatus})` +
         (o.status === "Cancelled" && o.cancelReason ? ` — wajah: ${o.cancelReason}.` : "") +
@@ -115,14 +150,52 @@ export default function ChatWidget() {
           : "") +
         (o.estimatedDelivery && o.status !== "Delivered" && o.status !== "Cancelled"
           ? ` — expected delivery ${new Date(o.estimatedDelivery).toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}.`
-          : ".") + extra,
+          : "."),
         { link: { to: "/track-order", label: "Poori tafseel dekhein" } }
       ));
     } catch {
+      awaitingRef.current = "track-input";
       push(botSay("Is se koi order match nahi hua. Order ID (jaise MLC-ABC123) ya order wala mukammal phone number dobara check karke likhein."));
     } finally {
       setBusy(false);
     }
+  };
+
+  // Tracking shuru karne ka Daraz-style flow: signed-in customer ko
+  // un ke apne recent orders ki list milti hai (tap = track); guest ko
+  // order ID / phone number maanga jata hai.
+  const startTracking = async () => {
+    if (localStorage.getItem("malac_token")) {
+      setBusy(true);
+      try {
+        const r = await api.get("/orders/my");
+        const mine = (r.data.orders || []).slice(0, 5);
+        if (mine.length > 0) {
+          const cs = mine.map(choiceOf);
+          choicesRef.current = cs;
+          awaitingRef.current = "track-choice";
+          push(botSay("Aap ke recent orders ye hain — jisay track karna hai us par tap karein. Ya apna order ID / phone number likh dein.", { choices: cs }));
+          return;
+        }
+        awaitingRef.current = "track-input";
+        push(botSay("Aap ke account me abhi koi order nahi mila. Agar order kisi aur number se kiya tha to wo phone number ya order ID likh dein — main check kar deta hoon."));
+        return;
+      } catch {
+        // Token expired/invalid — neeche wala aam prompt chalega.
+      } finally {
+        setBusy(false);
+      }
+    }
+    awaitingRef.current = "track-input";
+    push(botSay("Zaroor! Apna order ID (jaise MLC-ABC123) ya order wala phone number likhein — main foran status bata deta hoon."));
+  };
+
+  const pickOrder = (c) => {
+    if (busy) return;
+    awaitingRef.current = null;
+    choicesRef.current = null;
+    push({ id: nextId(), from: "user", text: c.orderId });
+    trackWith({ orderId: c.orderId });
   };
 
   const handleSend = async (raw) => {
@@ -144,9 +217,26 @@ export default function ChatWidget() {
       return;
     }
 
+    // --- Tracking picker khula ho to unclear jawab ("konsa?") par
+    // picker foran dobara dikhao — AI ki slow call par mat bhejo.
+    // Koi naya sawal (FAQ intent) aye to picker band karke aage barho.
+    if (awaitingRef.current) {
+      const isNewIntent = FAQS.some((f) => f.keys.some((k) => lower.includes(k)));
+      if (!isNewIntent) {
+        if (choicesRef.current?.length) {
+          push(botSay("In me se konsa order track karna hai? Neeche kisi order par tap karein, ya apna order ID likh dein.", { choices: choicesRef.current }));
+        } else {
+          push(botSay("Order track karne ke liye apna order ID (jaise MLC-ABC123) ya order wala phone number likhein — main foran status bata deta hoon."));
+        }
+        return;
+      }
+      awaitingRef.current = null;
+      choicesRef.current = null;
+    }
+
     // --- FAQ intents ---
     if (FAQS[1].keys.some((k) => lower.includes(k))) { // tracking intent
-      push(botSay("Zaroor! Apna order ID (jaise MLC-ABC123) ya order wala phone number likhein — main foran status bata deta hoon."));
+      startTracking();
       return;
     }
     for (const faq of FAQS) {
@@ -260,6 +350,23 @@ export default function ChatWidget() {
                         >
                           <span className="block text-[13px] font-medium text-lux-ink leading-snug">{p.title}</span>
                           <span className="block text-[11px] text-lux-burnt">{p.category}</span>
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                  {m.choices && (
+                    <span className="block mt-2 space-y-1.5">
+                      {m.choices.map((c) => (
+                        <button
+                          key={c.orderId}
+                          type="button"
+                          onClick={() => pickOrder(c)}
+                          className="block w-full text-left bg-cream-soft hover:bg-cream-deep/70 border border-cream-line rounded-xl px-3 py-2 transition-colors"
+                        >
+                          <span className="block text-[13px] font-medium text-lux-ink leading-snug">{c.orderId} · {c.status}</span>
+                          {(c.title || c.date) && (
+                            <span className="block text-[11px] text-lux-burnt">{[c.title, c.date].filter(Boolean).join(" — ")}</span>
+                          )}
                         </button>
                       ))}
                     </span>

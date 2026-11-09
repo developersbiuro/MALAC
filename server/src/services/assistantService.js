@@ -25,11 +25,16 @@
 //   not sent.
 // - The newest free Flash model can answer 503 "high demand", so the
 //   call falls back across the model list below before giving up.
+// - Speed (owner feedback 2026-11-09: replies felt slow): the FAST
+//   Flash-Lite model is tried FIRST — for these short grounded answers
+//   it replies in a few seconds; the bigger models are only fallbacks.
+//   Timeouts are tight (12s per call) so the worst case stays bounded
+//   and the client falls back to its instant rule-based replies.
 import env from "../config/env.js";
 import Product from "../models/Product.js";
 
 const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/interactions";
-const FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash"];
+const FALLBACK_MODELS = ["gemini-2.5-flash"];
 
 const STORE_FACTS = `You are "MALAC Assistant", the shopping assistant of MALAC (M.A Luxury Apparel Collection), an online store in Pakistan (website: www.malac.pp.ua). Answer the customer's latest message helpfully, in the SAME language/script they used (English or Roman Urdu), in a friendly tone, in at most 3 short sentences. No markdown formatting, no lists, plain sentences only.
 
@@ -79,7 +84,7 @@ function matchingProducts(products, message) {
 // retried by the caller as one flattened transcript string.
 function buildInputSteps(history, message) {
   const steps = [];
-  for (const h of history.slice(-8)) {
+  for (const h of history.slice(-6)) {
     const text = String(h?.text || "").trim();
     if (!text) continue;
     steps.push({
@@ -93,7 +98,7 @@ function buildInputSteps(history, message) {
 
 function buildTranscript(history, message) {
   const lines = [];
-  for (const h of history.slice(-8)) {
+  for (const h of history.slice(-6)) {
     const text = String(h?.text || "").trim();
     if (!text) continue;
     lines.push(`${h.from === "user" ? "Customer" : "Assistant"}: ${text.slice(0, 500)}`);
@@ -117,7 +122,7 @@ function extractReply(data) {
   return texts.join("").trim();
 }
 
-async function callGemini({ apiKey, model, systemInstruction, input, timeoutMs, maxOutputTokens = 1200 }) {
+async function callGemini({ apiKey, model, systemInstruction, input, timeoutMs, maxOutputTokens = 800 }) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -153,10 +158,13 @@ export async function buildAssistantReply({ message, history = [] }) {
 
   const { products, text: catalogue } = await catalogueSnapshot();
   const systemInstruction = `${STORE_FACTS}\n\nCATALOGUE SNAPSHOT:\n${catalogue}`;
-  const models = [env.gemini.model, ...FALLBACK_MODELS.filter((m) => m !== env.gemini.model)];
+  // Fastest model first (Flash-Lite), then the configured primary,
+  // then the remaining fallbacks — speed matters more than depth for
+  // these short, fully-grounded shop answers.
+  const models = [...new Set(["gemini-3.5-flash-lite", env.gemini.model, ...FALLBACK_MODELS])];
   const attempts = [
-    { input: buildInputSteps(history, message), timeoutMs: 20000 },
-    { input: buildTranscript(history, message), timeoutMs: 20000 },
+    { input: buildInputSteps(history, message), timeoutMs: 12000 },
+    { input: buildTranscript(history, message), timeoutMs: 12000 },
   ];
 
   for (const attempt of attempts) {
@@ -169,7 +177,7 @@ export async function buildAssistantReply({ message, history = [] }) {
         // a higher output budget before showing it to the customer.
         if (reply && !/[.!?]["')\]]?$/.test(reply.trim())) {
           try {
-            const longer = await callGemini({ apiKey, model, systemInstruction, ...attempt, timeoutMs: 30000, maxOutputTokens: 2000 });
+            const longer = await callGemini({ apiKey, model, systemInstruction, ...attempt, timeoutMs: 20000, maxOutputTokens: 1600 });
             if (longer) {
               return { reply: longer.slice(0, 1200), products: matchingProducts(products, message) };
             }
