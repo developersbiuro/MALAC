@@ -11,6 +11,7 @@ const PERMISSION_OPTIONS = [
   { key: "orders", label: "Orders" },
   { key: "payments", label: "Payments verification" },
   { key: "coupons", label: "Coupons" },
+  { key: "chatbot", label: "Chatbot & Support" },
 ];
 
 function PermissionChecks({ value, onChange }) {

@@ -1,36 +1,44 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { MessageCircle, X, Send, PackageSearch } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { MessageCircle, X, Send, PackageSearch, ShoppingCart, Minus, Plus, Trash2, Check } from "lucide-react";
 import api from "../api/client.js";
 import { useAppMode } from "../utils/appMode.js";
+import { useCart } from "../context/CartContext.jsx";
 
-// MALAC Assistant — rule-based core (FAQs, product search, order
-// tracking) with an AI layer on top (v2): when the keyword rules below
-// don't match, the message goes to POST /assistant/chat (Gemini, free
-// tier) for a natural-language answer grounded in the live catalogue.
-// Any failure there (offline, quota, not configured) silently falls
-// back to the product search + rule-based replies — the chat always
-// works. Conversation lives in component state only.
+// MALAC Assistant (v3 — master-prompt build).
 //
-// Order tracking is Daraz-style: a signed-in customer is shown their
-// own recent orders as tappable cards ("in me se konsa track karna
-// hai?"); a guest is asked for the order ID or phone number, and a
-// phone number matching several orders gets the same picker. While a
-// picker is open, unclear replies re-show it instantly (rule-based)
-// instead of waiting on the AI layer.
+// Layers, fastest first:
+//  1. Deterministic tools (instant, database-true): order tracking with
+//     the Daraz-style own-orders picker, structured browse ("2000 ke
+//     andar shoes dikhao" → real filtered DB query), compare/similar,
+//     cart view, support-ticket intake, cancellation guidance.
+//  2. FAQ rules for the store's fixed policies.
+//  3. The AI layer (POST /assistant/chat, Gemini free tier) for
+//     everything else — grounded in the full live catalogue, the real
+//     store Settings, owner FAQs and the customer's cart (priced
+//     server-side). Any AI failure silently falls back to product
+//     search + rules, so the chat always works.
+//
+// Persistence: every turn is stored server-side (ChatConversation)
+// keyed by a random local session id; signed-in customers' chats
+// attach to their account. Admin replies/takeover arrive by polling
+// while the panel is open — when a human takes over, the bot steps
+// aside honestly (it never pretends a human is the bot or vice versa).
+// Config (enabled / name / welcome) comes from Admin → Chatbot.
 
 const WHATSAPP_URL = "https://wa.me/923236016684";
 
 const QUICK_REPLIES = [
-  { label: "Product dhundhein", text: "Product dhundhna hai" },
-  { label: "Order track karein", text: "Order track karna hai" },
-  { label: "Delivery info", text: "Delivery charges aur time?" },
-  { label: "Payment tareeqa", text: "Payment ka tareeqa kya hai?" },
-  { label: "WhatsApp par baat karein", href: WHATSAPP_URL },
+  { label: "Find Products", text: "Product dhundhna hai" },
+  { label: "Track My Order", text: "Order track karna hai" },
+  { label: "Shopping Assistance", text: "Shopping me madad chahiye" },
+  { label: "Delivery Information", text: "Delivery charges aur time?" },
+  { label: "Return & Refund", text: "Return karna hai" },
+  { label: "Contact Support", text: "Support se baat karni hai" },
 ];
 
-const GREETING =
-  "Assalam-o-Alaikum! Main MALAC Assistant hoon. Product dhundhne, order track karne ya delivery/payment ki maloomat me main madad kar sakta hoon — neeche se choose karein ya apna sawal likhein.";
+const DEFAULT_GREETING =
+  "Welcome to MALAC! 👋 I'm your AI Shopping Assistant. How can I help you today? Product dhundhne, order track karne ya delivery/payment ki maloomat ke liye neeche se choose karein ya apna sawal likhein.";
 
 const FALLBACK =
   "Is bare me main abhi jawab nahi de paya. Aap product ka naam likh kar dhundh sakte hain, order track kar sakte hain, ya hum se WhatsApp par baat kar sakte hain.";
@@ -38,8 +46,8 @@ const FALLBACK =
 // FAQ intents: first match wins, so keep specific intents above generic ones.
 const FAQS = [
   {
-    keys: ["whatsapp", "contact", "baat kar", "insan", "human", "agent", "call kar", "rabta"],
-    text: "Aap hum se WhatsApp par foran baat kar sakte hain — team wahan jawab degi.",
+    keys: ["whatsapp", "contact", "baat kar", "insan", "human", "agent", "call kar", "rabta", "support se", "support ticket"],
+    text: "Aap hum se WhatsApp par foran baat kar sakte hain — team wahan jawab degi. Ya yahin 'ticket' likh dein, main aap ki support request admin tak pohncha dunga.",
     link: { href: WHATSAPP_URL, label: "WhatsApp par message karein" },
   },
   {
@@ -48,8 +56,8 @@ const FAQS = [
     link: { to: "/track-order", label: "Track Order page kholein" },
   },
   {
-    keys: ["return", "refund", "exchange", "wapis", "wapsi", "tabdeel"],
-    text: "Returns aur exchange ki mukammal policy hamari Privacy & Policy page par hai. Koi masla ho to WhatsApp par bata dein, team madad kare gi.",
+    keys: ["return", "refund", "exchange", "wapis", "wapsi", "tabdeel", "kharab", "damage", "ghalat product", "wrong item"],
+    text: "Return/exchange sirf 7 din ke andar, damaged/defective ya ghalat item par hota hai. Agar aap ka yahi masla hai to 'ticket' likh dein — main aap ki request admin tak pohncha dunga, faisla admin karega. Mukammal policy Policy page par hai.",
     link: { to: "/policy", label: "Policy page dekhein" },
   },
   {
@@ -65,11 +73,44 @@ const FAQS = [
     text: "Ji haan — Rs. 5,000 ya us se zyada ke order par delivery FREE hai. Us se kam par standard delivery Rs. 199 hai.",
   },
   {
-    keys: ["login", "sign up", "account", "order karna", "checkout"],
-    text: "Order karne ke liye MALAC account me login hona zaroori hai (guest checkout nahi hota). Browsing aur cart baghair login ke bhi chal sakta hai — checkout ke waqt login maanga jata hai.",
+    keys: ["login", "sign up", "account", "order karna", "checkout", "password bhool", "forgot"],
+    text: "Order karne ke liye MALAC account me login hona zaroori hai (guest checkout nahi hota). Browsing aur cart baghair login ke bhi chal sakta hai — checkout ke waqt login maanga jata hai. Password bhool jayein to Login page par 'Forgot password' se reset ho jata hai.",
     link: { to: "/login", label: "Login page kholein" },
   },
+  {
+    keys: ["cancel"],
+    text: "Order cancel sirf tab ho sakta hai jab parcel ship na hua ho (Pending / Processing). My Orders page par apne order ke neeche 'Cancel Order' button hai — wajah select karke confirm kar dein. Shipped order cancel nahi hota; masla ho to 'ticket' likh kar support request bhej dein.",
+    link: { to: "/orders", label: "My Orders kholein" },
+  },
 ];
+
+// Support-ticket categories offered in the intake flow.
+const TICKET_TYPES = [
+  { key: "return", label: "Return request" },
+  { key: "exchange", label: "Exchange" },
+  { key: "refund", label: "Refund inquiry" },
+  { key: "damaged", label: "Damaged product" },
+  { key: "wrong_item", label: "Wrong product mila" },
+  { key: "missing_item", label: "Item missing hai" },
+  { key: "delivery_issue", label: "Delivery ka masla" },
+  { key: "general", label: "General support" },
+];
+
+const getSessionId = () => {
+  try {
+    let id = localStorage.getItem("malac_chat_session");
+    if (!id) {
+      id = `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem("malac_chat_session", id);
+    }
+    return id;
+  } catch {
+    return `s-${Date.now().toString(36)}-guest`;
+  }
+};
+
+const timeOf = (ts) =>
+  new Date(ts || Date.now()).toLocaleTimeString("en-PK", { hour: "numeric", minute: "2-digit" });
 
 let msgSeq = 0;
 const nextId = () => ++msgSeq;
@@ -78,27 +119,71 @@ export default function ChatWidget() {
   const appMode = useAppMode();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const cart = useCart();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [config, setConfig] = useState(null); // { enabled, name, welcome }
+  const [takeover, setTakeover] = useState(false);
+  const [addedKey, setAddedKey] = useState("");
   const scrollRef = useRef(null);
+  const sessionRef = useRef(getSessionId());
+  const lastPollRef = useRef(null);
 
   // The admin suite has its own chrome — never float over it.
   const isAdmin = pathname.startsWith("/admin");
 
+  // Bot config from the server (Admin → Chatbot controls it).
+  useEffect(() => {
+    api.get("/assistant/config")
+      .then((r) => setConfig(r.data.chatbot))
+      .catch(() => setConfig({ enabled: true, name: "MALAC Assistant", welcome: "" }));
+  }, []);
+
   useEffect(() => {
     if (open && messages.length === 0) {
-      setMessages([{ id: nextId(), from: "bot", text: GREETING, quick: true }]);
+      push({
+        id: nextId(), from: "bot", at: Date.now(),
+        text: config?.welcome || DEFAULT_GREETING, quick: true,
+      });
     }
-  }, [open, messages.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, config]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open, busy]);
 
+  // Admin replies arrive by polling while the panel is open.
+  useEffect(() => {
+    if (!open) return undefined;
+    let alive = true;
+    const poll = () => {
+      const since = lastPollRef.current ? `&since=${encodeURIComponent(lastPollRef.current)}` : "";
+      api.get(`/assistant/poll?sessionId=${sessionRef.current}${since}`)
+        .then((r) => {
+          if (!alive) return;
+          setTakeover(!!r.data.takeover);
+          const fresh = r.data.messages || [];
+          if (fresh.length) {
+            lastPollRef.current = fresh[fresh.length - 1].at;
+            push(...fresh.map((m) => ({
+              id: nextId(), from: "admin", text: m.text, at: new Date(m.at).getTime(),
+            })));
+          }
+        })
+        .catch(() => {});
+    };
+    poll();
+    const t = setInterval(poll, 15000);
+    return () => { alive = false; clearInterval(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open ]);
+
   const push = (...msgs) => setMessages((prev) => [...prev, ...msgs]);
-  const botSay = (text, extra = {}) => ({ id: nextId(), from: "bot", text, ...extra });
+  const botSay = (text, extra = {}) => ({ id: nextId(), from: "bot", text, at: Date.now(), ...extra });
+  const userSay = (text) => ({ id: nextId(), from: "user", text, at: Date.now() });
 
   const messagesRef = useRef([]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
@@ -106,13 +191,33 @@ export default function ChatWidget() {
   // Daraz-style order picker state: while a tracking picker/input is
   // pending, the candidate orders live here so an unclear reply
   // ("konsa?") re-shows them instantly instead of hitting the AI layer.
-  const awaitingRef = useRef(null); // null | "track-choice" | "track-input"
+  const awaitingRef = useRef(null); // null | "track-choice" | "track-input" | "ticket"
   const choicesRef = useRef(null);
+  const ticketRef = useRef(null); // { type?, orderId?, step }
 
   const goTo = (to) => { setOpen(false); navigate(to); };
 
-  // Picker card for one order: customers see "Processing" for the
-  // stored Confirmed/Packed statuses (same rule as My Orders).
+  // ---- Product cards: Add to Cart through the real cart ----
+  const addToCart = (p) => {
+    if (!p.id || p.outOfStock) return;
+    cart.add(
+      { _id: p.id, title: p.title, images: [p.image || ""], sku: p.sku || "", stock: p.stock ?? 99, salePrice: p.wasPrice > 0 ? p.price : 0, basePrice: p.wasPrice > 0 ? p.wasPrice : p.price },
+      1
+    );
+    setAddedKey(p.slug);
+    setTimeout(() => setAddedKey(""), 1500);
+  };
+
+  // ---- Cart view inside chat ----
+  const showCart = () => {
+    if (!cart.items.length) {
+      push(botSay("Aap ka cart abhi khaali hai. Koi product pasand aye to card par 'Add to Cart' dabayein, ya mujhe naam likh dein — main dhundh deta hoon.", { quick: true }));
+      return;
+    }
+    push(botSay(`Aap ke cart me ${cart.count} item(s) hain — kul Rs. ${cart.subtotal.toLocaleString("en-PK")} (delivery alag, Rs. 5,000+ par FREE).`, { cartView: true }));
+  };
+
+  // ---- Order tracking (Daraz-style picker, as before) ----
   const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
   const choiceOf = (o) => ({
     orderId: o.orderId,
@@ -123,15 +228,11 @@ export default function ChatWidget() {
       : "",
   });
 
-  // body: { orderId } ya { phone } — server dono me se aik se dhoond leta hai.
   const trackWith = async (body) => {
     setBusy(true);
     try {
       const r = await api.post("/orders/track", body);
       const list = r.data.orders || [];
-      // Phone number matched several orders: Daraz-style picker —
-      // "in me se konsa track karna hai?" — instead of silently
-      // reporting only the most recent one.
       if (!r.data.order && list.length > 1) {
         const cs = list.slice(0, 5).map(choiceOf);
         choicesRef.current = cs;
@@ -142,6 +243,9 @@ export default function ChatWidget() {
       const o = r.data.order || list[0];
       awaitingRef.current = null;
       choicesRef.current = null;
+      const itemsLine = (o.items || []).length
+        ? ` Items: ${o.items.map((i) => `${i.title} x${i.qty}`).join(", ")}. Kul Rs. ${Number(o.total || 0).toLocaleString("en-PK")}.`
+        : "";
       push(botSay(
         `Order ${o.orderId} ka status: ${o.status}. Payment: ${o.paymentMethod} (${o.paymentStatus})` +
         (o.status === "Cancelled" && o.cancelReason ? ` — wajah: ${o.cancelReason}.` : "") +
@@ -150,7 +254,7 @@ export default function ChatWidget() {
           : "") +
         (o.estimatedDelivery && o.status !== "Delivered" && o.status !== "Cancelled"
           ? ` — expected delivery ${new Date(o.estimatedDelivery).toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}.`
-          : "."),
+          : ".") + itemsLine,
         { link: { to: "/track-order", label: "Poori tafseel dekhein" } }
       ));
     } catch {
@@ -161,9 +265,6 @@ export default function ChatWidget() {
     }
   };
 
-  // Tracking shuru karne ka Daraz-style flow: signed-in customer ko
-  // un ke apne recent orders ki list milti hai (tap = track); guest ko
-  // order ID / phone number maanga jata hai.
   const startTracking = async () => {
     if (localStorage.getItem("malac_token")) {
       setBusy(true);
@@ -181,7 +282,7 @@ export default function ChatWidget() {
         push(botSay("Aap ke account me abhi koi order nahi mila. Agar order kisi aur number se kiya tha to wo phone number ya order ID likh dein — main check kar deta hoon."));
         return;
       } catch {
-        // Token expired/invalid — neeche wala aam prompt chalega.
+        // Token expired/invalid — generic prompt below.
       } finally {
         setBusy(false);
       }
@@ -194,18 +295,122 @@ export default function ChatWidget() {
     if (busy) return;
     awaitingRef.current = null;
     choicesRef.current = null;
-    push({ id: nextId(), from: "user", text: c.orderId });
+    push(userSay(c.orderId));
     trackWith({ orderId: c.orderId });
+  };
+
+  // ---- Support ticket intake (step flow, saved server-side) ----
+  const startTicket = () => {
+    ticketRef.current = { step: "type" };
+    awaitingRef.current = "ticket";
+    push(botSay("Bilkul, main aap ki support request admin tak pohncha deta hoon. Pehle ye batayein masla kis qisam ka hai?", { ticketTypes: TICKET_TYPES }));
+  };
+
+  const pickTicketType = (t) => {
+    push(userSay(t.label));
+    ticketRef.current = { step: "order", type: t.key };
+    push(botSay("Agar ye kisi order ke bare me hai to apna Order ID likh dein (jaise MLC-ABC123) — warna 'skip' likh dein."));
+  };
+
+  const finishTicket = async (description) => {
+    const t = ticketRef.current || {};
+    setBusy(true);
+    try {
+      const body = { type: t.type || "general", description };
+      if (t.orderId) body.orderId = t.orderId;
+      if (t.phone) body.phone = t.phone;
+      const r = await api.post("/assistant/tickets", body);
+      const tk = r.data.ticket;
+      push(botSay(`Aap ki request save ho gayi hai. Ticket ID: ${tk.ticketId} — status abhi 'Pending' hai, admin review karke jawab dega. Apne tickets My Orders page ke neeche 'My Support Tickets' me bhi dekh sakte hain. Shukriya!`));
+    } catch (e) {
+      const msg = e?.response?.data?.message;
+      if (msg && /phone number used at checkout/i.test(msg) && t.orderId && !t.phone) {
+        ticketRef.current = { ...t, step: "phone", pendingDescription: description };
+        push(botSay("Order verify karne ke liye wo phone number likh dein jo checkout par diya tha — phir request bhej deta hoon."));
+        return;
+      }
+      push(botSay(msg || "Request abhi save nahi ho saki. Thodi der baad dobara try karein, ya WhatsApp par bata dein.", { link: { href: WHATSAPP_URL, label: "WhatsApp par message karein" } }));
+    } finally {
+      ticketRef.current = null;
+      awaitingRef.current = null;
+      setBusy(false);
+    }
+  };
+
+  const handleTicketStep = (text) => {
+    const t = ticketRef.current || {};
+    if (t.step === "order") {
+      const idMatch = text.match(/MLC[-\s]?[A-Z0-9][A-Z0-9-]{3,}/i);
+      if (idMatch) ticketRef.current = { ...t, step: "desc", orderId: idMatch[0].toUpperCase() };
+      else ticketRef.current = { ...t, step: "desc" };
+      push(botSay("Ab apna masla thori tafseel se likh dein — kya hua, kab hua? (kam az kam 2-3 jumlay)"));
+      return true;
+    }
+    if (t.step === "desc") {
+      if (text.trim().length < 10) {
+        push(botSay("Thori si aur tafseel likh dein taake admin ko masla samajh aye."));
+        return true;
+      }
+      finishTicket(text.trim());
+      return true;
+    }
+    if (t.step === "phone") {
+      ticketRef.current = { ...t, phone: text.trim() };
+      finishTicket(t.pendingDescription || "Support request");
+      return true;
+    }
+    return false;
+  };
+
+  // ---- Structured browse / compare (instant DB tools) ----
+  const tryBrowse = async (text) => {
+    try {
+      const r = await api.post("/assistant/browse", { message: text });
+      const found = r.data.products || [];
+      if (!found.length && !r.data.filter) return false;
+      if (!found.length) {
+        push(botSay("Is filter par abhi koi product available nahi hai. Price range ya category badal kar try karein — ya product ka naam likh dein."));
+        return true;
+      }
+      push(botSay("Ye rahe matching products — card par tap karke tafseel dekhein, ya wahin se cart me daal lein:", { products: found }));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const tryCompare = async (text) => {
+    try {
+      const r = await api.post("/assistant/compare", { message: text });
+      if (r.data.compare) {
+        push(botSay("Dono products ka muqabla neeche de diya hai — tafseel table me hai:", { compare: r.data.compare, products: r.data.products || [] }));
+        return true;
+      }
+      if (r.data.similarTo && (r.data.products || []).length) {
+        push(botSay(`"${r.data.similarTo}" jaisi aur items ye hain:`, { products: r.data.products }));
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
   };
 
   const handleSend = async (raw) => {
     const text = (raw ?? input).trim();
     if (!text || busy) return;
     setInput("");
-    push({ id: nextId(), from: "user", text });
+    push(userSay(text));
     const lower = text.toLowerCase();
 
-    // --- Order tracking: order ID ya phone number, jo bhi likha jay ---
+    // --- Support ticket flow consumes its own steps first ---
+    if (awaitingRef.current === "ticket" && handleTicketStep(text)) return;
+    if (["ticket", "support ticket", "complaint", "shikayat", "masla hai", "problem hai"].some((k) => lower.includes(k))) {
+      startTicket();
+      return;
+    }
+
+    // --- Order tracking: order ID ya phone number ---
     const idMatch = text.match(/MLC[-\s]?[A-Z0-9][A-Z0-9-]{3,}/i);
     if (idMatch) {
       trackWith({ orderId: idMatch[0].toUpperCase() });
@@ -217,9 +422,7 @@ export default function ChatWidget() {
       return;
     }
 
-    // --- Tracking picker khula ho to unclear jawab ("konsa?") par
-    // picker foran dobara dikhao — AI ki slow call par mat bhejo.
-    // Koi naya sawal (FAQ intent) aye to picker band karke aage barho.
+    // --- Tracking picker open: unclear replies re-show it instantly ---
     if (awaitingRef.current) {
       const isNewIntent = FAQS.some((f) => f.keys.some((k) => lower.includes(k)));
       if (!isNewIntent) {
@@ -234,9 +437,20 @@ export default function ChatWidget() {
       choicesRef.current = null;
     }
 
-    // --- FAQ intents ---
-    if (FAQS[1].keys.some((k) => lower.includes(k))) { // tracking intent
+    // --- Cart view ---
+    if (/\b(cart|basket|tokri)\b/i.test(text) && /\b(show|dikhao|dekho|view|kholo|kya hai|empty|khaali)\b/i.test(text)) {
+      showCart();
+      return;
+    }
+
+    // --- FAQ intents (tracking first: it opens the picker) ---
+    if (FAQS[1].keys.some((k) => lower.includes(k))) {
       startTracking();
+      return;
+    }
+    if (FAQS[2].keys.some((k) => lower.includes(k)) && /\b(return|refund|exchange|wapis|kharab|damage|ghalat|wrong)\b/i.test(text) && /\b(karna|chahiye|hai|karna hai|process)\b/i.test(text)) {
+      // A return/complaint ACTION (not just policy info) → intake flow.
+      startTicket();
       return;
     }
     for (const faq of FAQS) {
@@ -246,30 +460,53 @@ export default function ChatWidget() {
       }
     }
 
-    // --- AI layer (Gemini): natural-language questions the rules miss.
-    // Order tracking / FAQ answers above stay rule-based because they
-    // are exact; everything else gets one AI attempt, then the classic
-    // product-search fallback below.
+    // --- Compare / similar (deterministic, DB-true) ---
+    if (/\b(compare|muqabla|difference|farq|vs|versus|similar|jaisa|jaisi|alternative|mutabadil)\b/i.test(text)) {
+      setBusy(true);
+      const done = await tryCompare(text);
+      setBusy(false);
+      if (done) return;
+    }
+
+    // --- Structured browse (budget/category/sale/latest → real query) ---
+    if (await tryBrowse(text)) return;
+
+    // --- Admin takeover: the human owns the conversation now ---
+    if (takeover) {
+      push(botSay("Aap ki baat hamare support member tak pohnch gayi hai — wo yahin jawab dein ge. Thora intezar kar lein, ya jaldi ho to WhatsApp par message kar dein.", { link: { href: WHATSAPP_URL, label: "WhatsApp par message karein" } }));
+      return;
+    }
+
+    // --- AI layer (Gemini) ---
     setBusy(true);
     let aiAnswered = false;
     try {
       const history = messagesRef.current
         .slice(-8)
         .map((m) => ({ from: m.from === "user" ? "user" : "bot", text: m.text }));
-      const r = await api.post("/assistant/chat", { message: text, history });
-      if (r.data?.reply) {
+      const cartPayload = cart.items.map((i) => ({ product: i.product, qty: i.qty }));
+      const r = await api.post("/assistant/chat", {
+        message: text, history, cart: cartPayload, sessionId: sessionRef.current,
+      });
+      if (r.data?.takeover) {
+        setTakeover(true);
         aiAnswered = true;
-        push(botSay(r.data.reply, r.data.products?.length ? { products: r.data.products } : {}));
+        push(botSay("Aap ki conversation ab hamare support member ke paas hai — wo yahin jawab dein ge."));
+      } else if (r.data?.reply) {
+        aiAnswered = true;
+        push(botSay(r.data.reply, {
+          ...(r.data.products?.length ? { products: r.data.products } : {}),
+          ...(r.data.compare ? { compare: r.data.compare } : {}),
+        }));
       }
     } catch {
-      // AI unavailable (not configured / free quota / offline) — fall
-      // through to the rule-based behaviour below.
+      // AI unavailable — rule-based fallback below.
     } finally {
       setBusy(false);
     }
     if (aiAnswered) return;
 
-    // --- Product search (fallback jab AI jawab na de) ---
+    // --- Product search (classic fallback) ---
     if (["dhundh", "dhundo", "product", "chahiye", "dikhao", "show"].some((k) => lower.includes(k)) || text.split(/\s+/).length <= 4) {
       setBusy(true);
       try {
@@ -278,7 +515,7 @@ export default function ChatWidget() {
         if (found.length > 0) {
           push(botSay(`"${text}" ke liye ye products mile:`, {
             products: found.map((s) => ({
-              slug: s.slug, title: s.title, category: s.category,
+              id: s.id || "", slug: s.slug, title: s.title, category: s.category,
               image: s.image || "", price: s.price || 0,
               wasPrice: s.wasPrice || 0, outOfStock: !!s.outOfStock,
             })),
@@ -298,8 +535,44 @@ export default function ChatWidget() {
   };
 
   if (isAdmin) return null;
+  if (config && config.enabled === false) return null;
 
   const panelBottom = appMode ? "bottom-20" : "bottom-20 sm:bottom-24";
+  const botName = config?.name || "MALAC Assistant";
+
+  const ProductCard = (p) => (
+    <div key={p.slug} className="bg-cream-soft border border-cream-line rounded-xl px-3 py-2">
+      <button type="button" onClick={() => goTo(`/product/${p.slug}`)} className="block w-full text-left">
+        <span className="flex items-center gap-2.5">
+          {p.image && (
+            <img src={p.image} alt="" loading="lazy" className="w-11 h-11 rounded-lg object-cover border border-cream-line shrink-0" />
+          )}
+          <span className="min-w-0">
+            <span className="block text-[13px] font-medium text-lux-ink leading-snug">{p.title}</span>
+            <span className="block text-[11px] text-lux-burnt">{p.category}</span>
+            {p.price > 0 && (
+              <span className="block text-[12px] font-semibold text-lux-ink">
+                Rs. {p.price.toLocaleString("en-PK")}
+                {p.wasPrice > 0 && (
+                  <span className="ml-1.5 font-normal text-gray-400 line-through">Rs. {p.wasPrice.toLocaleString("en-PK")}</span>
+                )}
+                {p.outOfStock && <span className="ml-1.5 font-semibold text-red-500">Out of stock</span>}
+              </span>
+            )}
+          </span>
+        </span>
+      </button>
+      {p.id && !p.outOfStock && (
+        <button
+          type="button"
+          onClick={() => addToCart(p)}
+          className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold bg-lux-gradient text-white rounded-full px-2.5 py-1"
+        >
+          {addedKey === p.slug ? <><Check size={12} /> Added</> : <><ShoppingCart size={12} /> Add to Cart</>}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -326,8 +599,10 @@ export default function ChatWidget() {
               <MessageCircle size={16} />
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold leading-tight">MALAC Assistant</p>
-              <p className="text-[11px] text-white/60 leading-tight">Products, orders aur maloomat — foran jawab</p>
+              <p className="text-sm font-semibold leading-tight">{botName}</p>
+              <p className="text-[11px] text-white/60 leading-tight">
+                {takeover ? "Support member se connected" : "Products, orders aur maloomat — foran jawab"}
+              </p>
             </div>
             <button type="button" onClick={() => setOpen(false)} aria-label="Chat band karein" className="p-1.5 hover:bg-white/10 rounded-full">
               <X size={18} />
@@ -340,43 +615,43 @@ export default function ChatWidget() {
                 <div className={`max-w-[85%] px-3 py-2 rounded-2xl text-sm leading-snug ${
                   m.from === "user"
                     ? "ml-auto bg-lux-gradient text-white rounded-br-md"
-                    : "bg-white border border-cream-line text-lux-ink rounded-bl-md shadow-sm"
+                    : m.from === "admin"
+                      ? "bg-lux-ink text-white rounded-bl-md shadow-sm"
+                      : "bg-white border border-cream-line text-lux-ink rounded-bl-md shadow-sm"
                 }`}>
+                  {m.from === "admin" && <span className="block text-[10px] font-semibold text-lux-amber mb-0.5">MALAC Support</span>}
                   {m.text}
                   {m.products && (
                     <span className="block mt-2 space-y-1.5">
-                      {m.products.map((p) => (
-                        <button
-                          key={p.slug}
-                          type="button"
-                          onClick={() => goTo(`/product/${p.slug}`)}
-                          className="block w-full text-left bg-cream-soft hover:bg-cream-deep/70 border border-cream-line rounded-xl px-3 py-2 transition-colors"
-                        >
-                          <span className="flex items-center gap-2.5">
-                            {p.image && (
-                              <img
-                                src={p.image}
-                                alt=""
-                                loading="lazy"
-                                className="w-11 h-11 rounded-lg object-cover border border-cream-line shrink-0"
-                              />
-                            )}
-                            <span className="min-w-0">
-                              <span className="block text-[13px] font-medium text-lux-ink leading-snug">{p.title}</span>
-                              <span className="block text-[11px] text-lux-burnt">{p.category}</span>
-                              {p.price > 0 && (
-                                <span className="block text-[12px] font-semibold text-lux-ink">
-                                  Rs. {p.price.toLocaleString("en-PK")}
-                                  {p.wasPrice > 0 && (
-                                    <span className="ml-1.5 font-normal text-gray-400 line-through">Rs. {p.wasPrice.toLocaleString("en-PK")}</span>
-                                  )}
-                                  {p.outOfStock && <span className="ml-1.5 font-semibold text-red-500">Out of stock</span>}
-                                </span>
-                              )}
-                            </span>
-                          </span>
-                        </button>
-                      ))}
+                      {m.products.map((p) => ProductCard(p))}
+                    </span>
+                  )}
+                  {m.compare && (
+                    <span className="block mt-2 overflow-x-auto">
+                      <table className="w-full text-[11px] border border-cream-line rounded-lg overflow-hidden">
+                        <tbody>
+                          <tr className="bg-cream-soft">
+                            <td className="px-2 py-1 font-semibold"></td>
+                            {m.compare.map((c) => (
+                              <td key={c.slug} className="px-2 py-1 font-semibold text-lux-ink">{c.title}</td>
+                            ))}
+                          </tr>
+                          {[
+                            ["Price", (c) => `Rs. ${c.price.toLocaleString("en-PK")}${c.wasPrice > 0 ? ` (was Rs. ${c.wasPrice.toLocaleString("en-PK")})` : ""}`],
+                            ["Category", (c) => c.category],
+                            ["Stock", (c) => c.stock],
+                            ["Rating", (c) => c.rating],
+                            ["Options", (c) => c.options],
+                          ].map(([label, fn]) => (
+                            <tr key={label} className="border-t border-cream-line bg-white">
+                              <td className="px-2 py-1 font-semibold text-lux-burnt">{label}</td>
+                              {m.compare.map((c) => (
+                                <td key={c.slug} className="px-2 py-1 text-lux-ink">{fn(c)}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </span>
                   )}
                   {m.choices && (
@@ -396,6 +671,39 @@ export default function ChatWidget() {
                       ))}
                     </span>
                   )}
+                  {m.ticketTypes && (
+                    <span className="block mt-2 space-y-1.5">
+                      {m.ticketTypes.map((t) => (
+                        <button
+                          key={t.key}
+                          type="button"
+                          onClick={() => pickTicketType(t)}
+                          className="block w-full text-left bg-cream-soft hover:bg-cream-deep/70 border border-cream-line rounded-xl px-3 py-2 transition-colors text-[13px] font-medium text-lux-ink"
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                  {m.cartView && (
+                    <span className="block mt-2 space-y-1.5">
+                      {cart.items.map((i) => (
+                        <span key={i.key} className="flex items-center gap-2 bg-cream-soft border border-cream-line rounded-xl px-2.5 py-1.5">
+                          {i.image && <img src={i.image} alt="" className="w-9 h-9 rounded-md object-cover shrink-0" />}
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-[12px] font-medium text-lux-ink truncate">{i.title}</span>
+                            <span className="block text-[11px] text-lux-burnt">Rs. {i.price.toLocaleString("en-PK")} x {i.qty}</span>
+                          </span>
+                          <button type="button" aria-label="Quantity kam karein" onClick={() => cart.updateQty(i.key, i.qty - 1)} className="p-1 border border-cream-line rounded-full bg-white"><Minus size={12} /></button>
+                          <button type="button" aria-label="Quantity barhayein" onClick={() => cart.updateQty(i.key, i.qty + 1)} className="p-1 border border-cream-line rounded-full bg-white"><Plus size={12} /></button>
+                          <button type="button" aria-label="Cart se hatayein" onClick={() => cart.remove(i.key)} className="p-1 border border-cream-line rounded-full bg-white text-red-500"><Trash2 size={12} /></button>
+                        </span>
+                      ))}
+                      <button type="button" onClick={() => goTo("/checkout")} className="block w-full text-center bg-lux-gradient text-white text-[12px] font-semibold rounded-full px-3 py-2">
+                        Checkout par jayein — Rs. {cart.subtotal.toLocaleString("en-PK")}
+                      </button>
+                    </span>
+                  )}
                   {m.link && (
                     m.link.to ? (
                       <button type="button" onClick={() => goTo(m.link.to)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-lux-burnt underline underline-offset-2">
@@ -407,21 +715,17 @@ export default function ChatWidget() {
                       </a>
                     )
                   )}
+                  <span className={`block mt-1 text-[10px] ${m.from === "user" || m.from === "admin" ? "text-white/60 text-right" : "text-gray-400"}`}>
+                    {timeOf(m.at)}
+                  </span>
                 </div>
                 {m.quick && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {QUICK_REPLIES.map((q) => (
-                      q.href ? (
-                        <a key={q.label} href={q.href} target="_blank" rel="noreferrer"
-                          className="text-xs font-medium bg-white border border-lux-amber/50 text-lux-burnt rounded-full px-3 py-1.5 hover:bg-cream-soft">
-                          {q.label}
-                        </a>
-                      ) : (
-                        <button key={q.label} type="button" onClick={() => handleSend(q.text)}
-                          className="text-xs font-medium bg-white border border-lux-amber/50 text-lux-burnt rounded-full px-3 py-1.5 hover:bg-cream-soft">
-                          {q.label}
-                        </button>
-                      )
+                      <button key={q.label} type="button" onClick={() => handleSend(q.text)}
+                        className="text-xs font-medium bg-white border border-lux-amber/50 text-lux-burnt rounded-full px-3 py-1.5 hover:bg-cream-soft">
+                        {q.label}
+                      </button>
                     ))}
                   </div>
                 )}

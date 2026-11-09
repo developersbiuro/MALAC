@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, XCircle, RotateCcw } from "lucide-react";
+import { ShoppingBag, XCircle, RotateCcw, LifeBuoy, MessagesSquare } from "lucide-react";
 import api from "../../api/client.js";
 
 // Staff notifications: order events from customers (new order, customer
@@ -10,6 +10,8 @@ const ICONS = {
   order_placed: { Icon: ShoppingBag, cls: "bg-green-100 text-green-700" },
   order_cancelled: { Icon: XCircle, cls: "bg-red-100 text-red-600" },
   return_requested: { Icon: RotateCcw, cls: "bg-orange-100 text-orange-700" },
+  support_ticket: { Icon: LifeBuoy, cls: "bg-sky-100 text-sky-700" },
+  chat_takeover: { Icon: MessagesSquare, cls: "bg-violet-100 text-violet-700" },
 };
 
 export default function AdminNotifications() {
@@ -30,7 +32,7 @@ export default function AdminNotifications() {
   return (
     <div className="max-w-3xl">
       <h1 className="text-xl font-bold">Notifications</h1>
-      <p className="text-sm text-gray-500 mt-1">New orders, customer cancellations and return requests appear here — newest first.</p>
+      <p className="text-sm text-gray-500 mt-1">New orders, customer cancellations, return requests, support tickets and chat takeovers appear here — newest first.</p>
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
       <div className="space-y-2 mt-4">
         {items.map((n) => {

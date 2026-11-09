@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { LOGO_MARK } from "../assets/logo.js";
 import { NavLink, Link } from "react-router-dom";
-import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Star, Users, Settings as SettingsIcon, KeyRound, LogOut, Store, Smartphone, Bell } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, ShoppingBag, TicketPercent, Star, Users, Settings as SettingsIcon, KeyRound, LogOut, Store, Smartphone, Bell, BotMessageSquare } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import api from "../api/client.js";
 import { useSeo } from "../utils/seo.js";
@@ -16,6 +16,7 @@ const links = [
   { to: "/admin/orders", label: "Orders", Icon: ShoppingBag, permission: "orders" },
   { to: "/admin/coupons", label: "Coupons", Icon: TicketPercent, permission: "coupons" },
   { to: "/admin/reviews", label: "Reviews", Icon: Star, permission: "products" },
+  { to: "/admin/chatbot", label: "Chatbot", Icon: BotMessageSquare, permission: "chatbot" },
   { to: "/admin/roles", label: "Roles & Users", Icon: Users, superOnly: true },
   { to: "/admin/settings", label: "Settings", Icon: SettingsIcon, superOnly: true },
   // Own-account password change: every staff member, no permission gate.

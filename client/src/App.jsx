@@ -41,6 +41,7 @@ import AdminRoles from "./pages/admin/AdminRoles.jsx";
 import AdminSettings from "./pages/admin/AdminSettings.jsx";
 import AdminPassword from "./pages/admin/AdminPassword.jsx";
 import AdminNotifications from "./pages/admin/AdminNotifications.jsx";
+import AdminChatbot from "./pages/admin/AdminChatbot.jsx";
 
 // Shown when a staff account opens a section URL directly without the
 // access for it (the sidebar already hides those sections; this covers
@@ -85,6 +86,7 @@ function AdminShell() {
         <Route path="orders" element={<SectionGuard permission="orders"><AdminOrders /></SectionGuard>} />
         <Route path="coupons" element={<SectionGuard permission="coupons"><AdminCoupons /></SectionGuard>} />
         <Route path="reviews" element={<SectionGuard permission="products"><AdminReviews /></SectionGuard>} />
+        <Route path="chatbot" element={<SectionGuard permission="chatbot"><AdminChatbot /></SectionGuard>} />
         <Route path="roles" element={<SectionGuard superOnly><AdminRoles /></SectionGuard>} />
         <Route path="settings" element={<SectionGuard superOnly><AdminSettings /></SectionGuard>} />
         <Route path="password" element={<AdminPassword />} />

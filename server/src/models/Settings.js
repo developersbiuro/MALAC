@@ -21,6 +21,20 @@ const settingsSchema = new mongoose.Schema({
   jazzcashAccountNumber: { type: String, default: env.jazzcash.accountNumber },
   easypaisaAccountTitle: { type: String, default: env.easypaisa.accountTitle },
   easypaisaAccountNumber: { type: String, default: env.easypaisa.accountNumber },
+  // MALAC Assistant (chatbot) configuration — edited in Admin → Chatbot.
+  // The widget reads ONLY the safe public subset (publicChatbot()).
+  chatbotEnabled: { type: Boolean, default: true },
+  chatbotName: { type: String, default: "MALAC Assistant" },
+  chatbotWelcome: {
+    type: String,
+    default: "Welcome to MALAC! 👋 I'm your AI Shopping Assistant. How can I help you today? Product dhundhne, order track karne ya delivery/payment ki maloomat ke liye neeche se choose karein ya apna sawal likhein.",
+  },
+  chatbotInstructions: { type: String, default: "" }, // extra owner instructions for the AI
+  chatbotFaqs: [{
+    question: { type: String, default: "" },
+    answer: { type: String, default: "" },
+    _id: false,
+  }],
 }, { timestamps: true });
 
 settingsSchema.statics.getStore = async function () {
@@ -43,6 +57,17 @@ settingsSchema.methods.publicPayments = function () {
     freeShippingThreshold: this.freeShippingThreshold,
     jazzcash: wallet(this.jazzcashAccountTitle, this.jazzcashAccountNumber),
     easypaisa: wallet(this.easypaisaAccountTitle, this.easypaisaAccountNumber),
+  };
+};
+
+// The chatbot's public configuration: only what the storefront widget
+// may see (enabled flag, display name, welcome text). Owner FAQs and
+// custom AI instructions stay server-side.
+settingsSchema.methods.publicChatbot = function () {
+  return {
+    enabled: this.chatbotEnabled !== false,
+    name: this.chatbotName || "MALAC Assistant",
+    welcome: this.chatbotWelcome || "",
   };
 };
 

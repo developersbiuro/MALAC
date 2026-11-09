@@ -2,6 +2,7 @@ import { Router } from "express";
 import { protect, isStaff, isSuperAdmin, requirePermission } from "../middleware/auth.js";
 import * as admin from "../controllers/adminController.js";
 import * as orders from "../controllers/orderController.js";
+import * as chatAdmin from "../controllers/chatAdminController.js";
 
 const router = Router();
 router.use(protect, isStaff); // whole /admin API requires staff
@@ -41,4 +42,17 @@ router.patch("/password-resets/:id/approve", isSuperAdmin, admin.approvePassword
 router.patch("/password-resets/:id/reject", isSuperAdmin, admin.rejectPasswordReset);
 router.get("/settings", isSuperAdmin, admin.getSettings);
 router.put("/settings", isSuperAdmin, admin.updateSettings);
+// MALAC Assistant management (master-prompt §10): conversations,
+// manual replies + takeover, support tickets, chatbot settings/FAQs
+// and analytics — gated by the "chatbot" section permission so an
+// authorized Vice-Admin can run support without store-settings access.
+router.get("/chatbot/analytics", requirePermission("chatbot"), chatAdmin.chatbotAnalytics);
+router.get("/chatbot/conversations", requirePermission("chatbot"), chatAdmin.listConversations);
+router.get("/chatbot/conversations/:id", requirePermission("chatbot"), chatAdmin.getConversation);
+router.post("/chatbot/conversations/:id/reply", requirePermission("chatbot"), chatAdmin.replyConversation);
+router.patch("/chatbot/conversations/:id", requirePermission("chatbot"), chatAdmin.setConversationState);
+router.get("/chatbot/tickets", requirePermission("chatbot"), chatAdmin.listTickets);
+router.patch("/chatbot/tickets/:id", requirePermission("chatbot"), chatAdmin.updateTicket);
+router.get("/chatbot/settings", requirePermission("chatbot"), chatAdmin.getChatbotAdmin);
+router.put("/chatbot/settings", requirePermission("chatbot"), chatAdmin.updateChatbotAdmin);
 export default router;

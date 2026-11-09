@@ -30,6 +30,7 @@ export default function MyOrders() {
   useSeo({ title: "My Orders — MALAC", robots: "noindex" });
   const [tab, setTab] = useState("All");
   const [orders, setOrders] = useState([]);
+  const [tickets, setTickets] = useState([]);
   const [msg, setMsg] = useState("");
   // Inline cancel panel: which order is being cancelled + chosen reason.
   const [cancellingId, setCancellingId] = useState(null);
@@ -56,6 +57,11 @@ export default function MyOrders() {
     api.get("/orders/my", { params }).then((r) => setOrders(r.data.orders)).catch(() => setOrders([]));
   };
   useEffect(load, [tab]);
+
+  // Support tickets the customer opened from the MALAC Assistant chat.
+  useEffect(() => {
+    api.get("/assistant/tickets/mine").then((r) => setTickets(r.data.tickets || [])).catch(() => setTickets([]));
+  }, []);
 
   const openCancel = (orderId) => {
     setCancellingId(orderId); setCancelReason(""); setCancelNote(""); setMsg("");
@@ -210,6 +216,25 @@ export default function MyOrders() {
         ))}
         {orders.length === 0 && <p className="bg-white rounded-md p-8 text-center text-gray-400">No orders in this tab yet.</p>}
       </div>
+      {tickets.length > 0 && (
+        <section className="mt-6">
+          <h2 className="font-bold text-lg">My Support Tickets</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Requests you opened from the MALAC Assistant chat — the team's replies appear here.</p>
+          <div className="space-y-3 mt-3">
+            {tickets.map((t) => (
+              <article key={t.ticketId} className="bg-white rounded-md p-4 text-sm">
+                <div className="flex flex-wrap justify-between gap-2">
+                  <p><b>{t.ticketId}</b> <span className="text-gray-400">· {String(t.type || "").replace(/_/g, " ")}{t.orderId ? ` · Order ${t.orderId}` : ""} · {new Date(t.createdAt).toLocaleString("en-PK")}</span></p>
+                  <span className="text-xs font-medium rounded-full px-2.5 py-1 bg-gray-100 text-gray-600">{t.status}</span>
+                </div>
+                {(t.replies || []).map((r, i) => (
+                  <p key={i} className="mt-1.5 text-gray-700"><b>{r.by === "staff" ? "MALAC Support:" : "You:"}</b> {r.text}</p>
+                ))}
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
       {/* Hidden invoice print block for the order chosen above. */}
       {printState.order && <OrderInvoice order={printState.order} />}
     </main>

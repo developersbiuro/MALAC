@@ -14,7 +14,7 @@
 //    falls back to the legacy default ["products", "orders"] so those
 //    accounts keep the access they have always had.
 //  - Customers: none.
-export const PERMISSION_KEYS = ["products", "categories", "orders", "payments", "coupons"];
+export const PERMISSION_KEYS = ["products", "categories", "orders", "payments", "coupons", "chatbot"];
 
 export const LEGACY_VICE_ADMIN_PERMISSIONS = ["products", "orders"];
 

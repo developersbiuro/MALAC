@@ -9,12 +9,14 @@ import mongoose from "mongoose";
 const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["order_placed", "order_cancelled", "return_requested"],
+    enum: ["order_placed", "order_cancelled", "return_requested", "support_ticket", "chat_takeover"],
     required: true,
     index: true,
   },
   order: { type: mongoose.Schema.Types.ObjectId, ref: "Order" },
   orderId: { type: String, default: "" }, // human ID (MLC-XXXXXX) for display
+  ticket: { type: mongoose.Schema.Types.ObjectId, ref: "SupportTicket" },
+  ticketId: { type: String, default: "" }, // human ID (TKT-XXXXXX) for display
   message: { type: String, required: true },
   read: { type: Boolean, default: false, index: true },
 }, { timestamps: true });

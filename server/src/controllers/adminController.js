@@ -281,7 +281,7 @@ export const updateSettings = asyncHandler(async (req, res) => {
 // Public (no auth): only the safe checkout subset defined by the model.
 export const publicSettings = asyncHandler(async (req, res) => {
   const settings = await Settings.getStore();
-  res.json({ payments: settings.publicPayments() });
+  res.json({ payments: settings.publicPayments(), chatbot: settings.publicChatbot() });
 });
 
 // ---- Review moderation (anti-defamation gate) ----

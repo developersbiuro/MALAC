@@ -27,6 +27,19 @@ export const authorize = (...roles) => (req, res, next) => {
   }
   next();
 };
+export async function optionalProtect(req, res, next) {
+  const header = req.headers.authorization || "";
+  if (!header.startsWith("Bearer ")) return next();
+  try {
+    const decoded = jwt.verify(header.split(" ")[1], env.jwtSecret);
+    const user = await User.findById(decoded.id).select("-__v");
+    if (user) req.user = user;
+  } catch {
+    // An invalid/expired token on a public route just means "guest".
+  }
+  return next();
+}
+
 export const isStaff = authorize("admin", "vice-admin");
 export const isSuperAdmin = authorize("admin");
 
