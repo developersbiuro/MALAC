@@ -272,7 +272,8 @@ export const updateSettings = asyncHandler(async (req, res) => {
     "defaultShippingFee", "expressShippingFee", "freeShippingThreshold",
     "codEnabled", "cardPaymentsEnabled",
     "jazzcashAccountTitle", "jazzcashAccountNumber",
-    "easypaisaAccountTitle", "easypaisaAccountNumber"];
+    "easypaisaAccountTitle", "easypaisaAccountNumber",
+    "meezanAccountTitle", "meezanAccountNumber"];
   for (const key of allowed) if (req.body[key] !== undefined) settings[key] = req.body[key];
   await settings.save();
   res.json({ settings });
