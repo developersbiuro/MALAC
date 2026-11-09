@@ -1,5 +1,6 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
+import { sendPushToStaff } from "./pushService.js";
 import { sendEmail } from "./emailService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
@@ -18,12 +19,26 @@ async function customerEmailOf(order) {
   return { email, name: user?.name || "Customer" };
 }
 
+const PUSH_TITLES = {
+  order_placed: "MALAC — Naya Order",
+  order_cancelled: "MALAC — Order Cancelled",
+  return_requested: "MALAC — Return Request",
+  support_ticket: "MALAC — Support Ticket",
+  chat_takeover: "MALAC — Chat Message",
+};
+
 export async function notifyStaff(type, order, message) {
   try {
     await Notification.create({ type, order: order._id, orderId: order.orderId, message });
   } catch (err) {
     console.error(`[MALAC] staff notification failed (${type}): ${err.message}`);
   }
+  // Real phone push alongside the in-panel bell (best-effort, never blocks).
+  sendPushToStaff({
+    title: PUSH_TITLES[type] || "MALAC",
+    body: message,
+    data: { type, orderId: order.orderId || "" },
+  }).catch(() => {});
 }
 
 async function mailCustomer(order, build) {

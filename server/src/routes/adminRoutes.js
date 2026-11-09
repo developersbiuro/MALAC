@@ -3,6 +3,7 @@ import { protect, isStaff, isSuperAdmin, requirePermission } from "../middleware
 import * as admin from "../controllers/adminController.js";
 import * as orders from "../controllers/orderController.js";
 import * as chatAdmin from "../controllers/chatAdminController.js";
+import * as push from "../controllers/pushController.js";
 
 const router = Router();
 router.use(protect, isStaff); // whole /admin API requires staff
@@ -12,6 +13,10 @@ router.get("/analytics", admin.analytics);
 // permissions are.
 router.get("/notifications", orders.listNotifications);
 router.post("/notifications/read", orders.markNotificationsRead);
+// Mobile push (FCM) for the Admin app: device registration happens via
+// the app's bridge after staff sign-in; test fires a push to all devices.
+router.post("/push/register", push.registerPushDevice);
+router.post("/push/test", push.testPush);
 // Order work is gated by the "orders" permission; the Dashboard
 // (analytics) above stays visible to every staff account.
 router.get("/orders", requirePermission("orders"), orders.adminListOrders);

@@ -17,6 +17,21 @@ const ICONS = {
 export default function AdminNotifications() {
   const [items, setItems] = useState([]);
   const [error, setError] = useState("");
+  const [pushMsg, setPushMsg] = useState("");
+
+  // Fires a real FCM push to every registered staff phone (Admin app).
+  const sendTestPush = async () => {
+    setPushMsg("Sending…");
+    try {
+      const r = await api.post("/admin/push/test");
+      if (r.data?.sent > 0) setPushMsg(`Test notification bhej di gayi (${r.data.sent} device) — apne phone par check karein.`);
+      else if (r.data?.skipped === "no_devices") setPushMsg("Abhi koi phone registered nahi hai. Pehle nayi MALAC Admin app khol kar sign in karein, phir test karein.");
+      else if (r.data?.skipped === "unconfigured") setPushMsg("Push server abhi configure nahi hua (Firebase key pending hai).");
+      else setPushMsg("Push nahi gayi — thodi der baad dobara try karein.");
+    } catch {
+      setPushMsg("Push bhejne me masla aya — dobara try karein.");
+    }
+  };
 
   useEffect(() => {
     api.get("/admin/notifications")
@@ -33,6 +48,14 @@ export default function AdminNotifications() {
     <div className="max-w-3xl">
       <h1 className="text-xl font-bold">Notifications</h1>
       <p className="text-sm text-gray-500 mt-1">New orders, customer cancellations, return requests, support tickets and chat takeovers appear here — newest first.</p>
+      <div className="bg-white rounded-md border border-cream-line p-3.5 mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <p className="text-sm font-semibold">Mobile push notifications</p>
+          <p className="text-xs text-gray-500 mt-0.5">Naya order ate hi Admin app wale phone par notification jati hai — app band ho tab bhi.</p>
+        </div>
+        <button onClick={sendTestPush} className="btn-lux px-4 py-2 text-sm">Test Notification bhejein</button>
+        {pushMsg && <p className="w-full text-xs text-gray-600">{pushMsg}</p>}
+      </div>
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
       <div className="space-y-2 mt-4">
         {items.map((n) => {

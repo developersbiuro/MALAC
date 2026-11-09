@@ -26,6 +26,7 @@ import SupportTicket from "../models/SupportTicket.js";
 import Notification from "../models/Notification.js";
 import Settings from "../models/Settings.js";
 import Order from "../models/Order.js";
+import { sendPushToStaff } from "../services/pushService.js";
 
 const router = Router();
 
@@ -225,6 +226,11 @@ router.post(
       ticket: ticket._id,
       ticketId: ticket.ticketId,
       message: `New support ticket ${ticket.ticketId} (${type.replace(/_/g, " ")})${orderId ? ` — order ${orderId}` : ""}`,
+    }).catch(() => {});
+    sendPushToStaff({
+      title: "MALAC — Support Ticket",
+      body: `New support ticket ${ticket.ticketId} (${type.replace(/_/g, " ")})${orderId ? ` — order ${orderId}` : ""}`,
+      data: { type: "support_ticket", ticketId: ticket.ticketId },
     }).catch(() => {});
     return res.status(201).json({ ticket: { ticketId: ticket.ticketId, status: ticket.status, type: ticket.type } });
   })

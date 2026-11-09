@@ -13,6 +13,7 @@
 // conversation can be closed, a ticket resolved — nothing is erased.
 import ChatConversation from "../models/ChatConversation.js";
 import SupportTicket from "../models/SupportTicket.js";
+import { sendPushToStaff } from "../services/pushService.js";
 import Notification from "../models/Notification.js";
 import Settings from "../models/Settings.js";
 import User from "../models/User.js";
@@ -75,6 +76,11 @@ export const replyConversation = asyncHandler(async (req, res) => {
     await Notification.create({
       type: "chat_takeover",
       message: `Chatbot conversation taken over by ${req.user.name || "staff"} (${convo.customerName || "guest"})`,
+    }).catch(() => {});
+    sendPushToStaff({
+      title: "MALAC — Chat Takeover",
+      body: `Chat conversation taken over by ${req.user.name || "staff"} (${convo.customerName || "customer"})`,
+      data: { type: "chat_takeover" },
     }).catch(() => {});
   }
   convo.appendMessages([{ from: "admin", text }]);
