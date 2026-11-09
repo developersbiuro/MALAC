@@ -13,7 +13,7 @@ const settingsSchema = new mongoose.Schema({
   expressShippingFee: { type: Number, default: 399 },
   freeShippingThreshold: { type: Number, default: 5000 },
   codEnabled: { type: Boolean, default: true },
-  cardPaymentsEnabled: { type: Boolean, default: true }, // simulated in demo
+  cardPaymentsEnabled: { type: Boolean, default: false }, // card removed from checkout 2026-11-09; no gateway yet
   // JazzCash / Easypaisa manual payment accounts. Defaults come from
   // JAZZCASH_* / EASYPAISA_* env vars (owner-provided shared account);
   // the owner can change them any time in Admin -> Settings.
