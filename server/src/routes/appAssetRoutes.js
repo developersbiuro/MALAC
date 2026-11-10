@@ -62,6 +62,20 @@ router.get("/api/app/version", (req, res) => {
   });
 });
 
+// Admin app version manifest — STAFF-ONLY, like the admin APK itself.
+// The installed MALAC Admin app polls this (with its staff token) on
+// launch and offers an in-app update when a newer admin build ships;
+// the update downloads through the staff-gated /api/admin/app-download
+// above, so the admin app still has no public link. Bump these AND the
+// admin APK's version whenever a new admin build ships.
+router.get("/api/admin/app/version", protect, isStaff, (req, res) => {
+  res.json({
+    versionCode: 4,
+    versionName: "1.3",
+    apkUrl: "/api/admin/app-download",
+  });
+});
+
 // Social share image (og:image / twitter:image) — PUBLIC. Branded
 // 1200x630 PNG built from the official logo artwork (assets/ogImageAssets).
 router.get("/og-image.png", (req, res) => {
