@@ -9,9 +9,9 @@ const settingsSchema = new mongoose.Schema({
   otpSenderEmail: { type: String, default: env.otpSenderEmail },
   otpSenderPhone: { type: String, default: env.otpSenderPhone },
   whatsappSenderNumber: { type: String, default: env.whatsapp.senderNumber },
-  defaultShippingFee: { type: Number, default: 199 },
+  defaultShippingFee: { type: Number, default: 249 },
   expressShippingFee: { type: Number, default: 399 },
-  freeShippingThreshold: { type: Number, default: 5000 },
+  freeShippingThreshold: { type: Number, default: 3000 },
   codEnabled: { type: Boolean, default: true },
   cardPaymentsEnabled: { type: Boolean, default: false }, // card removed from checkout 2026-11-09; no gateway yet
   // JazzCash / Easypaisa manual payment accounts. Defaults come from

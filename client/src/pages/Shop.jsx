@@ -4,6 +4,7 @@ import { Check, SlidersHorizontal, Star, X } from "lucide-react";
 import api from "../api/client.js";
 import ProductCard from "../components/ProductCard.jsx";
 import { useSeo } from "../utils/seo.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 
 // API-supported sort values are sent to the server. "rating" is not one of
 // them (server sortMap has price-asc / price-desc / newest / popular), so
@@ -40,19 +41,22 @@ const RATING_OPTIONS = [0, 1, 2, 3, 4, 5];
 
 // Short, generic descriptions shown when a category is selected — written
 // from the category name only (no invented product specifics). Keys are
-// the store's real category names.
-const CATEGORY_DESCRIPTIONS = {
-  "Mobiles & Tablets": "Shop mobiles and tablets online in Pakistan at MALAC — smartphones, tablets and mobile accessories with prices in PKR, Cash on Delivery, and standard shipping free on orders over Rs. 5,000.",
-  "Electronics": "Shop electronics online in Pakistan at MALAC — LED TVs, audio and cameras for home and everyday use, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
-  "Fashion": "Shop fashion online in Pakistan at MALAC — clothing and footwear for men and women, from embroidered lawn suits and kurta shalwar to everyday shoes, with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
-  "Home & Living": "Shop home and living essentials online in Pakistan at MALAC — furniture, kitchen and bedding picks for every room, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
-  "Beauty & Health": "Shop beauty and health products online in Pakistan at MALAC — skincare, makeup and personal care essentials, with Cash on Delivery and standard shipping free on orders over Rs. 5,000.",
-  "Groceries": "Shop groceries online in Pakistan at MALAC — everyday staples, snacks and beverages for your kitchen, delivered to your door with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
-  "Sports & Fitness": "Shop sports and fitness gear online in Pakistan at MALAC — gym equipment, cricket gear and outdoor essentials, with Cash on Delivery and standard shipping free on orders over Rs. 5,000.",
-  "Toys & Baby": "Shop toys and baby products online in Pakistan at MALAC — toys, diapers and feeding essentials for little ones, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. 5,000.",
-};
+// the store's real category names. The free-shipping figure is the LIVE
+// threshold from Admin → Settings, passed in by the component.
+const buildCategoryDescriptions = (t) => ({
+  "Mobiles & Tablets": `Shop mobiles and tablets online in Pakistan at MALAC — smartphones, tablets and mobile accessories with prices in PKR, Cash on Delivery, and standard shipping free on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Electronics": `Shop electronics online in Pakistan at MALAC — LED TVs, audio and cameras for home and everyday use, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Fashion": `Shop fashion online in Pakistan at MALAC — clothing and footwear for men and women, from embroidered lawn suits and kurta shalwar to everyday shoes, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Home & Living": `Shop home and living essentials online in Pakistan at MALAC — furniture, kitchen and bedding picks for every room, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Beauty & Health": `Shop beauty and health products online in Pakistan at MALAC — skincare, makeup and personal care essentials, with Cash on Delivery and standard shipping free on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Groceries": `Shop groceries online in Pakistan at MALAC — everyday staples, snacks and beverages for your kitchen, delivered to your door with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Sports & Fitness": `Shop sports and fitness gear online in Pakistan at MALAC — gym equipment, cricket gear and outdoor essentials, with Cash on Delivery and standard shipping free on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Toys & Baby": `Shop toys and baby products online in Pakistan at MALAC — toys, diapers and feeding essentials for little ones, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+});
 
 export default function Shop() {
+  const { fees } = usePublicSettings();
+  const CATEGORY_DESCRIPTIONS = buildCategoryDescriptions(fees.freeThreshold);
   const [params] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [sort, setSort] = useState("");
@@ -111,8 +115,8 @@ export default function Shop() {
   useSeo({
     title: !search && !category && !flash ? "Online Shopping in Pakistan — All Products | MALAC" : `${title} — MALAC`,
     description: category
-      ? `Shop ${category} online in Pakistan at MALAC — M.A Luxury Apparel Collection, with Cash on Delivery and free shipping on orders over Rs. 5,000.`
-      : "Online shopping in Pakistan at MALAC — shop all products: mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+      ? `Shop ${category} online in Pakistan at MALAC — M.A Luxury Apparel Collection, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`
+      : `Online shopping in Pakistan at MALAC — shop all products: mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
   });
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">

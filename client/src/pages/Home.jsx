@@ -8,17 +8,20 @@ import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 
 import { useSeo } from "../utils/seo.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 
-const TRUST = [
+const buildTrust = (fees) => [
   { Icon: BadgeCheck, label: "Cash on Delivery Available" },
-  { Icon: Truck, label: "Free Shipping Over Rs. 5,000" },
+  { Icon: Truck, label: `Free Shipping Over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}` },
   { Icon: ShieldCheck, label: "Secure Ordering" },
   { Icon: MapPin, label: "Nationwide Delivery" },
 ];
 
 // FAQ answers mirror the store's real rules in Terms of Service /
 // Privacy Policy — keep the visible text and the FAQPage JSON-LD in sync.
-const FAQS = [
+// Delivery figures come from the live store Settings (Admin → Settings)
+// via usePublicSettings, like everywhere else on the storefront.
+const buildFaqs = (fees) => [
   {
     q: "How do I place an order on MALAC?",
     a: "Create a MALAC account or sign in — an account is required to place an order. Add the items you like to your cart, go to checkout, confirm your delivery address and payment method, and place your order. Every order is reviewed and confirmed by our team before it is packed and dispatched.",
@@ -29,7 +32,7 @@ const FAQS = [
   },
   {
     q: "When is shipping free?",
-    a: "Standard shipping is free on orders over Rs. 5,000. On smaller orders, standard delivery is Rs. 199 on most orders (the exact fee for an item is shown on its product page). Express delivery is available at checkout for Rs. 399 where offered. We deliver nationwide across Pakistan through courier partners including TCS, Leopards and Trax.",
+    a: `Standard shipping is free on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}. On smaller orders, standard delivery is Rs. ${fees.standard} on most orders (the exact fee for an item is shown on its product page). Express delivery is available at checkout for Rs. ${fees.express} where offered. We deliver nationwide across Pakistan through courier partners including TCS, Leopards and Trax.`,
   },
   {
     q: "How can I track my order?",
@@ -46,9 +49,12 @@ const FAQS = [
 ];
 
 export default function Home() {
+  const { fees } = usePublicSettings();
+  const TRUST = buildTrust(fees);
+  const FAQS = buildFaqs(fees);
   useSeo({
     title: "MALAC — Online Shopping in Pakistan | M.A Luxury Apparel Collection",
-    description: "Online shopping in Pakistan at MALAC — mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+    description: `Online shopping in Pakistan at MALAC — mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -164,8 +170,8 @@ export default function Home() {
           </p>
           <p>
             Ordering is straightforward: pay with Cash on Delivery, or by JazzCash / Easypaisa / bank (Meezan, NayaPay, SadaPay, FirstPay) transfer with a
-            payment screenshot our team verifies before dispatch. Standard delivery is Rs. 199 on most orders and
-            free on orders over Rs. 5,000, and we deliver nationwide through courier partners including TCS,
+            payment screenshot our team verifies before dispatch. Standard delivery is Rs. {fees.standard} on most orders and
+            free on orders over Rs. {fees.freeThreshold.toLocaleString("en-PK")}, and we deliver nationwide through courier partners including TCS,
             Leopards and Trax. Once your order is placed, you can follow it any time from the Track Your Order page.
           </p>
         </div>

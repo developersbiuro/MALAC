@@ -5,9 +5,11 @@ import api from "../api/client.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs } from "../utils/format.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 import { useSeo } from "../utils/seo.js";
 
 export default function CartPage() {
+  const { fees } = usePublicSettings();
   const { items, updateQty, remove, subtotal, clear } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export default function CartPage() {
   };
 
   const discount = coupon?.discount || 0;
-  const shipping = items.length === 0 ? 0 : (subtotal - discount >= 5000 ? 0 : 199);
+  const shipping = items.length === 0 ? 0 : (subtotal - discount >= fees.freeThreshold ? 0 : fees.standard);
   const total = subtotal - discount + shipping;
 
   const goCheckout = () => {

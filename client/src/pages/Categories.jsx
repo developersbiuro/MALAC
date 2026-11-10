@@ -4,19 +4,21 @@ import * as icons from "lucide-react";
 import { ArrowRight } from "lucide-react";
 import api from "../api/client.js";
 import { useSeo } from "../utils/seo.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 
 // Daraz-pattern category browser (MALAC's own cream/ink theme): a left
 // rail of top-level categories and a right pane showing the selected
 // category's sub-categories as tappable tiles. Data is the same DB-driven
 // GET /api/categories the Header and Home use — nothing is hardcoded.
 export default function Categories() {
+  const { fees } = usePublicSettings();
   const [params] = useSearchParams();
   const [categories, setCategories] = useState([]);
   const [selected, setSelected] = useState("");
 
   useSeo({
     title: "Shop by Category — MALAC",
-    description: "Browse MALAC categories online in Pakistan — mobiles, electronics, fashion, home & living, beauty, groceries and more, with Cash on Delivery and free shipping on orders over Rs. 5,000.",
+    description: `Browse MALAC categories online in Pakistan — mobiles, electronics, fashion, home & living, beauty, groceries and more, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
   });
 
   useEffect(() => {

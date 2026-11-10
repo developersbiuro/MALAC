@@ -2,14 +2,16 @@ import { Link } from "react-router-dom";
 import { X, Trash2, CheckCircle2, Truck } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { rs, FREE_SHIPPING_THRESHOLD } from "../utils/format.js";
+import { rs } from "../utils/format.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 
 export default function CartDrawer() {
+  const { fees } = usePublicSettings();
   const { items, drawerOpen, setDrawerOpen, updateQty, remove, subtotal } = useCart();
   const { user } = useAuth();
   if (!drawerOpen || !user) return null;
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const progress = Math.min(100, Math.round((subtotal / FREE_SHIPPING_THRESHOLD) * 100));
+  const remaining = Math.max(0, fees.freeThreshold - subtotal);
+  const progress = Math.min(100, Math.round((subtotal / fees.freeThreshold) * 100));
   return (
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />

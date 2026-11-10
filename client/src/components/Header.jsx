@@ -5,12 +5,14 @@ import api from "../api/client.js";
 import { LOGO_FULL } from "../assets/logo.js";
 import InstallAppButton from "./InstallAppButton.jsx";
 import { useAppMode } from "../utils/appMode.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { rs, priceOf } from "../utils/format.js";
 
 export default function Header() {
+  const { fees } = usePublicSettings();
   const appMode = useAppMode();
   const { user, logout, isStaff } = useAuth();
   const { count, setDrawerOpen } = useCart();
@@ -45,7 +47,7 @@ export default function Header() {
     <header className="sticky top-0 z-40 bg-white shadow-sm">
       <div className="bg-lux-ink text-cream-soft text-xs">
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex flex-col items-center gap-0.5 text-center sm:flex-row sm:justify-between sm:text-left">
-          <span><span className="text-lux-pale font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> <span className="block sm:inline">Free Shipping on Orders Over Rs. 5,000</span></span>
+          <span><span className="text-lux-pale font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> <span className="block sm:inline">Free Shipping on Orders Over {rs(fees.freeThreshold)}</span></span>
           <span className="hidden sm:flex gap-3">
             <Link to="/track-order" className="hover:text-lux-pale">Track Order</Link>
             {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-lux-pale"><ShieldCheck size={12} /> Admin</Link>}

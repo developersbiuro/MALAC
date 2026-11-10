@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 import { MessageCircle, Mail, Smartphone } from "lucide-react";
 import { LOGO_FULL } from "../assets/logo.js";
 import InstallAppButton from "./InstallAppButton.jsx";
+import { rs } from "../utils/format.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 
 const COURIERS = ["TCS", "Leopards", "Trax"];
 const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Faisalabad"];
@@ -20,6 +22,7 @@ const CATEGORIES = [
 ];
 
 export default function Footer() {
+  const { fees } = usePublicSettings();
   return (
     <footer className="bg-cream-soft mt-12 border-t border-cream-line pb-24 md:pb-0">
       <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
@@ -57,7 +60,7 @@ export default function Footer() {
               <span key={c} className="bg-white border border-cream-line rounded-full px-3 py-1 text-xs font-medium text-gray-600">{c}</span>
             ))}
           </p>
-          <p className="text-gray-500 mt-3">Standard delivery Rs. 199 · <span className="text-[#059669] font-medium">FREE over Rs. 5,000</span></p>
+          <p className="text-gray-500 mt-3">Standard delivery {rs(fees.standard)} · <span className="text-[#059669] font-medium">FREE over {rs(fees.freeThreshold)}</span></p>
         </div>
         <div>
           <p className="eyebrow !text-[10px] mb-3">Payments</p>

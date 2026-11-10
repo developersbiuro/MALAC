@@ -68,11 +68,11 @@ const FAQS = [
   },
   {
     keys: ["delivery", "shipping", "charges", "kitne din", "kab milega", "kab ayega", "ship"],
-    text: "Delivery pure Pakistan me 2–5 working days me ho jati hai. Standard delivery Rs. 199 aur Express Rs. 399 hai — aur Rs. 5,000 se zyada ke orders par delivery bilkul FREE hai.",
+    text: "Delivery pure Pakistan me 2–5 working days me ho jati hai. Standard delivery Rs. 249 aur Express Rs. 399 hai — aur Rs. 3,000 se zyada ke orders par delivery bilkul FREE hai.",
   },
   {
     keys: ["free shipping", "free delivery"],
-    text: "Ji haan — Rs. 5,000 ya us se zyada ke order par delivery FREE hai. Us se kam par standard delivery Rs. 199 hai.",
+    text: "Ji haan — Rs. 3,000 ya us se zyada ke order par delivery FREE hai. Us se kam par standard delivery Rs. 249 hai.",
   },
   {
     keys: ["login", "sign up", "account", "order karna", "checkout", "password bhool", "forgot"],
@@ -131,7 +131,7 @@ export default function ChatWidget() {
   const [busy, setBusy] = useState(false);
   const [messages, setMessages] = useState([]);
   const [config, setConfig] = useState(null); // { enabled, name, welcome }
-  const [fees, setFees] = useState({ std: 199, exp: 399, free: 5000 }); // live Settings, fetched below
+  const [fees, setFees] = useState({ std: 249, exp: 399, free: 3000 }); // live Settings, fetched below
   const [takeover, setTakeover] = useState(false);
   const [addedKey, setAddedKey] = useState("");
   const scrollRef = useRef(null);
@@ -154,9 +154,9 @@ export default function ChatWidget() {
       .then((r) => {
         const p = r.data.payments || {};
         setFees({
-          std: p.defaultShippingFee ?? 199,
+          std: p.defaultShippingFee ?? 249,
           exp: p.expressShippingFee ?? 399,
-          free: p.freeShippingThreshold ?? 5000,
+          free: p.freeShippingThreshold ?? 3000,
         });
       })
       .catch(() => {});
@@ -265,7 +265,7 @@ export default function ChatWidget() {
       push(botSay("Aap ka cart abhi khaali hai. Koi product pasand aye to card par 'Add to Cart' dabayein, ya mujhe naam likh dein — main dhundh deta hoon.", { quick: true }));
       return;
     }
-    push(botSay(`Aap ke cart me ${cart.count} item(s) hain — kul Rs. ${cart.subtotal.toLocaleString("en-PK")} (delivery alag, Rs. 5,000+ par FREE).`, { cartView: true }));
+    push(botSay(`Aap ke cart me ${cart.count} item(s) hain — kul Rs. ${cart.subtotal.toLocaleString("en-PK")} (delivery alag, Rs. ${fees.free.toLocaleString("en-PK")}+ par FREE).`, { cartView: true }));
   };
 
   // ---- Order tracking (Daraz-style picker, as before) ----

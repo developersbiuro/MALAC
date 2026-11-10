@@ -1,6 +1,7 @@
 import Order, { CUSTOMER_CANCEL_REASONS, ADMIN_CANCEL_REASONS, MANUAL_PAYMENT_METHODS } from "../models/Order.js";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
+import Settings from "../models/Settings.js";
 import env from "../config/env.js";
 import { sendEmail } from "./emailService.js";
 import { reviewInviteEmail } from "./emailTemplates.js";
@@ -69,7 +70,13 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
       if (!transactionId) throw new Error(`${paymentMethod}: transaction ID is required`);
       if (!senderAccount) throw new Error(`${paymentMethod}: sender account number is required`);
     }
-    const shipping = deliveryMethod === "Express" ? 399 : (subtotal - discount >= 5000 ? 0 : 199);
+  // Delivery charges come from the live store Settings (Admin →
+  // Settings) — the panel values are the single source of truth for
+  // every order; never hardcode them here.
+  const store = await Settings.getStore();
+  const shipping = deliveryMethod === "Express"
+    ? store.expressShippingFee
+    : (subtotal - discount >= store.freeShippingThreshold ? 0 : store.defaultShippingFee);
   const total = subtotal - discount + shipping;
   // Stock is claimed ATOMICALLY before the coupon is redeemed: each
   // decrement is a single conditional update that only succeeds when

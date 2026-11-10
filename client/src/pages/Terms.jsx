@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import LegalPage, { LegalSection } from "../components/LegalPage.jsx";
 import { useSeo } from "../utils/seo.js";
+import { rs } from "../utils/format.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 
 export default function Terms() {
+  const { fees } = usePublicSettings();
   useSeo({
     title: "Terms of Service — MALAC",
     description: "MALAC's terms of service: ordering, Cash on Delivery and JazzCash/Easypaisa payments, delivery, returns and cancellations.",
@@ -35,7 +38,7 @@ export default function Terms() {
       </LegalSection>
 
       <LegalSection title="4. Delivery & Shipping">
-        <p>We deliver nationwide across Pakistan through trusted courier partners, including TCS, Leopards and Trax. Standard delivery is Rs. 199 on most orders (the exact fee for an item is shown on its product page), and standard shipping is <b>FREE on orders over Rs. 5,000</b>. Express delivery is available at checkout for Rs. 399 where offered.</p>
+        <p>We deliver nationwide across Pakistan through trusted courier partners, including TCS, Leopards and Trax. Standard delivery is {rs(fees.standard)} on most orders (the exact fee for an item is shown on its product page), and standard shipping is <b>FREE on orders over {rs(fees.freeThreshold)}</b>. Express delivery is available at checkout for {rs(fees.express)} where offered.</p>
         <p>Delivery timelines shown during checkout are estimates and may vary by city and courier. You can follow your order at any time from the Track Your Order page once you are signed in.</p>
       </LegalSection>
 

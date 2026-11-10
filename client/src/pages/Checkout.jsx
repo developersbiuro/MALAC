@@ -91,9 +91,9 @@ export default function Checkout() {
   const discount = coupon?.discount || 0;
   const shipping = useMemo(() => {
     if (items.length === 0) return 0;
-    if (deliveryMethod === "Express") return 399;
-    return subtotal - discount >= 5000 ? 0 : 199;
-  }, [items, deliveryMethod, subtotal, discount]);
+    if (deliveryMethod === "Express") return wallets?.expressShippingFee ?? 399;
+    return subtotal - discount >= (wallets?.freeShippingThreshold ?? 3000) ? 0 : (wallets?.defaultShippingFee ?? 249);
+  }, [items, deliveryMethod, subtotal, discount, wallets]);
   const total = subtotal - discount + shipping;
   const isManual = MANUAL.includes(paymentMethod);
   const walletInfo = isManual && wallets ? wallets[WALLET_KEY[paymentMethod]] : null;
@@ -213,8 +213,8 @@ export default function Checkout() {
 
         {step === 1 && (
           <div className="space-y-3 text-sm">
-            {[{ m: "Standard", fee: subtotal - discount >= 5000 ? 0 : 199, note: `Get it by ${deliveryWindow("Standard")}` },
-              { m: "Express", fee: 399, note: `Get it by ${deliveryWindow("Express")}` }].map((o) => (
+            {[{ m: "Standard", fee: subtotal - discount >= (wallets?.freeShippingThreshold ?? 3000) ? 0 : (wallets?.defaultShippingFee ?? 249), note: `Get it by ${deliveryWindow("Standard")}` },
+              { m: "Express", fee: wallets?.expressShippingFee ?? 399, note: `Get it by ${deliveryWindow("Express")}` }].map((o) => (
               <label key={o.m} className={`flex gap-3 border rounded p-3 cursor-pointer ${deliveryMethod === o.m ? "border-brand bg-brand-light" : ""}`}>
                 <input type="radio" checked={deliveryMethod === o.m} onChange={() => setDeliveryMethod(o.m)} />
                 <Truck size={18} className="text-brand" />
