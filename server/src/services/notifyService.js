@@ -27,6 +27,22 @@ const PUSH_TITLES = {
   chat_takeover: "MALAC — Chat Message",
 };
 
+// Display name for notifications: the name on the order's delivery
+// address is the name the customer ordered as; fall back to the
+// account name. Staff pushes carry the customer's name (Daraz-style:
+// "new order — <customer>"), and customer pushes greet by first name.
+async function customerNameOf(order) {
+  const fromAddress = (order.address?.fullName || "").trim();
+  if (fromAddress) return fromAddress;
+  try {
+    const user = await User.findById(order.user).select("name").lean();
+    return (user?.name || "").trim() || "Customer";
+  } catch {
+    return "Customer";
+  }
+}
+const firstNameOf = (name) => (name || "Customer").trim().split(/\s+/)[0];
+
 export async function notifyStaff(type, order, message) {
   try {
     await Notification.create({ type, order: order._id, orderId: order.orderId, message });
@@ -60,11 +76,12 @@ function pushCustomer(order, title, body) {
   sendPushToUser(order.user, { title, body, data: { orderId: order.orderId || "" } }).catch(() => {});
 }
 
-export function onOrderPlaced(order) {
+export async function onOrderPlaced(order) {
+  const name = await customerNameOf(order);
   pushCustomer(order, "MALAC — Order confirm ho gaya",
-    `Aap ka order ${order.orderId} place ho gaya hai — Rs. ${Number(order.total).toLocaleString("en-PK")}. Hum jald confirm karke ship kar dein ge.`);
+    `Shukriya ${firstNameOf(name)}! Aap ka order ${order.orderId} place ho gaya hai — Rs. ${Number(order.total).toLocaleString("en-PK")}. Hum jald confirm karke ship kar dein ge.`);
   notifyStaff("order_placed", order,
-    `New order ${order.orderId} placed — Rs. ${Number(order.total).toLocaleString("en-PK")} · ${order.paymentMethod}`);
+    `Naya order ${order.orderId} — ${name} · Rs. ${Number(order.total).toLocaleString("en-PK")} · ${order.paymentMethod}`);
   mailCustomer(order, {
     subject: `MALAC order confirmed — ${order.orderId}`,
     heading: "Thank you — your order is confirmed",
@@ -72,12 +89,13 @@ export function onOrderPlaced(order) {
   });
 }
 
-export function onOrderCancelled(order, by) {
+export async function onOrderCancelled(order, by) {
+  const name = await customerNameOf(order);
   pushCustomer(order, "MALAC — Order cancelled",
-    `Aap ka order ${order.orderId} cancel ho gaya hai${order.cancelReason ? ` (${order.cancelReason})` : ""}.`);
+    `${firstNameOf(name)}, aap ka order ${order.orderId} cancel ho gaya hai${order.cancelReason ? ` (${order.cancelReason})` : ""}.`);
   if (by === "customer") {
     notifyStaff("order_cancelled", order,
-      `Order ${order.orderId} cancelled by the customer — ${order.cancelReason || "no reason given"}`);
+      `Order ${order.orderId} — ${name} ne cancel kar diya — ${order.cancelReason || "no reason given"}`);
   }
   mailCustomer(order, {
     subject: `MALAC order cancelled — ${order.orderId}`,
@@ -89,9 +107,10 @@ export function onOrderCancelled(order, by) {
   });
 }
 
-export function onOrderShipped(order) {
+export async function onOrderShipped(order) {
+  const name = await customerNameOf(order);
   pushCustomer(order, "MALAC — Order ship ho gaya",
-    `Aap ka order ${order.orderId} rawaana ho gaya hai${order.courier ? ` via ${order.courier}` : ""}${order.trackingId ? ` — tracking ${order.trackingId}` : ""}.`);
+    `${firstNameOf(name)}, aap ka order ${order.orderId} rawaana ho gaya hai${order.courier ? ` via ${order.courier}` : ""}${order.trackingId ? ` — tracking ${order.trackingId}` : ""}.`);
   const courierLine = order.courier
     ? ` via ${order.courier}${order.trackingId ? ` (tracking ID ${order.trackingId})` : ""}`
     : "";
@@ -105,14 +124,16 @@ export function onOrderShipped(order) {
   });
 }
 
-export function onOrderDelivered(order) {
+export async function onOrderDelivered(order) {
+  const name = await customerNameOf(order);
   pushCustomer(order, "MALAC — Order deliver ho gaya",
-    `Aap ka order ${order.orderId} deliver ho gaya hai. Shopping ke liye shukriya! Apna review zaroor dein.`);
+    `${firstNameOf(name)}, aap ka order ${order.orderId} deliver ho gaya hai. Shopping ke liye shukriya! Apna review zaroor dein.`);
 }
 
-export function onReturnRequested(order) {
+export async function onReturnRequested(order) {
+  const name = await customerNameOf(order);
   notifyStaff("return_requested", order,
-    `Return requested for order ${order.orderId} — ${order.returnReason || "no reason given"}`);
+    `Return request — ${name} · order ${order.orderId} — ${order.returnReason || "no reason given"}`);
   mailCustomer(order, {
     subject: `MALAC return request received — ${order.orderId}`,
     heading: "We received your return request",

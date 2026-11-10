@@ -55,10 +55,10 @@ router.get("/api/admin/app-download", protect, isStaff, sendApk(adminApk, "MALAC
 // in the APK (AndroidManifest + MainActivity) whenever a new APK ships.
 router.get("/api/app/version", (req, res) => {
   res.json({
-    versionCode: 3,
-    versionName: "1.2",
+    versionCode: 4,
+    versionName: "1.3",
     apkUrl: "/download/malac-app.apk",
-    notes: "Push notifications for your orders (confirm, ship, deliver), app-style layout, My Account, MALAC Assistant",
+    notes: "Notifications ab Daraz-style ayengi — app pehle launch par notification, photos aur location ki permission khud mangegi; order updates naam ke sath",
   });
 });
 
