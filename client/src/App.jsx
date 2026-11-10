@@ -27,6 +27,7 @@ import ResetPassword from "./pages/ResetPassword.jsx";
 import ForgotPassword from "./pages/ForgotPassword.jsx";
 import NotFound from "./pages/NotFound.jsx";
 import Terms from "./pages/Terms.jsx";
+import About from "./pages/About.jsx";
 import Policy from "./pages/Policy.jsx";
 
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
@@ -133,6 +134,7 @@ export default function App() {
             approval) and customers (?type=customer, self-service) */}
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/terms" element={<Terms />} />
+        <Route path="/about" element={<About />} />
         <Route path="/policy" element={<Policy />} />
         <Route path="/admin/*" element={<AdminShell />} />
         <Route path="*" element={<NotFound />} />

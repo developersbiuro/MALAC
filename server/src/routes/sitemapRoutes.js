@@ -50,6 +50,7 @@ router.get("/sitemap.xml", async (req, res) => {
     { loc: `${SITE_URL}/`, lastmod: today, changefreq: "daily", priority: "1.0" },
     { loc: `${SITE_URL}/shop`, lastmod: today, changefreq: "daily", priority: "0.9" },
     { loc: `${SITE_URL}/track-order`, lastmod: today, changefreq: "weekly", priority: "0.5" },
+    { loc: `${SITE_URL}/about`, lastmod: today, changefreq: "monthly", priority: "0.4" },
     { loc: `${SITE_URL}/terms`, lastmod: today, changefreq: "monthly", priority: "0.3" },
     { loc: `${SITE_URL}/policy`, lastmod: today, changefreq: "monthly", priority: "0.3" },
   ];

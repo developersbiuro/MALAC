@@ -70,6 +70,17 @@ export default function ProductDetails() {
             image: seoImage ? [seoImage] : ["https://www.malac.pp.ua/og-image.png"],
             description: seoDescription,
             sku: product.sku || undefined,
+            category: product.category || undefined,
+            brand: { "@type": "Brand", "name": "MALAC" },
+            ...(product.ratingCount > 0 && product.ratingAvg > 0
+              ? {
+                  aggregateRating: {
+                    "@type": "AggregateRating",
+                    ratingValue: product.ratingAvg,
+                    reviewCount: product.ratingCount,
+                  },
+                }
+              : {}),
             offers: {
               "@type": "Offer",
               url: `https://www.malac.pp.ua/product/${product.slug}`,
