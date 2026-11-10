@@ -25,7 +25,12 @@ function serviceAccount() {
     return null;
   }
   try {
-    const sa = JSON.parse(raw);
+    // The env var may hold the JSON either raw or base64-encoded (the
+    // base64 form survives dashboard paste/copy without escaping issues).
+    const text = raw.trim().startsWith("{")
+      ? raw
+      : Buffer.from(raw.trim(), "base64").toString("utf8");
+    const sa = JSON.parse(text);
     if (!sa.project_id || !sa.client_email || !sa.private_key) throw new Error("missing fields");
     return sa;
   } catch (err) {
