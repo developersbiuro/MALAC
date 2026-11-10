@@ -9,6 +9,7 @@ import { useWishlist } from "../context/WishlistContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { rs, priceOf, discountPct, deliveryWindow } from "../utils/format.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
+import { colorHex } from "../utils/colors.js";
 import { useSeo } from "../utils/seo.js";
 
 export default function ProductDetails() {
@@ -225,13 +226,15 @@ export default function ProductDetails() {
               <p className="text-[#059669] text-sm font-semibold mt-1">You Save {rs(product.basePrice - product.salePrice)} ({discountPct(product)}%)</p>
             </>}
           </div>
+          <p className="text-xs text-gray-500 mt-2">Unit: <b className="text-gray-700">{product.unitQty || 1} {product.unit || "Pc"}</b></p>
           {Object.entries(groups).map(([name, variants]) => (
             <div key={name} className="mt-4">
               <p className="text-sm text-gray-500">{name}: <b className="text-gray-800">{selected[name]?.value || "Select"}</b></p>
               <div className="flex gap-2 mt-1.5 flex-wrap">
                 {variants.map((v) => (
                   <button key={v._id} onClick={() => setSelected((s) => ({ ...s, [name]: v }))}
-                    className={`border rounded px-3 py-1.5 text-sm ${selected[name]?._id === v._id ? "border-lux-amber text-lux-burnt" : ""}`}>
+                    className={`border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 ${selected[name]?._id === v._id ? "border-lux-amber text-lux-burnt" : ""}`}>
+                    {/colou?r/i.test(name) && colorHex(v.value) && <span className="w-3.5 h-3.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: colorHex(v.value) }} />}
                     {v.value}{v.priceDelta ? ` (+${rs(v.priceDelta)})` : ""}
                   </button>
                 ))}

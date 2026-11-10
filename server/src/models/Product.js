@@ -25,6 +25,10 @@ const productSchema = new mongoose.Schema({
   basePrice: { type: Number, required: true, min: 0 },
   salePrice: { type: Number, default: 0, min: 0 }, // 0 = no sale
   stock: { type: Number, default: 0, min: 0 },
+  // Pack/unit the price buys: unitQty + unit — e.g. 1 Pc, 2 Pc,
+  // 500 ml, 1 kg. Set per product in the admin form.
+  unit: { type: String, default: "Pc" },
+  unitQty: { type: Number, default: 1, min: 0 },
   sku: { type: String, required: true, unique: true, uppercase: true },
   variants: [variantSchema],
   tags: [{ type: String }],
