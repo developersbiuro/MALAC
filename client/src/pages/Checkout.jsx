@@ -44,6 +44,14 @@ export default function Checkout() {
     api.get("/settings/public").then((r) => setWallets(r.data.payments)).catch(() => setWallets(null));
   }, []);
 
+  // The owner's Settings switch: COD disabled in Admin → Settings hides
+  // the COD option here (the server refuses COD orders too), and a
+  // pre-selected COD moves to the first manual method.
+  const codOff = wallets != null && wallets.codEnabled === false;
+  useEffect(() => {
+    if (codOff && paymentMethod === "COD") setPaymentMethod("JazzCash");
+  }, [codOff, paymentMethod]);
+
   // Picking a saved address fills the whole form — including its
   // live-location pin when it has one, so the pin rides into the order.
   const pickSaved = (id) => {
@@ -231,7 +239,7 @@ export default function Checkout() {
 
         {step === 2 && (
           <div className="space-y-3 text-sm">
-            {methodCard("COD", Banknote, "Cash on Delivery", "Pay in cash when your order arrives.")}
+            {!codOff && methodCard("COD", Banknote, "Cash on Delivery", "Pay in cash when your order arrives.")}
             {methodCard("JazzCash", Smartphone, "JazzCash (Manual Transfer)",
               walletInfo && paymentMethod === "JazzCash" ? "" : "Send money to the store JazzCash account, then upload the screenshot.")}
             {methodCard("Easypaisa", Smartphone, "Easypaisa (Manual Transfer)",
@@ -251,7 +259,7 @@ export default function Checkout() {
                 : !walletInfo?.configured ? (
                   <p className="text-amber-600">
                     The store has not configured its {paymentMethod} account yet, so this method is
-                    unavailable right now. Please choose COD.
+                    unavailable right now. {codOff ? "Please choose another payment method." : "Please choose COD."}
                   </p>
                 ) : (
                   <>

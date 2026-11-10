@@ -10,8 +10,8 @@ import ProductCard from "../components/ProductCard.jsx";
 import { useSeo } from "../utils/seo.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
 
-const buildTrust = (fees) => [
-  { Icon: BadgeCheck, label: "Cash on Delivery Available" },
+const buildTrust = (fees, codOn = true) => [
+  ...(codOn ? [{ Icon: BadgeCheck, label: "Cash on Delivery Available" }] : []),
   { Icon: Truck, label: `Free Shipping Over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}` },
   { Icon: ShieldCheck, label: "Secure Ordering" },
   { Icon: MapPin, label: "Nationwide Delivery" },
@@ -49,8 +49,8 @@ const buildFaqs = (fees) => [
 ];
 
 export default function Home() {
-  const { fees } = usePublicSettings();
-  const TRUST = buildTrust(fees);
+  const { fees, payments } = usePublicSettings();
+  const TRUST = buildTrust(fees, payments?.codEnabled !== false);
   const FAQS = buildFaqs(fees);
   useSeo({
     title: "MALAC — Online Shopping in Pakistan | M.A Luxury Apparel Collection",

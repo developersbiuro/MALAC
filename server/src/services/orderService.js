@@ -74,6 +74,11 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
   // Settings) — the panel values are the single source of truth for
   // every order; never hardcode them here.
   const store = await Settings.getStore();
+  // The owner's Settings switch rules here too: with Cash on Delivery
+  // disabled in Admin → Settings, a COD order is refused outright.
+  if ((paymentMethod || "COD") === "COD" && store.codEnabled === false) {
+    throw new Error("Cash on Delivery is not available right now — please choose a bank/wallet transfer method");
+  }
   const shipping = deliveryMethod === "Express"
     ? store.expressShippingFee
     : (subtotal - discount >= store.freeShippingThreshold ? 0 : store.defaultShippingFee);

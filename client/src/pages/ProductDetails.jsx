@@ -13,7 +13,7 @@ import { colorHex } from "../utils/colors.js";
 import { useSeo } from "../utils/seo.js";
 
 export default function ProductDetails() {
-  const { fees } = usePublicSettings();
+  const { fees, payments } = usePublicSettings();
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -288,7 +288,7 @@ export default function ProductDetails() {
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 mt-2.5 text-[12px] text-gray-500">
           <span className="flex items-center gap-1"><Lock size={13} className="text-[#059669]" /> SSL Secured Checkout</span>
           <span className="flex items-center gap-1"><Truck size={13} className="text-[#059669]" /> Free Shipping Over {rs(fees.freeThreshold)}</span>
-          <span className="flex items-center gap-1"><BadgeCheck size={13} className="text-[#059669]" /> Cash on Delivery</span>
+          {payments?.codEnabled !== false && <span className="flex items-center gap-1"><BadgeCheck size={13} className="text-[#059669]" /> Cash on Delivery</span>}
         </div>
       </div>
 
