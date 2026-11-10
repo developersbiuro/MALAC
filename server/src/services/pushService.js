@@ -131,3 +131,16 @@ export async function sendPushToUser(userId, { title, body, data } = {}) {
     return { sent: 0, error: err.message };
   }
 }
+
+// Broadcast to EVERY registered customer device — new-product and
+// flash-sale announcements, and staff-composed campaigns from the
+// admin panel. Sequential sends are fine at this store's scale.
+export async function sendPushToAllCustomers({ title, body, data } = {}) {
+  try {
+    const devices = await PushDevice.find({ active: true, app: "customer" }).select("token").lean();
+    return await sendToDevices(devices, { title, body, data });
+  } catch (err) {
+    console.error(`[MALAC] customer broadcast failed: ${err.message}`);
+    return { sent: 0, error: err.message };
+  }
+}

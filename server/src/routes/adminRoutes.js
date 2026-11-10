@@ -17,6 +17,7 @@ router.post("/notifications/read", orders.markNotificationsRead);
 // the app's bridge after staff sign-in; test fires a push to all devices.
 router.post("/push/register", push.registerPushDevice);
 router.post("/push/test", push.testPush);
+router.post("/push/broadcast", push.broadcastToCustomers);
 // Order work is gated by the "orders" permission; the Dashboard
 // (analytics) above stays visible to every staff account.
 router.get("/orders", requirePermission("orders"), orders.adminListOrders);

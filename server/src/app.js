@@ -20,6 +20,7 @@ import feedRoutes from "./routes/feedRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
 import appAssetRoutes from "./routes/appAssetRoutes.js";
+import cronRoutes from "./routes/cronRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { securityHeaders } from "./middleware/securityHeaders.js";
@@ -160,6 +161,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/assistant", assistantRoutes);
 app.use("/api/push", pushRoutes);
+app.use(cronRoutes); // /api/cron/* — Vercel Cron only, Bearer-guarded
 
 app.use(notFound);
 app.use(errorHandler);

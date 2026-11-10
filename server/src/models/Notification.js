@@ -9,7 +9,7 @@ import mongoose from "mongoose";
 const notificationSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["order_placed", "order_cancelled", "return_requested", "support_ticket", "chat_takeover"],
+    enum: ["order_placed", "order_cancelled", "order_delivered", "return_requested", "support_ticket", "chat_takeover"],
     required: true,
     index: true,
   },

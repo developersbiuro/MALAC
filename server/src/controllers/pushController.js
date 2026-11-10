@@ -1,5 +1,5 @@
 import PushDevice from "../models/PushDevice.js";
-import { sendPushToStaff } from "../services/pushService.js";
+import { sendPushToStaff, sendPushToAllCustomers } from "../services/pushService.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 // POST /api/admin/push/register — the MALAC Admin app calls this (via the
@@ -31,6 +31,23 @@ export const testPush = asyncHandler(async (req, res) => {
     title: "MALAC — Test Notification",
     body: "Push notifications kaam kar rahe hain. Naye order par aisi hi notification ayegi.",
     data: { type: "test" },
+  });
+  return res.json(result);
+});
+
+// POST /api/admin/push/broadcast — staff-composed announcement (flash
+// sales, offers) to EVERY registered customer device, from the composer
+// on Admin → Notifications. Staff-only via the /admin router chain.
+export const broadcastToCustomers = asyncHandler(async (req, res) => {
+  const title = typeof req.body?.title === "string" ? req.body.title.trim().slice(0, 60) : "";
+  const body = typeof req.body?.body === "string" ? req.body.body.trim().slice(0, 180) : "";
+  if (!title || !body) {
+    return res.status(400).json({ message: "Title aur message dono lazmi hain." });
+  }
+  const result = await sendPushToAllCustomers({
+    title,
+    body,
+    data: { type: "broadcast" },
   });
   return res.json(result);
 });

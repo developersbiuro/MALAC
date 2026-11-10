@@ -107,6 +107,13 @@ const orderSchema = new mongoose.Schema({
   // Set once when the "your order was delivered — please review" email goes
   // out (first transition into Delivered), so status re-saves never re-send.
   reviewEmailSentAt: { type: Date },
+  // Daily review-reminder pushes (cron): when the last reminder push
+  // went to this customer for this order, and how many have gone in
+  // total. Reminders stop the moment every product in the order is
+  // reviewed, or 30 days after delivery — see
+  // services/reviewReminderService.js.
+  reviewReminderLastSentAt: { type: Date },
+  reviewReminderCount: { type: Number, default: 0 },
   status: { type: String, enum: ORDER_STATUSES, default: "Pending", index: true },
   statusHistory: [statusEntrySchema],
   address: {

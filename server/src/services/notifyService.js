@@ -1,6 +1,6 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
-import { sendPushToStaff, sendPushToUser } from "./pushService.js";
+import { sendPushToStaff, sendPushToUser, sendPushToAllCustomers } from "./pushService.js";
 import { sendEmail } from "./emailService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
@@ -22,6 +22,7 @@ async function customerEmailOf(order) {
 const PUSH_TITLES = {
   order_placed: "MALAC — Naya Order",
   order_cancelled: "MALAC — Order Cancelled",
+  order_delivered: "MALAC — Order Delivered",
   return_requested: "MALAC — Return Request",
   support_ticket: "MALAC — Support Ticket",
   chat_takeover: "MALAC — Chat Message",
@@ -128,6 +129,9 @@ export async function onOrderDelivered(order) {
   const name = await customerNameOf(order);
   pushCustomer(order, "MALAC — Order deliver ho gaya",
     `${firstNameOf(name)}, aap ka order ${order.orderId} deliver ho gaya hai. Shopping ke liye shukriya! Apna review zaroor dein.`);
+  // Staff hear about deliveries too (owner's rule) — bell + admin push.
+  notifyStaff("order_delivered", order,
+    `Order ${order.orderId} delivered — ${name} · Rs. ${Number(order.total).toLocaleString("en-PK")}`);
 }
 
 export async function onReturnRequested(order) {
@@ -140,4 +144,33 @@ export async function onReturnRequested(order) {
     intro: `your return request for order <strong style="color:#0f172a;">${order.orderId}</strong> has been received. Our team will contact you on WhatsApp or email to arrange the return.`,
     extra: "As a reminder, returns are accepted within 7 days of delivery for damaged, defective or incorrect items, unused and in their original packaging.",
   });
+}
+
+// --- Catalogue broadcasts to every customer app (owner's rule) --------
+// New products and flash sales are announced to all registered customer
+// devices. Best-effort like everything here: a broadcast failure must
+// never fail the product save that triggered it.
+const effectivePrice = (p) => (p.salePrice > 0 ? p.salePrice : p.basePrice);
+const rs = (n) => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
+
+export function onProductCreated(product) {
+  if (!product || product.status !== "Active") return;
+  sendPushToAllCustomers({
+    title: "MALAC — Naya Product aa gaya 🛍️",
+    body: `${product.title} — ${rs(effectivePrice(product))}. Abhi app mein dekhein!`,
+    data: { type: "product", slug: product.slug || "" },
+  }).catch(() => {});
+}
+
+export function onFlashSaleStarted(product) {
+  if (!product || product.status !== "Active") return;
+  const now = effectivePrice(product);
+  const was = product.basePrice;
+  sendPushToAllCustomers({
+    title: "MALAC — ⚡ Flash Sale shuru!",
+    body: was > now
+      ? `${product.title} ab sirf ${rs(now)} (pehle ${rs(was)}) — waqt mehdood hai!`
+      : `${product.title} Flash Sale mein aa gaya hai — sirf ${rs(now)}!`,
+    data: { type: "flash_sale", slug: product.slug || "" },
+  }).catch(() => {});
 }

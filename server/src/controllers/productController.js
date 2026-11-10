@@ -7,6 +7,7 @@ import env from "../config/env.js";
 import { effectivePermissions } from "../utils/permissions.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { slugify } from "../utils/slugify.js";
+import { onProductCreated, onFlashSaleStarted } from "../services/notifyService.js";
 
 // Escape regex metacharacters in user-supplied search text (and cap its
 // length) so a query is always a LITERAL substring match — never a
@@ -98,12 +99,21 @@ export const createProduct = asyncHandler(async (req, res) => {
   body.slug = body.slug || slugify(`${body.title}-${body.sku || ""}`);
   if (body.stock === 0) body.status = body.status || "Out of Stock";
   const product = await Product.create(body);
+  // Customer-app announcements (best-effort, never block the save): a
+  // newly live product is broadcast to every customer device, and one
+  // born in a flash sale gets the flash-sale announcement too.
+  onProductCreated(product);
+  if (product.flashSale) onFlashSaleStarted(product);
   res.status(201).json({ product });
 });
 
 export const updateProduct = asyncHandler(async (req, res) => {
+  const before = await Product.findById(req.params.id).select("flashSale status").lean();
   const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
   if (!product) return res.status(404).json({ message: "Product not found" });
+  // Announce only the TRANSITION into a flash sale (off → on while the
+  // product is live) so routine edits never spam customers.
+  if (before && !before.flashSale && product.flashSale) onFlashSaleStarted(product);
   res.json({ product });
 });
 
