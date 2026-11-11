@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../api/client.js";
+import { registerPushToken, resetPushRegistration } from "../utils/pushRegister.js";
 
 const AuthContext = createContext(null);
 
@@ -16,12 +17,19 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Customer-app push: whenever a customer session is active inside
+  // the app, make sure this phone's FCM token is registered for them
+  // (see utils/pushRegister.js for the first-session bug this fixes).
+  useEffect(() => {
+    if (user && user.role === "customer") registerPushToken(user._id);
+  }, [user]);
+
   const saveSession = ({ user, token }) => {
     localStorage.setItem("malac_token", token);
     setUser(user);
     return user;
   };
-  const logout = () => { localStorage.removeItem("malac_token"); setUser(null); };
+  const logout = () => { localStorage.removeItem("malac_token"); resetPushRegistration(); setUser(null); };
   const isStaff = user && ["admin", "vice-admin"].includes(user.role);
   const isSuperAdmin = user?.role === "admin";
   // Effective section permissions come from the server payload (Super
