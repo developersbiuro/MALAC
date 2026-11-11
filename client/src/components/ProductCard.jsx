@@ -8,7 +8,7 @@ import { rs, discountPct, priceOf } from "../utils/format.js";
 
 export default function ProductCard({ product }) {
   const { toggle, has } = useWishlist();
-  const { add, setDrawerOpen } = useCart();
+  const { add } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
   const pct = discountPct(product);
@@ -16,7 +16,7 @@ export default function ProductCard({ product }) {
   const here = location.pathname + location.search;
   const addToCart = () => {
     if (!add(product)) { navigate(loginPath(`/product/${product.slug}`)); return; }
-    setDrawerOpen(true);
+    // Feedback is the global "added" toast — the cart itself is a page.
   };
   const toggleWish = () => {
     if (!toggle(product)) navigate(loginPath(here));

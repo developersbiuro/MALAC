@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import MobileBottomNav from "./components/MobileBottomNav.jsx";
-import CartDrawer from "./components/CartDrawer.jsx";
+import CartToast from "./components/CartToast.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
 import { isAppMode } from "./utils/appMode.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
@@ -126,7 +126,7 @@ export default function App() {
   return (
     <>
       {!isAdmin && <Header />}
-      {!isAdmin && <CartDrawer />}
+      {!isAdmin && <CartToast />}
       <div className={appMode && !isAdmin && !hideNav ? "pb-20" : undefined}>
       <Suspense fallback={PageLoading}>
       <Routes>

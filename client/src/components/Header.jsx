@@ -15,7 +15,7 @@ export default function Header() {
   const { fees, payments } = usePublicSettings();
   const appMode = useAppMode();
   const { user, logout, isStaff } = useAuth();
-  const { count, setDrawerOpen } = useCart();
+  const { count } = useCart();
   const { items: wishlist } = useWishlist();
   const [categories, setCategories] = useState([]);
   const [q, setQ] = useState("");
@@ -113,7 +113,7 @@ export default function Header() {
           <Heart size={22} />
           {user && wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
         </Link>
-        <button onClick={() => (user ? setDrawerOpen(true) : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
+        <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
           <ShoppingCart size={22} />
           {user && count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{count}</span>}
         </button>

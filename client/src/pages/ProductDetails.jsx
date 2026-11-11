@@ -17,7 +17,7 @@ export default function ProductDetails() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { add, setDrawerOpen } = useCart();
+  const { add } = useCart();
   const { toggle, has } = useWishlist();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -132,11 +132,14 @@ export default function ProductDetails() {
       navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`);
       return;
     }
-    setDrawerOpen(true);
+    // Feedback is the global "added" toast — the cart itself is a page.
   };
   const buyNow = () => {
     if (!user) { navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`); return; }
     add(product, qty, variantLabel, unitPrice);
+    // Buy Now means the whole cart as it stands — drop any subset
+    // selection an earlier cart-page visit may have stored.
+    try { sessionStorage.removeItem("malac_checkout_keys"); } catch { /* ignore */ }
     navigate("/checkout");
   };
   const toggleWish = () => {

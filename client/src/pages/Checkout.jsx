@@ -21,7 +21,18 @@ const MANUAL = MANUAL_METHODS;
 
 export default function Checkout() {
   useSeo({ title: "Checkout — MALAC", robots: "noindex" });
-  const { items, subtotal, clear } = useCart();
+  const { items, clear, remove } = useCart();
+  // Daraz-style subset checkout: the cart page stores the keys the
+  // customer ticked; only those are ordered (and only those leave the
+  // cart). No stored selection = the whole cart, as before.
+  const [checkoutKeys] = useState(() => {
+    try {
+      const k = JSON.parse(sessionStorage.getItem("malac_checkout_keys") || "null");
+      return Array.isArray(k) && k.length ? k : null;
+    } catch { return null; }
+  });
+  const orderItems = checkoutKeys ? items.filter((i) => checkoutKeys.includes(i.key)) : items;
+  const subtotal = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
   const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
@@ -104,14 +115,14 @@ export default function Checkout() {
 
   const discount = coupon?.discount || 0;
   const shipping = useMemo(() => {
-    if (items.length === 0) return 0;
+    if (orderItems.length === 0) return 0;
     if (deliveryMethod === "Express") return wallets?.expressShippingFee ?? 399;
     return subtotal - discount >= (wallets?.freeShippingThreshold ?? 3000) ? 0 : (wallets?.defaultShippingFee ?? 249);
-  }, [items, deliveryMethod, subtotal, discount, wallets]);
+  }, [orderItems, deliveryMethod, subtotal, discount, wallets]);
   const total = subtotal - discount + shipping;
   // Daraz-style "Total Saving": coupon discount + the standard fee saved
   // when this order ships free.
-  const totalSaving = discount + (shipping === 0 && deliveryMethod === "Standard" && items.length > 0 ? (wallets?.defaultShippingFee ?? 249) : 0);
+  const totalSaving = discount + (shipping === 0 && deliveryMethod === "Standard" && orderItems.length > 0 ? (wallets?.defaultShippingFee ?? 249) : 0);
   const isManual = MANUAL.includes(paymentMethod);
   const walletInfo = isManual && wallets ? wallets[WALLET_KEY[paymentMethod]] : null;
 
@@ -149,7 +160,7 @@ export default function Checkout() {
     setPlacing(true);
     try {
       const r = await api.post("/orders", {
-        items: items.map((i) => ({ product: i.product, qty: i.qty, variantLabel: i.variantLabel })),
+        items: orderItems.map((i) => ({ product: i.product, qty: i.qty, variantLabel: i.variantLabel })),
         address: { ...address, email: email.trim() }, paymentMethod, deliveryMethod, couponCode: coupon?.code || "",
         ...(isManual ? {
           paymentScreenshot: manual.screenshotPath,
@@ -158,7 +169,13 @@ export default function Checkout() {
           senderTitle: manual.senderTitle.trim(),
         } : {}),
       });
-      clear();
+      if (checkoutKeys) {
+        // Only the ordered (ticked) items leave the cart.
+        orderItems.forEach((i) => remove(i.key));
+        try { sessionStorage.removeItem("malac_checkout_keys"); } catch { /* ignore */ }
+      } else {
+        clear();
+      }
       navigate(`/order-confirmation/${r.data.order.orderId}`, { state: { order: r.data.order } });
     } catch (e) {
       if (e.response?.status === 401) navigate(`/login?redirect=${encodeURIComponent("/checkout")}`);
@@ -166,7 +183,7 @@ export default function Checkout() {
     } finally { setPlacing(false); }
   };
 
-  if (items.length === 0) return <main className="max-w-4xl mx-auto px-3 pt-8"><div className="bg-white rounded-md p-8 text-center text-gray-400">Your cart is empty.</div></main>;
+  if (orderItems.length === 0) return <main className="max-w-4xl mx-auto px-3 pt-8"><div className="bg-white rounded-md p-8 text-center text-gray-400">Your cart is empty.</div></main>;
   const input = "border rounded px-3 py-2 text-sm w-full";
   const methodCard = (value, Icon, title, sub) => (
     <label className={`flex gap-3 border rounded p-3 cursor-pointer ${paymentMethod === value ? "border-brand bg-brand-light" : ""}`}>
@@ -318,7 +335,7 @@ export default function Checkout() {
 
       <aside className="bg-white rounded-md p-4 text-sm space-y-2 lg:sticky lg:top-32">
         <p className="font-semibold">Order Summary</p>
-        {items.map((i) => (
+        {orderItems.map((i) => (
           <div key={i.key} className="flex justify-between gap-2">
             <span className="line-clamp-1 min-w-0">{i.title} × {i.qty}</span><span className="shrink-0">{rs(i.price * i.qty)}</span>
           </div>

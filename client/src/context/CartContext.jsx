@@ -6,11 +6,14 @@ const load = () => { try { return JSON.parse(localStorage.getItem("malac_cart"))
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(load);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Small "added to cart" toast (Daraz-style feedback): the cart itself
+  // is a full PAGE (/cart) — no slide-in drawer anywhere.
+  const [toast, setToast] = useState(null);
   useEffect(() => localStorage.setItem("malac_cart", JSON.stringify(items)), [items]);
 
   const add = (product, qty = 1, variantLabel = "", unitPrice = null) => {
     if (!hasSession()) return false; // guest lock: cart is a signed-in function
+    setToast({ id: Date.now(), text: product.title });
     const price = unitPrice ?? (product.salePrice > 0 ? product.salePrice : product.basePrice);
     setItems((prev) => {
       const key = `${product._id}|${variantLabel}`;
@@ -40,7 +43,7 @@ export function CartProvider({ children }) {
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.price * i.qty, 0), [items]);
 
   return (
-    <CartContext.Provider value={{ items, add, updateQty, remove, clear, count, subtotal, drawerOpen, setDrawerOpen }}>
+    <CartContext.Provider value={{ items, add, updateQty, remove, clear, count, subtotal, toast, setToast }}>
       {children}
     </CartContext.Provider>
   );
