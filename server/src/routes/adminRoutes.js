@@ -19,6 +19,9 @@ router.post("/push/register", push.registerPushDevice);
 router.post("/push/test", push.testPush);
 router.post("/push/broadcast", push.broadcastToCustomers);
 router.get("/push/templates", push.listPushTemplates);
+router.get("/push/saved-templates", push.listSavedTemplates);
+router.post("/push/saved-templates", push.createSavedTemplate);
+router.delete("/push/saved-templates/:id", push.deleteSavedTemplate);
 // Order work is gated by the "orders" permission; the Dashboard
 // (analytics) above stays visible to every staff account.
 router.get("/orders", requirePermission("orders"), orders.adminListOrders);

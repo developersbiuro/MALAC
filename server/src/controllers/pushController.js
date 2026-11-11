@@ -1,4 +1,5 @@
 import PushDevice from "../models/PushDevice.js";
+import NotificationTemplate from "../models/NotificationTemplate.js";
 import { sendPushToStaff, sendPushToAllCustomers } from "../services/pushService.js";
 import { buildBroadcastTemplates } from "../services/notificationBot.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -59,4 +60,34 @@ export const broadcastToCustomers = asyncHandler(async (req, res) => {
 export const listPushTemplates = asyncHandler(async (req, res) => {
   const templates = await buildBroadcastTemplates();
   return res.json({ templates });
+});
+
+// --- Staff-saved templates (Admin → Notifications) -------------------
+// The team writes a notification once and saves it for reuse; saved
+// templates are listed above the composer and fill it with one tap.
+
+export const listSavedTemplates = asyncHandler(async (req, res) => {
+  const templates = await NotificationTemplate.find()
+    .sort({ createdAt: -1 }).limit(50).lean();
+  return res.json({ templates });
+});
+
+export const createSavedTemplate = asyncHandler(async (req, res) => {
+  const title = typeof req.body?.title === "string" ? req.body.title.trim().slice(0, 60) : "";
+  const body = typeof req.body?.body === "string" ? req.body.body.trim().slice(0, 180) : "";
+  if (!title || !body) {
+    return res.status(400).json({ message: "Title aur message dono lazmi hain." });
+  }
+  const template = await NotificationTemplate.create({
+    title, body,
+    createdBy: req.user?._id,
+    createdByName: req.user?.name || "",
+  });
+  return res.status(201).json({ template });
+});
+
+export const deleteSavedTemplate = asyncHandler(async (req, res) => {
+  const deleted = await NotificationTemplate.findByIdAndDelete(req.params.id);
+  if (!deleted) return res.status(404).json({ message: "Template nahi mila." });
+  return res.json({ ok: true });
 });
