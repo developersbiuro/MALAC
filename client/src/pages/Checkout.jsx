@@ -455,7 +455,7 @@ export default function Checkout() {
             <button onClick={removeCoupon} className="text-green-700 font-bold px-1" aria-label="Remove voucher">✕</button>
           </p>
         ) : couponMsg ? (
-          <p className={`text-[13px] font-medium ${couponMsg.kind === "ok" ? "text-green-600" : "text-red-500"}`}>{couponMsg.text}</p>
+          <p className={`text-sm font-semibold ${couponMsg.kind === "ok" ? "text-green-600" : "text-red-500"}`}>{couponMsg.text}</p>
         ) : null}
         <div className="flex justify-between"><span>Subtotal</span><span>{rs(subtotal)}</span></div>
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>

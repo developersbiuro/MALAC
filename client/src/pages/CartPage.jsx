@@ -136,7 +136,7 @@ export default function CartPage() {
             <button onClick={removeCoupon} className="text-green-700 font-bold px-1" aria-label="Remove voucher">✕</button>
           </p>
         ) : msg ? (
-          <p className={`text-[13px] font-medium ${msgKind === "ok" ? "text-green-600" : "text-red-500"}`}>{msg}</p>
+          <p className={`text-sm font-semibold ${msgKind === "ok" ? "text-green-600" : "text-red-500"}`}>{msg}</p>
         ) : null}
         <div className="flex justify-between"><span>Subtotal ({selItems.length} selected)</span><span>{rs(selSubtotal)}</span></div>
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>

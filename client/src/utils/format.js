@@ -1,12 +1,14 @@
 export const rs = (n) => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
 
 // Friendly, customer-readable text for a rejected voucher — the raw
-// server reasons ("Coupon not found") read like system errors.
+// server reasons ("Coupon not found") read like system errors. Every
+// rejection starts with the words "Invalid voucher" so the customer
+// sees exactly that (Abdullah's requirement, 2026-11-11).
 export const couponReason = (reason) => ({
-  "Coupon not found": "Ye voucher code maujood nahi hai — spelling check karke dobara try karein.",
-  "Coupon has expired": "Is voucher ki muddat khatam ho gayi hai.",
-  "Coupon is inactive": "Ye voucher abhi active nahi hai.",
-}[reason] || reason || "Ye voucher nahi chal saka.");
+  "Coupon not found": "Invalid voucher — ye code maujood nahi hai. Spelling check karke dobara try karein.",
+  "Coupon has expired": "Invalid voucher — is code ki muddat khatam ho gayi hai.",
+  "Coupon is inactive": "Invalid voucher — ye code abhi active nahi hai.",
+}[reason] || reason || "Invalid voucher — ye code nahi chal saka.");
 // Fallback free-shipping threshold ONLY — every surface that shows or
 // charges delivery reads the LIVE value from Admin → Settings via
 // usePublicSettings(); this constant just covers the first paint.
