@@ -67,3 +67,25 @@ img, video { max-width: 100%; }
   }
   .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.22em] text-[#b45309]; }
 }
+
+@layer base {
+  /* Press feedback (Abdullah, 2026-11-11: "button press ka pta nahi
+     chalta"): every button visibly reacts the moment it is pressed,
+     store-wide — a slight shrink + darken while the finger is down.
+     Base layer on purpose: elements with their own Tailwind
+     transition/transform utilities keep their bespoke behaviour. */
+  button {
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.08s ease-out, filter 0.08s ease-out;
+  }
+  button:not(:disabled):active {
+    transform: scale(0.96);
+    filter: brightness(0.95);
+  }
+  nav a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  nav a:active {
+    transform: scale(0.95);
+  }
+}
