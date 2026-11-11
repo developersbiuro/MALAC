@@ -3,7 +3,7 @@ import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Settings from "../models/Settings.js";
 import env from "../config/env.js";
-import { sendEmail } from "./emailService.js";
+import { sendStoreEmail } from "./emailService.js";
 import { reviewInviteEmail } from "./emailTemplates.js";
 import { onOrderCancelled, onOrderShipped, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
@@ -267,5 +267,5 @@ async function sendDeliveredReviewInvite(order) {
   }
   if (!items.length) return;
   const { html, text } = reviewInviteEmail({ name: user?.name, orderId: order.orderId, items });
-  await sendEmail({ to: email, subject: `Your MALAC order ${order.orderId} was delivered — review your purchase`, html, text });
+  await sendStoreEmail({ to: email, subject: `Your MALAC order ${order.orderId} was delivered — review your purchase`, html, text });
 }

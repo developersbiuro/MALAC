@@ -1,7 +1,7 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import { sendPushToStaff, sendPushToUser, sendPushToAllCustomers } from "./pushService.js";
-import { sendEmail } from "./emailService.js";
+import { sendStoreEmail } from "./emailService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
 // Order-event side effects, in one place: the customer's lifecycle email
@@ -67,7 +67,7 @@ async function mailCustomer(order, build) {
       name: target.name, orderId: order.orderId, heading, intro, extra,
       items: order.items || [], total: order.total,
     });
-    await sendEmail({ to: target.email, subject, html, text });
+    await sendStoreEmail({ to: target.email, subject, html, text });
   } catch (err) {
     console.error(`[MALAC] order email failed (${order.orderId}): ${err.message}`);
   }
