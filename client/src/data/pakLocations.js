@@ -13,11 +13,14 @@
 //     towns / tehsil seats of the district. 566 place entries; 551
 //     unique names (a few cities span several districts).
 //   - `areasByCity` carries neighbourhood / colony / sector lists for
-//     the major metros only (Karachi, Lahore, Islamabad, Rawalpindi,
+//     the major metros (Karachi, Lahore, Islamabad, Rawalpindi,
 //     Faisalabad, Multan, Peshawar, Quetta, Hyderabad, Sialkot,
-//     Gujranwala, Bahawalpur, Sargodha, Abbottabad). Cities without an
-//     entry simply have no suggested areas — the area field stays a
-//     free-text input everywhere, so any colony name can be typed.
+//     Gujranwala, Bahawalpur, Sargodha, Abbottabad), and pakAreas.js
+//     (EXTRA_AREAS) adds city-wise lists for 250+ more courier-covered
+//     cities and towns — areasOfCity() merges both, de-duplicated.
+//     Cities without an entry simply have no suggested areas — the
+//     area field stays a free-text input everywhere, so any colony
+//     name can be typed and checkout is never blocked.
 //
 // Helpers exported for the picker component:
 //   citiesOfProvince(name)  -> flat [{ city, district }] for a province
@@ -26,6 +29,8 @@
 //                              (case-insensitive; used to adopt GPS
 //                              reverse-geocoded cities and to prefill
 //                              the province of legacy saved addresses)
+import { EXTRA_AREAS } from "./pakAreas.js";
+
 export const PROVINCES = [
   {
     name: "Punjab",
@@ -264,18 +269,33 @@ export function citiesOfProvince(provinceName) {
   return out;
 }
 
-// Suggested areas / neighbourhoods for a city (major metros only).
+// Suggested areas / neighbourhoods for a city: the built-in metro
+// lists above merged with the city-wise EXTRA_AREAS (pakAreas.js),
+// de-duplicated case-insensitively.
+const EXTRA_BY_LOWER = new Map(
+  Object.entries(EXTRA_AREAS).map(([city, areas]) => [city.toLowerCase(), areas])
+);
 export function areasOfCity(cityName) {
   if (!cityName) return [];
-  const key = cityName.toLowerCase();
+  const key = String(cityName).trim().toLowerCase();
+  let builtin = [];
   for (const p of PROVINCES) {
     for (const d of p.districts) {
       for (const [city, areas] of Object.entries(d.areasByCity || {})) {
-        if (city.toLowerCase() === key) return areas;
+        if (city.toLowerCase() === key) { builtin = areas; break; }
       }
     }
   }
-  return [];
+  const extra = EXTRA_BY_LOWER.get(key) || [];
+  const seen = new Set();
+  const out = [];
+  for (const a of [...builtin, ...extra]) {
+    const k = String(a).trim().toLowerCase();
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push(a);
+  }
+  return out;
 }
 
 // Case-insensitive lookup used to adopt a free-form city name (GPS

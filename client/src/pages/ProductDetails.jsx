@@ -11,6 +11,7 @@ import { rs, priceOf, discountPct, deliveryWindow } from "../utils/format.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
 import { colorHex } from "../utils/colors.js";
 import { useSeo } from "../utils/seo.js";
+import { maskName } from "../utils/customerContact.js";
 
 export default function ProductDetails() {
   const { fees, payments } = usePublicSettings();
@@ -358,7 +359,7 @@ export default function ProductDetails() {
         <div className="space-y-3">
           {reviews.map((r) => (
             <article key={r._id} className="border-b pb-3">
-              <div className="flex items-center gap-2"><RatingStars value={r.rating} /><b className="text-sm">{r.authorName}</b>
+              <div className="flex items-center gap-2"><RatingStars value={r.rating} /><b className="text-sm">{maskName(r.authorName)}</b>
                 {r.verifiedPurchase && <span className="text-[11px] text-green-600">Verified Purchase</span>}</div>
               <p className="text-sm mt-1">{r.comment}</p>
               {(r.images || []).map((src, i) => <img key={i} src={src} alt={`Customer review photo for ${product.title}`} className="w-16 h-16 object-cover rounded mt-2 inline-block mr-2" />)}

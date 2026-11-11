@@ -130,7 +130,7 @@ export default function OrderDetail() {
       });
       setMyReviews((m) => ({ ...m, [String(item.product)]: r.data.review }));
       setReviewFor(null); setRvComment(""); setRvPhotos([]); setRvRating(5);
-      setRvMsg(`Review save ho gaya — order ${orderId} ke sath. Admin approval ke baad product page par nazar ayega. Shukriya!`);
+      setRvMsg("Review save ho gaya. Admin approval ke baad product page par nazar ayega. Shukriya!");
     } catch (e) {
       setRvMsg(e.response?.data?.message || "Review submit nahi hua — dobara try karein.");
     } finally { setRvBusy(false); }
@@ -258,10 +258,10 @@ export default function OrderDetail() {
                 {o.status === "Delivered" && (
                   <div className="ml-[60px] mt-1.5">
                     {rev ? (
-                      <p className="text-xs text-green-600">★ {rev.rating}/5 — Review diya gaya{rev.status === "pending" ? " (approval ka intezaar hai)" : ""} · Order {o.orderId} ke sath save hai</p>
+                      <p className="text-xs text-green-600">★ {rev.rating}/5 — Review diya gaya{rev.status === "pending" ? " (approval ka intezaar hai)" : ""}</p>
                     ) : reviewFor === i._id ? (
                       <div className="border border-amber-200 bg-amber-50/60 rounded-lg p-3 fade-up">
-                        <p className="text-xs font-semibold text-amber-800">Apna review dein — ye review order {o.orderId} ke sath save hoga</p>
+                        <p className="text-xs font-semibold text-amber-800">Apna review dein</p>
                         <div className="flex gap-1 mt-2">
                           {[1, 2, 3, 4, 5].map((n) => (
                             <button key={n} type="button" onClick={() => setRvRating(n)} aria-label={`${n} star`}>
