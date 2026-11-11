@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/client.js";
 import RatingStars from "../../components/RatingStars.jsx";
-import { maskName, maskedContactLine } from "../../utils/customerContact.js";
+import { customerContact } from "../../utils/customerContact.js";
 
 // Review moderation: every customer review starts "pending" and stays off
 // the store until approved here — the anti-defamation gate. API + menu are
@@ -88,12 +88,12 @@ export default function AdminReviews() {
       </div>
       <div className="space-y-3 mt-4">
         {reviews.map((r) => {
-          const contact = r.user ? maskedContactLine(r.user) : "";
+          const contact = r.user ? customerContact(r.user).line : "";
           return (
             <article key={r._id} className="bg-white rounded-md border border-cream-line p-4">
               <div className="flex items-start gap-2 flex-wrap">
                 <RatingStars value={r.rating} />
-                <b className="text-sm">{maskName(r.authorName)}</b>
+                <b className="text-sm">{r.authorName}</b>
                 {r.verifiedPurchase
                   ? <span className="text-[11px] font-semibold text-green-600">Verified Purchase</span>
                   : <span className="text-[11px] text-gray-400">Not a verified purchase</span>}
@@ -109,6 +109,7 @@ export default function AdminReviews() {
                   ? <Link className="text-lux-burnt underline" to={`/product/${r.product.slug}`}>{r.product.title}</Link>
                   : (r.product?.title || "—")}
                 {" · "}{new Date(r.createdAt).toLocaleString()}
+                {r.orderId ? ` · Order ${r.orderId}` : ""}
                 {contact ? ` · ${contact}` : ""}
               </p>
               <div className="flex gap-2 mt-3 flex-wrap">
