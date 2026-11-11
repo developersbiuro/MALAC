@@ -28,6 +28,32 @@ document.addEventListener("error", (e) => {
   }
 }, true);
 
+// Auto-recovery from stale page chunks (owner's white-screen report,
+// 2026-11-12): pages are code-split, so after a new deploy a tab or
+// app left open on the old build can request code files that no longer
+// exist — the page then fails to open and stays blank. Vite fires
+// "vite:preloadError" for exactly this, and lazy-import failures also
+// surface as unhandled rejections. Either way: reload ONCE to pick up
+// the fresh build (a timestamp guard stops any reload loop).
+const CHUNK_ERROR = /Failed to fetch dynamically imported module|Importing a module script failed|Loading chunk|ChunkLoadError/i;
+function reloadOnceForFreshBuild() {
+  try {
+    const last = Number(sessionStorage.getItem("malac_fresh_reload_at") || 0);
+    if (Date.now() - last < 15000) return;
+    sessionStorage.setItem("malac_fresh_reload_at", String(Date.now()));
+  } catch {
+    /* storage unavailable — reload anyway */
+  }
+  window.location.reload();
+}
+window.addEventListener("vite:preloadError", (e) => {
+  e.preventDefault();
+  reloadOnceForFreshBuild();
+});
+window.addEventListener("unhandledrejection", (e) => {
+  if (CHUNK_ERROR.test(String(e.reason?.message || e.reason || ""))) reloadOnceForFreshBuild();
+});
+
 // PWA: register the service worker (production builds only). Progressive
 // enhancement — the store works exactly the same if registration fails.
 if (import.meta.env.PROD && "serviceWorker" in navigator) {

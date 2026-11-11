@@ -7,6 +7,7 @@ import CartToast from "./components/CartToast.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
 import { isAppMode } from "./utils/appMode.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 
@@ -83,10 +84,12 @@ function SectionGuard({ permission, superOnly, children }) {
 // the same URL — customers are denied even if they log in there.
 function AdminShell() {
   const { user, loading, isStaff } = useAuth();
+  const { pathname } = useLocation();
   if (loading) return <p className="p-8 text-center text-gray-400">Loading...</p>;
   if (!user || !isStaff) return <AdminLogin />;
   return (
     <AdminLayout>
+      <ErrorBoundary resetKey={pathname}>
       <Suspense fallback={PageLoading}>
       <Routes>
         <Route index element={<Dashboard />} />
@@ -105,6 +108,7 @@ function AdminShell() {
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
       </Suspense>
+      </ErrorBoundary>
     </AdminLayout>
   );
 }
@@ -128,6 +132,7 @@ export default function App() {
       {!isAdmin && <Header />}
       {!isAdmin && <CartToast />}
       <div className={appMode && !isAdmin && !hideNav ? "pb-20" : undefined}>
+      <ErrorBoundary resetKey={pathname}>
       <Suspense fallback={PageLoading}>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -160,6 +165,7 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
+      </ErrorBoundary>
       </div>
       {!isAdmin && !appMode && <Footer />}
       {!isAdmin && !hideNav && <MobileBottomNav />}
