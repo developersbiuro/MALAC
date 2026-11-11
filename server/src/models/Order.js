@@ -1,12 +1,12 @@
 import mongoose from "mongoose";
 
-export const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled", "Returned"];
+export const ORDER_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "OutForDelivery", "Delivered", "Cancelled", "Returned"];
 // Customer-facing stages collapse Confirmed + Packed into "Processing"
 // (that is what shoppers already see on My Orders / Track Order / the
 // chatbot): the storefront translates with this helper, and the public
 // track endpoint maps the internal status through it.
 export const CUSTOMER_STATUS = (status) =>
-  (status === "Confirmed" || status === "Packed" ? "Processing" : status);
+  (status === "Confirmed" || status === "Packed" ? "Processing" : status === "OutForDelivery" ? "Out for Delivery" : status);
 // Cancellation reasons (Daraz-style). Cancelling REQUIRES one of these —
 // validated server-side per actor (customer self-cancel vs staff cancel).
 export const CUSTOMER_CANCEL_REASONS = [

@@ -270,7 +270,7 @@ export const updateSettings = asyncHandler(async (req, res) => {
   const settings = await Settings.getStore();
   const allowed = ["storeName", "otpSenderEmail", "otpSenderPhone", "whatsappSenderNumber",
     "defaultShippingFee", "expressShippingFee", "freeShippingThreshold",
-    "codEnabled", "cardPaymentsEnabled",
+    "codEnabled", "cardPaymentsEnabled", "botDailyPromo", "botInactivePush",
     "jazzcashAccountTitle", "jazzcashAccountNumber",
     "easypaisaAccountTitle", "easypaisaAccountNumber",
     "meezanAccountTitle", "meezanAccountNumber",

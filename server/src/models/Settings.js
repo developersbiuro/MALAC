@@ -13,6 +13,12 @@ const settingsSchema = new mongoose.Schema({
   expressShippingFee: { type: Number, default: 399 },
   freeShippingThreshold: { type: Number, default: 3000 },
   codEnabled: { type: Boolean, default: true },
+  // MALAC Notification Bot (free, FCM): automatic customer pushes run by
+  // the daily cron — a rotating promo template, and a "we miss you"
+  // win-back for customers who have not opened the app in 3 days.
+  // Managed from Admin → Notifications; both default ON.
+  botDailyPromo: { type: Boolean, default: true },
+  botInactivePush: { type: Boolean, default: true },
   cardPaymentsEnabled: { type: Boolean, default: false }, // card removed from checkout 2026-11-09; no gateway yet
   // JazzCash / Easypaisa manual payment accounts. Defaults come from
   // JAZZCASH_* / EASYPAISA_* env vars (owner-provided shared account);

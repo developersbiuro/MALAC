@@ -15,7 +15,7 @@ export const placeOrder = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: "Please complete sign-up verification before placing an order." });
   }
   const order = await createOrder({ user: req.user, ...req.body });
-  onOrderPlaced(order); // confirmation email + staff bell (best-effort)
+  await onOrderPlaced(order); // customer push awaited (serverless freeze fix); email + staff bell fire inside
   res.status(201).json({ order });
 });
 
@@ -149,7 +149,7 @@ export const requestReturn = asyncHandler(async (req, res) => {
   order.returnNote = String(req.body?.note || "").slice(0, 300);
   order.statusHistory.push({ status: "Delivered", by: "customer", note: `Return requested: ${reason}` });
   await order.save();
-  onReturnRequested(order);
+  await onReturnRequested(order);
   res.json({ order });
 });
 

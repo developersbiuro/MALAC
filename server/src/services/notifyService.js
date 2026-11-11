@@ -80,8 +80,14 @@ async function mailCustomer(order, build) {
   }
 }
 
-function pushCustomer(order, title, body) {
-  sendPushToUser(order.user, { title, body, data: { orderId: order.orderId || "" } }).catch(() => {});
+// Awaited by the lifecycle handlers below: on Vercel a fire-and-forget
+// promise can be frozen once the HTTP response is sent, which is how
+// "order placed" pushes were lost while later ones (cancel) arrived.
+// Awaiting costs one FCM round-trip and makes every step's push real.
+async function pushCustomer(order, title, body) {
+  try {
+    await sendPushToUser(order.user, { title, body, data: { orderId: order.orderId || "" } });
+  } catch { /* a push failure must never break the order flow */ }
 }
 
 // Order confirmation on WhatsApp too (owner's ask, 2026-11-11: "email ya
@@ -103,7 +109,7 @@ async function whatsappCustomer(order, name) {
 
 export async function onOrderPlaced(order) {
   const name = await customerNameOf(order);
-  pushCustomer(order, "MALAC — Order confirm ho gaya",
+  await pushCustomer(order, "MALAC — Order confirm ho gaya",
     `Shukriya ${firstNameOf(name)}! Aap ka order ${order.orderId} place ho gaya hai — Rs. ${Number(order.total).toLocaleString("en-PK")}. Hum jald confirm karke ship kar dein ge.`);
   notifyStaff("order_placed", order,
     `Naya order ${order.orderId} — ${name} · Rs. ${Number(order.total).toLocaleString("en-PK")} · ${order.paymentMethod}`);
@@ -117,7 +123,7 @@ export async function onOrderPlaced(order) {
 
 export async function onOrderCancelled(order, by) {
   const name = await customerNameOf(order);
-  pushCustomer(order, "MALAC — Order cancelled",
+  await pushCustomer(order, "MALAC — Order cancelled",
     `${firstNameOf(name)}, aap ka order ${order.orderId} cancel ho gaya hai${order.cancelReason ? ` (${order.cancelReason})` : ""}.`);
   if (by === "customer") {
     notifyStaff("order_cancelled", order,
@@ -133,9 +139,21 @@ export async function onOrderCancelled(order, by) {
   });
 }
 
+export async function onOrderPacked(order) {
+  const name = await customerNameOf(order);
+  await pushCustomer(order, "MALAC — Order pack ho gaya 📦",
+    `${firstNameOf(name)}, aap ka order ${order.orderId} pack ho gaya hai aur jald dispatch ho jayega.`);
+}
+
+export async function onOrderOutForDelivery(order) {
+  const name = await customerNameOf(order);
+  await pushCustomer(order, "MALAC — Order out for delivery hai 🛵",
+    `${firstNameOf(name)}, aap ka order ${order.orderId} rastay mein hai — rider aaj hi deliver karega${order.paymentMethod === "COD" ? `. Rs. ${Number(order.total).toLocaleString("en-PK")} tayyar rakhein` : ""}.`);
+}
+
 export async function onOrderShipped(order) {
   const name = await customerNameOf(order);
-  pushCustomer(order, "MALAC — Order ship ho gaya",
+  await pushCustomer(order, "MALAC — Order ship ho gaya",
     `${firstNameOf(name)}, aap ka order ${order.orderId} rawaana ho gaya hai${order.courier ? ` via ${order.courier}` : ""}${order.trackingId ? ` — tracking ${order.trackingId}` : ""}.`);
   const courierLine = order.courier
     ? ` via ${order.courier}${order.trackingId ? ` (tracking ID ${order.trackingId})` : ""}`
@@ -152,7 +170,7 @@ export async function onOrderShipped(order) {
 
 export async function onOrderDelivered(order) {
   const name = await customerNameOf(order);
-  pushCustomer(order, "MALAC — Order deliver ho gaya",
+  await pushCustomer(order, "MALAC — Order deliver ho gaya",
     `${firstNameOf(name)}, aap ka order ${order.orderId} deliver ho gaya hai. Shopping ke liye shukriya! Apna review zaroor dein.`);
   // Staff hear about deliveries too (owner's rule) — bell + admin push.
   notifyStaff("order_delivered", order,

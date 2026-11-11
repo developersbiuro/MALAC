@@ -18,6 +18,7 @@ router.post("/notifications/read", orders.markNotificationsRead);
 router.post("/push/register", push.registerPushDevice);
 router.post("/push/test", push.testPush);
 router.post("/push/broadcast", push.broadcastToCustomers);
+router.get("/push/templates", push.listPushTemplates);
 // Order work is gated by the "orders" permission; the Dashboard
 // (analytics) above stays visible to every staff account.
 router.get("/orders", requirePermission("orders"), orders.adminListOrders);

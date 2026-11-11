@@ -13,6 +13,11 @@ const pushDeviceSchema = new mongoose.Schema({
   app: { type: String, default: "admin" },
   active: { type: Boolean, default: true, index: true },
   lastSeenAt: { type: Date, default: Date.now },
+  // Notification Bot win-back stamp: when the "we miss you" push last
+  // went to this device. The bot re-sends only after the customer has
+  // been seen again (lastSeenAt moves past this stamp) and then gone
+  // quiet for another 3 days — one win-back per quiet spell.
+  inactivePushAt: { type: Date, default: null },
 }, { timestamps: true });
 
 export default mongoose.model("PushDevice", pushDeviceSchema);

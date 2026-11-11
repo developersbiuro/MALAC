@@ -5,7 +5,7 @@ import Settings from "../models/Settings.js";
 import env from "../config/env.js";
 import { sendEmail } from "./emailService.js";
 import { reviewInviteEmail } from "./emailTemplates.js";
-import { onOrderCancelled, onOrderShipped, onOrderDelivered } from "./notifyService.js";
+import { onOrderCancelled, onOrderPacked, onOrderShipped, onOrderOutForDelivery, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
 
@@ -205,7 +205,7 @@ export async function cancelOrder(order, by = "customer", { reason = "", note = 
       ).catch(() => {});
     }
   }
-  onOrderCancelled(order, by); // customer email (+ staff bell for customer cancels)
+  await onOrderCancelled(order, by); // customer push + email (+ staff bell for customer cancels)
   return order;
 }
 
@@ -248,8 +248,10 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
     }
   }
   await order.save();
-  if (status === "Shipped" && prev !== "Shipped") onOrderShipped(order); // customer "on its way" email + push
-  if (status === "Delivered" && prev !== "Delivered") onOrderDelivered(order); // customer push
+  if (status === "Packed" && prev !== "Packed") await onOrderPacked(order); // customer push
+  if (status === "Shipped" && prev !== "Shipped") await onOrderShipped(order); // customer "on its way" email + push
+  if (status === "OutForDelivery" && prev !== "OutForDelivery") await onOrderOutForDelivery(order); // customer push
+  if (status === "Delivered" && prev !== "Delivered") await onOrderDelivered(order); // customer push
   if (sendReviewInvite) {
     try { await sendDeliveredReviewInvite(order); }
     catch { /* the invite is best-effort; delivery state is already saved */ }

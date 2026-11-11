@@ -1,5 +1,6 @@
 import PushDevice from "../models/PushDevice.js";
 import { sendPushToStaff, sendPushToAllCustomers } from "../services/pushService.js";
+import { buildBroadcastTemplates } from "../services/notificationBot.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 // POST /api/admin/push/register — the MALAC Admin app calls this (via the
@@ -50,4 +51,12 @@ export const broadcastToCustomers = asyncHandler(async (req, res) => {
     data: { type: "broadcast" },
   });
   return res.json(result);
+});
+
+// GET /api/admin/push/templates — the Notification Bot's ready-made
+// announcements, computed from the live catalogue (Admin →
+// Notifications renders them as one-tap chips above the composer).
+export const listPushTemplates = asyncHandler(async (req, res) => {
+  const templates = await buildBroadcastTemplates();
+  return res.json({ templates });
 });
