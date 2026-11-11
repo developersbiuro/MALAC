@@ -8,7 +8,7 @@ import { findCity } from "../data/pakLocations.js";
 import PhoneInput from "../components/PhoneInput.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { rs, deliveryWindow } from "../utils/format.js";
+import { rs, deliveryWindow, couponReason } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
 import { MANUAL_METHODS, WALLET_KEY } from "../utils/payments.js";
 import { isRealEmail } from "../utils/customerContact.js";
@@ -142,13 +142,31 @@ export default function Checkout() {
   const isManual = MANUAL.includes(paymentMethod);
   const walletInfo = isManual && wallets ? wallets[WALLET_KEY[paymentMethod]] : null;
 
+  // Voucher feedback lives in its OWN state rendered right under the
+  // voucher row — it used to write into the order-level `error`, which
+  // only renders on the payment step, so Apply looked completely dead
+  // on the address/delivery steps (Abdullah, 2026-11-11).
+  const [couponMsg, setCouponMsg] = useState(null); // { kind: "ok"|"err", text }
+  const [applying, setApplying] = useState(false);
   const applyCoupon = async () => {
+    const c = code.trim();
+    if (!c) { setCouponMsg({ kind: "err", text: "Pehle voucher code likhein, phir Apply dabayein." }); return; }
+    setApplying(true);
     try {
-      const r = await api.get(`/coupons/validate/${code}`, { params: { subtotal } });
-      setCoupon(r.data.valid ? r.data : null);
-      setError(r.data.valid ? "" : r.data.reason || "Invalid coupon");
-    } catch { setError("Could not validate coupon"); }
+      const r = await api.get(`/coupons/validate/${c}`, { params: { subtotal } });
+      if (r.data.valid) {
+        setCoupon(r.data);
+        setCouponMsg({ kind: "ok", text: `Voucher lag gaya — aap ko ${rs(r.data.discount)} ki bachat hui.` });
+      } else {
+        setCoupon(null);
+        setCouponMsg({ kind: "err", text: couponReason(r.data.reason) });
+      }
+    } catch {
+      setCoupon(null);
+      setCouponMsg({ kind: "err", text: "Voucher check nahi ho saka — connection dekh kar dobara try karein." });
+    } finally { setApplying(false); }
   };
+  const removeCoupon = () => { setCoupon(null); setCode(""); setCouponMsg(null); };
 
   const uploadScreenshot = async (file) => {
     if (!file) return;
@@ -429,8 +447,16 @@ export default function Checkout() {
         ))}
         <div className="flex gap-2 pt-1">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Voucher code" className="border rounded px-2 py-1.5 flex-1 min-w-0" />
-          <button onClick={applyCoupon} className="bg-brand text-white rounded px-3">Apply</button>
+          <button onClick={applyCoupon} disabled={applying} className="bg-brand text-white rounded px-3 disabled:opacity-50">{applying ? "Checking…" : "Apply"}</button>
         </div>
+        {coupon ? (
+          <p className="flex items-center justify-between bg-green-50 border border-green-200 text-green-700 rounded px-2.5 py-1.5 text-xs font-medium">
+            <span>{coupon.code} applied — {rs(discount)} off</span>
+            <button onClick={removeCoupon} className="text-green-700 font-bold px-1" aria-label="Remove voucher">✕</button>
+          </p>
+        ) : couponMsg ? (
+          <p className={`text-[13px] font-medium ${couponMsg.kind === "ok" ? "text-green-600" : "text-red-500"}`}>{couponMsg.text}</p>
+        ) : null}
         <div className="flex justify-between"><span>Subtotal</span><span>{rs(subtotal)}</span></div>
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>
         <div className="flex justify-between"><span>Shipping ({deliveryMethod})</span><span>{shipping === 0 ? "Free" : rs(shipping)}</span></div>

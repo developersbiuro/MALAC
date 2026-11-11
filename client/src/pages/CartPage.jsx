@@ -4,7 +4,7 @@ import { Trash2 } from "lucide-react";
 import api from "../api/client.js";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { rs } from "../utils/format.js";
+import { rs, couponReason } from "../utils/format.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
 import { useSeo } from "../utils/seo.js";
 
@@ -22,6 +22,8 @@ export default function CartPage() {
   const [code, setCode] = useState("");
   const [coupon, setCoupon] = useState(null);
   const [msg, setMsg] = useState("");
+  const [msgKind, setMsgKind] = useState("err"); // "ok" | "err"
+  const [applying, setApplying] = useState(false);
   const [selected, setSelected] = useState(() => items.map((i) => i.key));
   useSeo({ title: "Shopping Cart — MALAC", robots: "noindex" });
 
@@ -44,12 +46,23 @@ export default function CartPage() {
     setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
   const applyCoupon = async () => {
+    const c = code.trim();
+    if (!c) { setMsgKind("err"); setMsg("Pehle voucher code likhein, phir Apply dabayein."); return; }
+    setApplying(true);
     try {
-      const r = await api.get(`/coupons/validate/${code}`, { params: { subtotal: selSubtotal } });
-      if (r.data.valid) { setCoupon(r.data); setMsg(`Applied: -${rs(r.data.discount)}`); }
-      else { setCoupon(null); setMsg(r.data.reason || "Invalid coupon"); }
-    } catch { setMsg("Could not validate coupon"); }
+      const r = await api.get(`/coupons/validate/${c}`, { params: { subtotal: selSubtotal } });
+      if (r.data.valid) {
+        setCoupon(r.data); setMsgKind("ok");
+        setMsg(`Voucher lag gaya — aap ko ${rs(r.data.discount)} ki bachat hui.`);
+      } else {
+        setCoupon(null); setMsgKind("err"); setMsg(couponReason(r.data.reason));
+      }
+    } catch {
+      setCoupon(null); setMsgKind("err");
+      setMsg("Voucher check nahi ho saka — connection dekh kar dobara try karein.");
+    } finally { setApplying(false); }
   };
+  const removeCoupon = () => { setCoupon(null); setCode(""); setMsg(""); };
 
   const discount = coupon?.discount || 0;
   const shipping = selItems.length === 0 ? 0 : (selSubtotal - discount >= fees.freeThreshold ? 0 : fees.standard);
@@ -115,9 +128,16 @@ export default function CartPage() {
         <p className="font-semibold">Order Summary</p>
         <div className="flex gap-2">
           <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Voucher code (try WELCOME10)" className="border rounded px-2 py-1.5 flex-1 min-w-0" />
-          <button onClick={applyCoupon} className="bg-brand text-white rounded px-3">Apply</button>
+          <button onClick={applyCoupon} disabled={applying} className="bg-brand text-white rounded px-3 disabled:opacity-50">{applying ? "Checking…" : "Apply"}</button>
         </div>
-        {msg && <p className="text-xs text-gray-500">{msg}</p>}
+        {coupon ? (
+          <p className="flex items-center justify-between bg-green-50 border border-green-200 text-green-700 rounded px-2.5 py-1.5 text-xs font-medium">
+            <span>{coupon.code} applied — {rs(discount)} off</span>
+            <button onClick={removeCoupon} className="text-green-700 font-bold px-1" aria-label="Remove voucher">✕</button>
+          </p>
+        ) : msg ? (
+          <p className={`text-[13px] font-medium ${msgKind === "ok" ? "text-green-600" : "text-red-500"}`}>{msg}</p>
+        ) : null}
         <div className="flex justify-between"><span>Subtotal ({selItems.length} selected)</span><span>{rs(selSubtotal)}</span></div>
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>
         <div className="flex justify-between"><span>Shipping</span><span>{shipping === 0 ? "Free" : rs(shipping)}</span></div>
