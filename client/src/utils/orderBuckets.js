@@ -1,7 +1,7 @@
 // Daraz-style order buckets for the My Account hub and the My Orders
 // filter. ONE definition drives both the hub's counts and the filtered
 // list (via /orders?bucket=<key>) so the two can never disagree.
-const OPEN_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered"];
+const OPEN_STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "OutForDelivery", "Delivered"];
 
 export const ORDER_BUCKETS = [
   {
@@ -19,7 +19,7 @@ export const ORDER_BUCKETS = [
   {
     key: "toreceive",
     label: "To Receive",
-    test: (o) => o.status === "Shipped",
+    test: (o) => o.status === "Shipped" || o.status === "OutForDelivery",
   },
   {
     key: "toreview",

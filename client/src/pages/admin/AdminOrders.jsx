@@ -7,11 +7,12 @@ import { customerContact } from "../../utils/customerContact.js";
 import { printBlock } from "../../utils/print.js";
 import OrderInvoice from "../../components/OrderInvoice.jsx";
 
-const FILTERS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
+const FILTERS = ["All", "Pending", "Processing", "Shipped", "OutForDelivery", "Delivered", "Cancelled", "Returned"];
 // Staff pipeline (Daraz-style): Pending → Confirmed → Packed → Shipped →
-// Delivered. "Processing" is not a step — it is the tab that groups
-// Confirmed + Packed. Cancelled needs a reason (see ADMIN_CANCEL_REASONS).
-const STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled", "Returned"];
+// OutForDelivery → Delivered. "Processing" is not a step — it is the tab
+// that groups Confirmed + Packed. Cancelled needs a reason (see
+// ADMIN_CANCEL_REASONS).
+const STATUSES = ["Pending", "Confirmed", "Packed", "Shipped", "OutForDelivery", "Delivered", "Cancelled", "Returned"];
 const COURIERS = ["TCS", "Leopards", "Trax", "PostEx", "Other"];
 const ADMIN_CANCEL_REASONS = [
   "Out of stock", "Customer requested", "Payment not verified",
@@ -20,6 +21,7 @@ const ADMIN_CANCEL_REASONS = [
 const statusBadge = {
   Pending: "bg-amber-100 text-amber-700", Confirmed: "bg-sky-100 text-sky-700",
   Packed: "bg-indigo-100 text-indigo-700", Shipped: "bg-violet-100 text-violet-700",
+  OutForDelivery: "bg-cyan-100 text-cyan-700",
   Delivered: "bg-green-100 text-green-700", Cancelled: "bg-red-100 text-red-600",
   Returned: "bg-orange-100 text-orange-700",
 };
@@ -127,7 +129,7 @@ export default function AdminOrders() {
         {FILTERS.map((f) => (
           <button key={f} onClick={() => setFilter(f)}
             className={`text-sm px-3 py-1.5 rounded-full ${filter === f ? "bg-brand text-white" : "bg-white"}`}>
-            {f}{counts[f] != null ? ` (${counts[f]})` : ""}</button>
+            {f === "OutForDelivery" ? "Out for Delivery" : f}{counts[f] != null ? ` (${counts[f]})` : ""}</button>
         ))}
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search order ID"
           className="border rounded px-3 py-2 sm:py-1.5 text-sm sm:ml-auto bg-white flex-1 sm:flex-none min-w-[150px]" />
@@ -154,7 +156,7 @@ export default function AdminOrders() {
                       {o.paymentVerificationStatus.replace("_", " ")}
                     </span>)}
                 </td>
-                <td><span className={`rounded-full px-2 py-0.5 text-xs ${statusBadge[o.status] || "bg-gray-100 text-gray-600"}`}>{o.status}</span>
+                <td><span className={`rounded-full px-2 py-0.5 text-xs ${statusBadge[o.status] || "bg-gray-100 text-gray-600"}`}>{o.status === "OutForDelivery" ? "Out for Delivery" : o.status}</span>
                   {(o.courier || o.trackingId) && <span className="block text-[10px] text-gray-400 mt-0.5">{o.courier}{o.trackingId ? ` · ${o.trackingId}` : ""}</span>}
                 </td>
                 <td className="text-xs text-gray-400">{new Date(o.createdAt).toLocaleDateString("en-PK")}</td>
@@ -324,16 +326,16 @@ export default function AdminOrders() {
                 <p className="font-semibold mb-1">Fulfillment Status</p>
                 {/* Daraz-style step buttons */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
-                  {["Confirmed", "Packed", "Shipped", "Delivered"].map((s) => (
+                  {["Confirmed", "Packed", "Shipped", "OutForDelivery", "Delivered"].map((s) => (
                     <button key={s} onClick={() => setFormStatus(s)}
                       className={`text-xs px-3 py-1.5 rounded-full border ${formStatus === s ? "bg-brand text-white border-transparent" : selected.status === s ? "bg-gray-100 font-semibold" : "bg-white"}`}>
-                      {s}{selected.status === s ? " ✓" : ""}
+                      {s === "OutForDelivery" ? "Out for Delivery" : s}{selected.status === s ? " ✓" : ""}
                     </button>
                   ))}
                 </div>
                 <label className="block text-xs text-gray-500 mb-1">Move to status</label>
                 <select value={formStatus} onChange={(e) => setFormStatus(e.target.value)} className="border rounded px-3 py-2 w-full">
-                  {STATUSES.map((s) => <option key={s}>{s}</option>)}
+                  {STATUSES.map((s) => <option key={s} value={s}>{s === "OutForDelivery" ? "Out for Delivery" : s}</option>)}
                 </select>
 
                 {formStatus === "Shipped" && (
@@ -352,7 +354,7 @@ export default function AdminOrders() {
                     <p className="text-[11px] text-gray-500">The customer sees the courier + tracking ID on the Track Order page once shipped.</p>
                   </div>
                 )}
-                {["Shipped", "Delivered", "Returned"].includes(selected.status) && formStatus !== "Shipped" && (selected.courier || selected.trackingId) && (
+                {["Shipped", "OutForDelivery", "Delivered", "Returned"].includes(selected.status) && formStatus !== "Shipped" && (selected.courier || selected.trackingId) && (
                   <div className="mt-3 border rounded p-3 bg-gray-50 space-y-2">
                     <p className="flex items-center gap-1 font-medium"><Truck size={14} /> Courier: {selected.courier || "-"} · <span className="font-mono">{selected.trackingId || "-"}</span></p>
                     <div className="grid grid-cols-2 gap-2">

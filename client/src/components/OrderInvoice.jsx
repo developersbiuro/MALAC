@@ -11,7 +11,7 @@ import { customerContact } from "../utils/customerContact.js";
 
 // Customer-facing status label — Confirmed/Packed read as "Processing",
 // mirroring MyOrders.
-const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
+const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s === "OutForDelivery" ? "Out for Delivery" : s);
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" }) : null);
 const historyDate = (order, status) =>
   fmtDate((order.statusHistory || []).find((h) => h.status === status)?.at);

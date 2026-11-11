@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, XCircle, RotateCcw, LifeBuoy, MessagesSquare, PackageCheck, Megaphone } from "lucide-react";
+import { ShoppingBag, XCircle, RotateCcw, LifeBuoy, MessagesSquare, PackageCheck, Megaphone, Bot } from "lucide-react";
 import api from "../../api/client.js";
 
 // Staff notifications: order events from customers (new order, customer
@@ -23,6 +23,10 @@ export default function AdminNotifications() {
   const [bcBody, setBcBody] = useState("");
   const [bcMsg, setBcMsg] = useState("");
   const [bcBusy, setBcBusy] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [bot, setBot] = useState({ daily: true, inactive: true });
+  const [botEditable, setBotEditable] = useState(false);
+  const [botMsg, setBotMsg] = useState("");
 
   // Fires a real FCM push to every registered staff phone (Admin app).
   const sendTestPush = async () => {
@@ -63,7 +67,34 @@ export default function AdminNotifications() {
     }
   };
 
+  // Notification Bot controls (Super Admin only — the settings API
+  // refuses other staff, in which case the toggles simply stay hidden
+  // and the bot keeps its current state).
+  const toggleBot = async (key, value) => {
+    const field = key === "daily" ? "botDailyPromo" : "botInactivePush";
+    setBot((b) => ({ ...b, [key]: value }));
+    setBotMsg("Save ho raha hai…");
+    try {
+      await api.put("/admin/settings", { [field]: value });
+      setBotMsg(value ? "Bot ON — setting save ho gayi." : "Bot OFF — setting save ho gayi.");
+    } catch {
+      setBotMsg("Save nahi hua — sirf Super Admin bot settings badal sakta hai.");
+    }
+  };
+
   useEffect(() => {
+    api.get("/admin/push/templates")
+      .then((r) => setTemplates(r.data.templates || []))
+      .catch(() => {});
+    api.get("/admin/settings")
+      .then((r) => {
+        setBot({
+          daily: r.data.settings?.botDailyPromo !== false,
+          inactive: r.data.settings?.botInactivePush !== false,
+        });
+        setBotEditable(true);
+      })
+      .catch(() => {});
     api.get("/admin/notifications")
       .then((r) => {
         setItems(r.data.notifications || []);
@@ -94,6 +125,20 @@ export default function AdminNotifications() {
             <p className="text-xs text-gray-500 mt-0.5">Flash sale ya offer ka elan — tamam customer apps par jayega. Naya product aur flash sale shuru hone par notification khud bhi chali jati hai.</p>
           </div>
         </div>
+        {templates.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {templates.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => { setBcTitle(t.title); setBcBody(t.body); setBcMsg(t.ready ? "Template bhar gaya hai — check karke 'Sab customers ko bhejein' dabayein." : (t.note || "Ye template abhi live nahi.")); }}
+                className={`text-xs px-3 py-1.5 rounded-full border ${t.ready ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-gray-50 border-cream-line text-gray-400"}`}
+                title={t.ready ? "Composer me bharein" : (t.note || "")}
+              >
+                {t.label}{t.ready ? "" : " · abhi live nahi"}
+              </button>
+            ))}
+          </div>
+        )}
         <input
           value={bcTitle}
           onChange={(e) => setBcTitle(e.target.value)}
@@ -112,6 +157,27 @@ export default function AdminNotifications() {
         <div className="flex flex-wrap items-center gap-3 mt-2">
           <button onClick={sendBroadcast} disabled={bcBusy} className="btn-lux px-4 py-2 text-sm disabled:opacity-60">Sab customers ko bhejein</button>
           {bcMsg && <p className="text-xs text-gray-600">{bcMsg}</p>}
+        </div>
+      </div>
+      <div className="bg-white rounded-md border border-cream-line p-3.5 mt-3">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full p-2 bg-violet-100 text-violet-700"><Bot size={16} /></span>
+          <div>
+            <p className="text-sm font-semibold">Notification Bot — FREE (khud manage karta hai)</p>
+            <p className="text-xs text-gray-500 mt-0.5">Bot rozana khud notifications bhejta hai — koi kharcha nahi (FCM free hai). Review reminders rozana dopahar 12 bajay alag se jate hain.</p>
+          </div>
+        </div>
+        <div className="mt-3 space-y-2 text-sm">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={bot.daily} disabled={!botEditable} onChange={(e) => toggleBot("daily", e.target.checked)} className="mt-0.5" />
+            <span><span className="font-medium">Rozana promo template</span> <span className="text-gray-500">— har shaam 6 bajay ek template (Flash Sale / Naye Products / Aaj ki Deals / Free Delivery) tamam customer apps ko, jo sach me live ho wahi.</span></span>
+          </label>
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input type="checkbox" checked={bot.inactive} disabled={!botEditable} onChange={(e) => toggleBot("inactive", e.target.checked)} className="mt-0.5" />
+            <span><span className="font-medium">3 din se gayab customers</span> <span className="text-gray-500">— jis customer ne 3 din se app na khola ho, use uske naam ke sath "miss you" notification (har khamoshi par sirf ek dafa).</span></span>
+          </label>
+          {!botEditable && <p className="text-xs text-gray-400">Bot abhi ON hai (default). Toggles sirf Super Admin ke liye hain.</p>}
+          {botMsg && <p className="text-xs text-gray-600">{botMsg}</p>}
         </div>
       </div>
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}

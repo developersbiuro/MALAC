@@ -9,15 +9,16 @@ import { printBlock } from "../utils/print.js";
 import OrderInvoice from "../components/OrderInvoice.jsx";
 import { bucketByKey } from "../utils/orderBuckets.js";
 
-const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
+const TABS = ["All", "Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned"];
 // Badges are keyed by the customer-facing label; Confirmed/Packed show
 // as "Processing" (the server stores Confirmed/Packed — see customerStatus).
 const badge = {
   Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
-  Shipped: "bg-violet-100 text-violet-700", Delivered: "bg-green-100 text-green-700",
+  Shipped: "bg-violet-100 text-violet-700", "Out for Delivery": "bg-cyan-100 text-cyan-700",
+  Delivered: "bg-green-100 text-green-700",
   Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
 };
-const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
+const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s === "OutForDelivery" ? "Out for Delivery" : s);
 const CUSTOMER_CANCEL_REASONS = [
   "Changed my mind", "Ordered by mistake", "Found a better price elsewhere",
   "Delivery is taking too long", "Need to change address or items",
@@ -156,7 +157,7 @@ export default function MyOrders() {
                   : o.paymentVerificationStatus === "rejected" ? "Rejected - contact support" : ""}
                   {o.transactionId ? ` · Txn ${o.transactionId}` : ""}</>
               )}
-              {(o.courier || o.trackingId) && ["Shipped", "Delivered", "Returned"].includes(o.status) && (
+              {(o.courier || o.trackingId) && ["Shipped", "OutForDelivery", "Delivered", "Returned"].includes(o.status) && (
                 <> · Courier: <b>{o.courier || "-"}</b>{o.trackingId ? <> · Tracking: <b className="font-mono">{o.trackingId}</b></> : ""}</>
               )}</span>
               <span>Total: <b className="text-brand">{rs(o.total)}</b></span>

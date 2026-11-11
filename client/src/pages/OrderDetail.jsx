@@ -14,10 +14,11 @@ import OrderInvoice from "../components/OrderInvoice.jsx";
 // else lives on this page.
 const badge = {
   Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
-  Shipped: "bg-violet-100 text-violet-700", Delivered: "bg-green-100 text-green-700",
+  Shipped: "bg-violet-100 text-violet-700", "Out for Delivery": "bg-cyan-100 text-cyan-700",
+  Delivered: "bg-green-100 text-green-700",
   Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
 };
-const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
+const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s === "OutForDelivery" ? "Out for Delivery" : s);
 const CUSTOMER_CANCEL_REASONS = [
   "Changed my mind", "Ordered by mistake", "Found a better price elsewhere",
   "Delivery is taking too long", "Need to change address or items",
@@ -27,13 +28,14 @@ const RETURN_REASONS = [
   "Damaged item received", "Defective / not working", "Wrong item delivered",
   "Wrong size or colour", "Missing parts or accessories", "Other",
 ];
-const STAGES = ["Pending", "Processing", "Shipped", "Delivered"];
+const STAGES = ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered"];
 const stageIndex = (status) => {
   const cs = customerStatus(status);
   if (cs === "Pending") return 0;
   if (cs === "Processing") return 1;
   if (cs === "Shipped") return 2;
-  if (cs === "Delivered") return 3;
+  if (cs === "Out for Delivery") return 3;
+  if (cs === "Delivered") return 4;
   return -1; // Cancelled / Returned — no progress bar
 };
 
@@ -147,7 +149,7 @@ export default function OrderDetail() {
             ))}
           </ol>
         )}
-        {(o.courier || o.trackingId) && ["Shipped", "Delivered", "Returned"].includes(o.status) && (
+        {(o.courier || o.trackingId) && ["Shipped", "OutForDelivery", "Delivered", "Returned"].includes(o.status) && (
           <p className="mt-3 text-gray-600">Courier: <b>{o.courier || "-"}</b>{o.trackingId ? <> · Tracking: <b className="font-mono">{o.trackingId}</b></> : ""}</p>
         )}
         {o.estimatedDelivery && o.status !== "Delivered" && o.status !== "Cancelled" && (

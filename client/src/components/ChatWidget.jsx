@@ -269,7 +269,7 @@ export default function ChatWidget() {
   };
 
   // ---- Order tracking (Daraz-style picker, as before) ----
-  const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s);
+  const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s === "OutForDelivery" ? "Out for Delivery" : s);
   const choiceOf = (o) => ({
     orderId: o.orderId,
     status: customerStatus(o.status),
@@ -300,7 +300,7 @@ export default function ChatWidget() {
       push(botSay(
         `Order ${o.orderId} ka status: ${o.status}. Payment: ${o.paymentMethod} (${o.paymentStatus})` +
         (o.status === "Cancelled" && o.cancelReason ? ` — wajah: ${o.cancelReason}.` : "") +
-        (["Shipped", "Delivered"].includes(o.status) && (o.courier || o.trackingId)
+        (["Shipped", "Out for Delivery", "Delivered"].includes(o.status) && (o.courier || o.trackingId)
           ? ` — Courier: ${o.courier || "-"}${o.trackingId ? `, Tracking: ${o.trackingId}` : ""}.`
           : "") +
         (o.estimatedDelivery && o.status !== "Delivered" && o.status !== "Cancelled"
