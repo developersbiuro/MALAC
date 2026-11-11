@@ -24,6 +24,8 @@ export default function AdminNotifications() {
   const [bcMsg, setBcMsg] = useState("");
   const [bcBusy, setBcBusy] = useState(false);
   const [templates, setTemplates] = useState([]);
+  const [saved, setSaved] = useState([]);
+  const [saveMsg, setSaveMsg] = useState("");
   const [bot, setBot] = useState({ daily: true, inactive: true });
   const [botEditable, setBotEditable] = useState(false);
   const [botMsg, setBotMsg] = useState("");
@@ -82,7 +84,36 @@ export default function AdminNotifications() {
     }
   };
 
+  // Save the composer's current title + message as a reusable template.
+  const saveTemplate = async () => {
+    if (!bcTitle.trim() || !bcBody.trim()) {
+      setSaveMsg("Pehle title aur message likhein, phir save karein.");
+      return;
+    }
+    setSaveMsg("Save ho raha hai…");
+    try {
+      const r = await api.post("/admin/push/saved-templates", { title: bcTitle.trim(), body: bcBody.trim() });
+      setSaved((s) => [r.data.template, ...s]);
+      setSaveMsg("Template save ho gaya — neeche 'Saved Templates' me mil jayega.");
+    } catch {
+      setSaveMsg("Template save nahi hua — dobara try karein.");
+    }
+  };
+
+  const deleteTemplate = async (t) => {
+    if (!window.confirm(`Template "${t.title}" delete kar dein?`)) return;
+    try {
+      await api.delete(`/admin/push/saved-templates/${t._id}`);
+      setSaved((s) => s.filter((x) => x._id !== t._id));
+    } catch {
+      setSaveMsg("Template delete nahi hua — dobara try karein.");
+    }
+  };
+
   useEffect(() => {
+    api.get("/admin/push/saved-templates")
+      .then((r) => setSaved(r.data.templates || []))
+      .catch(() => {});
     api.get("/admin/push/templates")
       .then((r) => setTemplates(r.data.templates || []))
       .catch(() => {});
@@ -156,8 +187,29 @@ export default function AdminNotifications() {
         />
         <div className="flex flex-wrap items-center gap-3 mt-2">
           <button onClick={sendBroadcast} disabled={bcBusy} className="btn-lux px-4 py-2 text-sm disabled:opacity-60">Sab customers ko bhejein</button>
+          <button onClick={saveTemplate} className="border border-cream-line rounded-full px-4 py-2 text-sm bg-white">Template save karein</button>
           {bcMsg && <p className="text-xs text-gray-600">{bcMsg}</p>}
         </div>
+        {saved.length > 0 && (
+          <div className="mt-3 border-t border-cream-line pt-3">
+            <p className="text-xs font-semibold text-gray-500">SAVED TEMPLATES — tap karein to composer bhar jayega</p>
+            <div className="space-y-1.5 mt-2">
+              {saved.map((t) => (
+                <div key={t._id} className="flex items-start gap-2 bg-cream-soft/60 rounded-lg px-3 py-2">
+                  <button
+                    onClick={() => { setBcTitle(t.title); setBcBody(t.body); setBcMsg("Saved template bhar gaya hai — check karke bhejein."); }}
+                    className="flex-1 min-w-0 text-left"
+                  >
+                    <span className="block text-sm font-medium truncate">{t.title}</span>
+                    <span className="block text-xs text-gray-500 truncate">{t.body}</span>
+                  </button>
+                  <button onClick={() => deleteTemplate(t)} title="Delete template" className="text-gray-400 hover:text-red-600 shrink-0 px-1 text-sm">✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {saveMsg && <p className="text-xs text-gray-600 mt-2">{saveMsg}</p>}
       </div>
       <div className="bg-white rounded-md border border-cream-line p-3.5 mt-3">
         <div className="flex items-center gap-2">
