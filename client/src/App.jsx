@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
@@ -9,41 +10,48 @@ import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 import { useAuth } from "./context/AuthContext.jsx";
 
-import Home from "./pages/Home.jsx";
-import Shop from "./pages/Shop.jsx";
-import Categories from "./pages/Categories.jsx";
-import ProductDetails from "./pages/ProductDetails.jsx";
-import CartPage from "./pages/CartPage.jsx";
-import Checkout from "./pages/Checkout.jsx";
-import OrderConfirmation from "./pages/OrderConfirmation.jsx";
-import MyOrders from "./pages/MyOrders.jsx";
-import OrderDetail from "./pages/OrderDetail.jsx";
-import TrackOrder from "./pages/TrackOrder.jsx";
-import ProfileSettings from "./pages/ProfileSettings.jsx";
-import AccountHub from "./pages/AccountHub.jsx";
-import WishlistPage from "./pages/WishlistPage.jsx";
-import Login from "./pages/Login.jsx";
-import Signup from "./pages/Signup.jsx";
-import ResetPassword from "./pages/ResetPassword.jsx";
-import ForgotPassword from "./pages/ForgotPassword.jsx";
-import NotFound from "./pages/NotFound.jsx";
-import Terms from "./pages/Terms.jsx";
-import About from "./pages/About.jsx";
-import Policy from "./pages/Policy.jsx";
+// Pages are code-split (React.lazy): the phone downloads only the page
+// it opens instead of the whole store in one ~1.5 MB bundle. On the
+// slow connections most customers use, first load is now a fraction of
+// what it was; the shell (header/nav/cart/chat) stays eager so the
+// frame paints instantly. (Owner flagged slow app loading, 2026-11-11.)
+const Home = lazy(() => import("./pages/Home.jsx"));
+const Shop = lazy(() => import("./pages/Shop.jsx"));
+const Categories = lazy(() => import("./pages/Categories.jsx"));
+const ProductDetails = lazy(() => import("./pages/ProductDetails.jsx"));
+const CartPage = lazy(() => import("./pages/CartPage.jsx"));
+const Checkout = lazy(() => import("./pages/Checkout.jsx"));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation.jsx"));
+const MyOrders = lazy(() => import("./pages/MyOrders.jsx"));
+const OrderDetail = lazy(() => import("./pages/OrderDetail.jsx"));
+const TrackOrder = lazy(() => import("./pages/TrackOrder.jsx"));
+const ProfileSettings = lazy(() => import("./pages/ProfileSettings.jsx"));
+const AccountHub = lazy(() => import("./pages/AccountHub.jsx"));
+const WishlistPage = lazy(() => import("./pages/WishlistPage.jsx"));
+const Login = lazy(() => import("./pages/Login.jsx"));
+const Signup = lazy(() => import("./pages/Signup.jsx"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
+const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+const Terms = lazy(() => import("./pages/Terms.jsx"));
+const About = lazy(() => import("./pages/About.jsx"));
+const Policy = lazy(() => import("./pages/Policy.jsx"));
 
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
-import Dashboard from "./pages/admin/Dashboard.jsx";
-import AdminProducts from "./pages/admin/AdminProducts.jsx";
-import AdminProductForm from "./pages/admin/AdminProductForm.jsx";
-import AdminCategories from "./pages/admin/AdminCategories.jsx";
-import AdminOrders from "./pages/admin/AdminOrders.jsx";
-import AdminCoupons from "./pages/admin/AdminCoupons.jsx";
-import AdminReviews from "./pages/admin/AdminReviews.jsx";
-import AdminRoles from "./pages/admin/AdminRoles.jsx";
-import AdminSettings from "./pages/admin/AdminSettings.jsx";
-import AdminPassword from "./pages/admin/AdminPassword.jsx";
-import AdminNotifications from "./pages/admin/AdminNotifications.jsx";
-import AdminChatbot from "./pages/admin/AdminChatbot.jsx";
+const Dashboard = lazy(() => import("./pages/admin/Dashboard.jsx"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminProducts.jsx"));
+const AdminProductForm = lazy(() => import("./pages/admin/AdminProductForm.jsx"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories.jsx"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders.jsx"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons.jsx"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews.jsx"));
+const AdminRoles = lazy(() => import("./pages/admin/AdminRoles.jsx"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings.jsx"));
+const AdminPassword = lazy(() => import("./pages/admin/AdminPassword.jsx"));
+const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications.jsx"));
+const AdminChatbot = lazy(() => import("./pages/admin/AdminChatbot.jsx"));
+
+const PageLoading = <p className="p-8 text-center text-gray-400">Loading...</p>;
 
 // Shown when a staff account opens a section URL directly without the
 // access for it (the sidebar already hides those sections; this covers
@@ -79,6 +87,7 @@ function AdminShell() {
   if (!user || !isStaff) return <AdminLogin />;
   return (
     <AdminLayout>
+      <Suspense fallback={PageLoading}>
       <Routes>
         <Route index element={<Dashboard />} />
         <Route path="products" element={<SectionGuard permission="products"><AdminProducts /></SectionGuard>} />
@@ -95,6 +104,7 @@ function AdminShell() {
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
+      </Suspense>
     </AdminLayout>
   );
 }
@@ -111,6 +121,7 @@ export default function App() {
       {!isAdmin && <Header />}
       {!isAdmin && <CartDrawer />}
       <div className={appMode && !isAdmin ? "pb-20" : undefined}>
+      <Suspense fallback={PageLoading}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
@@ -141,6 +152,7 @@ export default function App() {
         <Route path="/admin/*" element={<AdminShell />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
       </div>
       {!isAdmin && !appMode && <Footer />}
       {!isAdmin && <MobileBottomNav />}
