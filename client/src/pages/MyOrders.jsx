@@ -113,7 +113,7 @@ export default function MyOrders() {
         {orders.map((o) => (
           <article key={o._id} className="bg-white rounded-md p-4 text-sm">
             <div className="flex flex-wrap justify-between gap-2">
-              <p><b>{o.orderId}</b> <span className="text-gray-400">· {new Date(o.createdAt).toLocaleString("en-PK")}</span></p>
+              <p><Link to={`/orders/${o.orderId}`} className="hover:text-brand"><b>{o.orderId}</b></Link> <span className="text-gray-400">· {new Date(o.createdAt).toLocaleString("en-PK")}</span></p>
               <span className={`text-xs font-medium rounded-full px-2.5 py-1 ${badge[customerStatus(o.status)] || "bg-gray-100 text-gray-600"}`}>{customerStatus(o.status)}</span>
             </div>
             {o.status === "Cancelled" && o.cancelReason && (
@@ -152,6 +152,9 @@ export default function MyOrders() {
             <button onClick={() => printInvoice(o)} className="mt-2 mr-2 inline-flex items-center gap-1 border rounded px-4 py-2 sm:py-1.5 text-xs text-gray-600 hover:bg-gray-50">
               <Printer size={13} /> Print invoice
             </button>
+            <Link to={`/orders/${o.orderId}`} className="mt-2 mr-2 inline-flex items-center gap-1 border border-brand text-brand rounded px-4 py-2 sm:py-1.5 text-xs hover:bg-brand-light">
+              View detail
+            </Link>
             {["Pending", "Confirmed", "Packed"].includes(o.status) && cancellingId !== o.orderId && (
               <button onClick={() => openCancel(o.orderId)} className="mt-2 border border-red-300 text-red-500 rounded px-4 py-2 sm:py-1.5 text-xs">
                 Cancel Order

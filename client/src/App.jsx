@@ -17,6 +17,7 @@ import CartPage from "./pages/CartPage.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import OrderConfirmation from "./pages/OrderConfirmation.jsx";
 import MyOrders from "./pages/MyOrders.jsx";
+import OrderDetail from "./pages/OrderDetail.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
 import ProfileSettings from "./pages/ProfileSettings.jsx";
 import AccountHub from "./pages/AccountHub.jsx";
@@ -120,6 +121,7 @@ export default function App() {
         <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
         <Route path="/order-confirmation/:orderId" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute><MyOrders /></ProtectedRoute>} />
+        <Route path="/orders/:orderId" element={<ProtectedRoute><OrderDetail /></ProtectedRoute>} />
         {/* Tracking is a signed-in function now (Abdullah, 2026-11-09:
             browsing is public, every function needs an account) */}
         <Route path="/track-order" element={<ProtectedRoute><TrackOrder /></ProtectedRoute>} />
