@@ -37,3 +37,19 @@ export function useAppMode() {
   const [appMode] = useState(isAppMode);
   return appMode;
 }
+
+// The installed app's version name ("1.6"), read from the WebView user
+// agent the APK sets ("MALACApp/1.6"). Null in a plain browser / PWA —
+// the Profile screens show the version only inside the real app,
+// small and quiet at the bottom (owner's ask, 2026-11-11).
+let cachedVersion;
+export function appVersion() {
+  if (cachedVersion !== undefined) return cachedVersion;
+  try {
+    const m = navigator.userAgent.match(/MALACApp\/([\d.]+)/);
+    cachedVersion = m ? m[1] : null;
+  } catch {
+    cachedVersion = null;
+  }
+  return cachedVersion;
+}

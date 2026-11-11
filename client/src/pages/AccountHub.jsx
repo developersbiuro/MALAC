@@ -10,6 +10,7 @@ import { LOGO_MARK } from "../assets/logo.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useSeo } from "../utils/seo.js";
+import { appVersion } from "../utils/appMode.js";
 
 // "My Account" hub (/account) — Daraz-app-style: identity header, an
 // orders strip with status buckets (To Pay / To Ship / To Receive /
@@ -129,6 +130,10 @@ export default function AccountHub() {
         <MenuRow to="/policy" Icon={ShieldCheck} label="Privacy Policy" />
         {user && <MenuRow Icon={LogOut} label="Logout" danger onClick={handleLogout} />}
       </section>
+
+      {appVersion() && (
+        <p className="text-center text-[11px] text-gray-400 mt-4">MALAC App · v{appVersion()}</p>
+      )}
     </main>
   );
 }

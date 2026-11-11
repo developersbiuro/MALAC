@@ -9,6 +9,7 @@ import { findCity } from "../data/pakLocations.js";
 import PhoneInput from "../components/PhoneInput.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 import { useSeo } from "../utils/seo.js";
+import { appVersion } from "../utils/appMode.js";
 
 // Profile Settings (/account/settings, login required — see
 // ProtectedRoute in App.jsx). Four sections:
@@ -514,6 +515,10 @@ export default function ProfileSettings() {
           </button>
         )}
       </Section>
+
+      {appVersion() && (
+        <p className="text-center text-[11px] text-gray-400 mt-4">MALAC App · v{appVersion()}</p>
+      )}
     </main>
   );
 }
