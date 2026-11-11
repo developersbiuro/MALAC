@@ -24,7 +24,7 @@ export default function LegalPage({ eyebrow, title, intro, children }) {
       {intro && <p className="text-sm text-gray-500 leading-relaxed mt-3">{intro}</p>}
       {children}
       <p className="text-xs text-gray-400 mt-10 border-t border-cream-line pt-4">
-        Questions? Email us at developersbiuro@gmail.com or WhatsApp +92 3236016684.
+        Questions? Email us at info@malac.pp.ua or WhatsApp +92 3236016684.
       </p>
     </main>
   );

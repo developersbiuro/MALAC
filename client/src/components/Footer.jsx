@@ -33,8 +33,8 @@ export default function Footer() {
             <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
               <MessageCircle size={15} className="text-[#059669]" /> WhatsApp: +92 3236016684
             </a>
-            <a href="mailto:developersbiuro@gmail.com" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
-              <Mail size={15} className="text-[#059669]" /> developersbiuro@gmail.com
+            <a href="mailto:info@malac.pp.ua" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
+              <Mail size={15} className="text-[#059669]" /> info@malac.pp.ua
             </a>
           </p>
         </div>

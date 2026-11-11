@@ -40,11 +40,11 @@ const buildFaqs = (fees) => [
   },
   {
     q: "What is MALAC's return and exchange policy?",
-    a: "If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (developersbiuro@gmail.com) with your order number. After we inspect the returned item, we will arrange a replacement or a refund. Items must be unused and in their original packaging. For hygiene and safety reasons, certain items may not be returnable, and change-of-mind returns are not accepted.",
+    a: "If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (info@malac.pp.ua) with your order number. After we inspect the returned item, we will arrange a replacement or a refund. Items must be unused and in their original packaging. For hygiene and safety reasons, certain items may not be returnable, and change-of-mind returns are not accepted.",
   },
   {
     q: "How do I contact MALAC?",
-    a: "Message us on WhatsApp at +92 3236016684 or email us at developersbiuro@gmail.com — for order help, payment questions, or anything about your account.",
+    a: "Message us on WhatsApp at +92 3236016684 or email us at info@malac.pp.ua — for order help, payment questions, or anything about your account.",
   },
 ];
 

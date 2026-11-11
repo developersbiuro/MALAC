@@ -45,7 +45,7 @@ export default function Policy() {
       </LegalSection>
 
       <LegalSection title="6. Your Rights">
-        <p>You may ask us to access, correct or delete your personal information at any time by emailing developersbiuro@gmail.com or messaging us on WhatsApp at +92 3236016684. We will respond within a reasonable time and may verify your identity first to protect your account.</p>
+        <p>You may ask us to access, correct or delete your personal information at any time by emailing info@malac.pp.ua or messaging us on WhatsApp at +92 3236016684. We will respond within a reasonable time and may verify your identity first to protect your account.</p>
       </LegalSection>
 
       <LegalSection title="7. Children's Privacy">
@@ -57,12 +57,12 @@ export default function Policy() {
       </LegalSection>
 
       <LegalSection title="9. Returns & Exchanges">
-        <p>If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (developersbiuro@gmail.com) with your order number. After we inspect the returned item, we will arrange a replacement or a refund.</p>
+        <p>If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (info@malac.pp.ua) with your order number. After we inspect the returned item, we will arrange a replacement or a refund.</p>
         <p>Items must be unused and in their original packaging. For hygiene and safety reasons, certain items may not be returnable, and change-of-mind returns are not accepted. The full returns terms are in section 5 of our <Link to="/terms" className="text-lux-burnt font-medium hover:underline">Terms of Service</Link>.</p>
       </LegalSection>
 
       <LegalSection title="10. Contact Us">
-        <p>Questions about this policy or your data: developersbiuro@gmail.com · WhatsApp +92 3236016684. See also our <Link to="/terms" className="text-lux-burnt font-medium hover:underline">Terms of Service</Link>.</p>
+        <p>Questions about this policy or your data: info@malac.pp.ua · WhatsApp +92 3236016684. See also our <Link to="/terms" className="text-lux-burnt font-medium hover:underline">Terms of Service</Link>.</p>
       </LegalSection>
     </LegalPage>
   );

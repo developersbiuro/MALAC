@@ -43,7 +43,7 @@ export default function Terms() {
       </LegalSection>
 
       <LegalSection title="5. Returns & Exchanges">
-        <p>If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (developersbiuro@gmail.com) with your order number. After we inspect the returned item, we will arrange a replacement or a refund.</p>
+        <p>If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (info@malac.pp.ua) with your order number. After we inspect the returned item, we will arrange a replacement or a refund.</p>
         <p>Items must be unused and in their original packaging. For hygiene and safety reasons, certain items may not be returnable, and change-of-mind returns are not accepted.</p>
       </LegalSection>
 
@@ -65,7 +65,7 @@ export default function Terms() {
       </LegalSection>
 
       <LegalSection title="10. Governing Law & Contact">
-        <p>These terms are governed by the laws of Pakistan. For anything about these terms or your order, contact us at developersbiuro@gmail.com or on WhatsApp at +92 3236016684.</p>
+        <p>These terms are governed by the laws of Pakistan. For anything about these terms or your order, contact us at info@malac.pp.ua or on WhatsApp at +92 3236016684.</p>
       </LegalSection>
     </LegalPage>
   );
