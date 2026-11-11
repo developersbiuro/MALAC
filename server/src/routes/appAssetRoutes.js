@@ -56,7 +56,7 @@ router.get("/api/admin/app-download", protect, isStaff, sendApk(adminApk, "MALAC
 router.get("/api/app/version", (req, res) => {
   res.json({
     versionCode: 7,
-    versionName: "1.6",
+    versionName: "1.01.1",
     apkUrl: "/download/malac-app.apk",
     notes: "Notification ke chhote aur bare dono icons me ab poora MALAC logo background ke sath ayega",
   });
@@ -71,7 +71,7 @@ router.get("/api/app/version", (req, res) => {
 router.get("/api/admin/app/version", protect, isStaff, (req, res) => {
   res.json({
     versionCode: 7,
-    versionName: "1.6",
+    versionName: "1.01.1",
     apkUrl: "/api/admin/app-download",
   });
 });
