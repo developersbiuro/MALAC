@@ -38,6 +38,12 @@ export const env = {
     // inside a 24-hour service window opened by the user messaging first.
     otpTemplate: process.env.WHATSAPP_OTP_TEMPLATE || "malac_otp",
     otpTemplateLang: process.env.WHATSAPP_OTP_TEMPLATE_LANG || "en",
+    // Approved Meta UTILITY template for the order-placed confirmation
+    // (owner's ask, 2026-11-11: order place hone par WhatsApp par bhi
+    // confirmation jay). Until the template exists and is approved,
+    // sends fail at Meta and are logged only — orders never break.
+    orderTemplate: process.env.WHATSAPP_ORDER_TEMPLATE || "malac_order_confirm",
+    orderTemplateLang: process.env.WHATSAPP_ORDER_TEMPLATE_LANG || "en_US",
   },
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID || "",

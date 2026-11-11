@@ -2,6 +2,7 @@ import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import { sendPushToStaff, sendPushToUser, sendPushToAllCustomers } from "./pushService.js";
 import { sendEmail } from "./emailService.js";
+import { sendWhatsAppOrderConfirmation } from "./whatsappService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
 // Order-event side effects, in one place: the customer's lifecycle email
@@ -83,6 +84,23 @@ function pushCustomer(order, title, body) {
   sendPushToUser(order.user, { title, body, data: { orderId: order.orderId || "" } }).catch(() => {});
 }
 
+// Order confirmation on WhatsApp too (owner's ask, 2026-11-11: "email ya
+// whatsapp confirmation jaay" — both channels now fire). Strictly
+// best-effort: it goes to the phone on the order, and any failure (e.g.
+// the utility template still in review) is logged, never surfaced — an
+// order must never fail because a message could not be sent.
+async function whatsappCustomer(order, name) {
+  try {
+    const phone = order.address?.phone || "";
+    if (!phone) return;
+    await sendWhatsAppOrderConfirmation({
+      to: phone, name, orderId: order.orderId, total: order.total,
+    });
+  } catch (err) {
+    console.error(`[MALAC] order WhatsApp failed (${order.orderId}): ${err.message}`);
+  }
+}
+
 export async function onOrderPlaced(order) {
   const name = await customerNameOf(order);
   pushCustomer(order, "MALAC — Order confirm ho gaya",
@@ -94,6 +112,7 @@ export async function onOrderPlaced(order) {
     heading: "Thank you — your order is confirmed",
     intro: `your order <strong style="color:#0f172a;">${order.orderId}</strong> has been placed successfully. We will call or message you if anything needs confirming, and email you again when it ships.`,
   });
+  whatsappCustomer(order, name);
 }
 
 export async function onOrderCancelled(order, by) {
