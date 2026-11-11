@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud, Landmark } from "lucide-react";
+import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud, Landmark, MapPin } from "lucide-react";
 import api from "../api/client.js";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import LocationSelect from "../components/LocationSelect.jsx";
@@ -95,6 +95,22 @@ export default function Checkout() {
     });
   };
 
+  // Daraz-style default address: the customer's saved default (or
+  // first) address is applied automatically when checkout opens, so
+  // they never re-type it — CHANGE on the address card picks another.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const autoAppliedRef = useRef(false);
+  useEffect(() => {
+    if (autoAppliedRef.current) return;
+    const list = user?.addresses || [];
+    if (!list.length) return;
+    autoAppliedRef.current = true;
+    const def = list.find((a) => a.isDefault) || list[0];
+    if (def?._id) pickSaved(def._id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+  const selSaved = (user?.addresses || []).find((a) => a._id === savedId) || null;
+
   const applyLocation = ({ lat, lng, mapsUrl, addressLine, area, city }) => {
     setAddress((cur) => {
       // Adopt the reverse-geocoded city when it matches the national
@@ -169,6 +185,29 @@ export default function Checkout() {
           senderTitle: manual.senderTitle.trim(),
         } : {}),
       });
+      // Save the delivery address to the customer's address book so
+      // the next checkout pre-fills it (Daraz-style default address).
+      // Strictly best-effort: an address-book failure must never
+      // affect a placed order.
+      try {
+        const payload = {
+          fullName: address.fullName, phone: address.phone, province: address.province,
+          city: address.city, area: address.area, street: address.street,
+          postalCode: address.postalCode, lat: address.lat, lng: address.lng,
+          mapsUrl: address.mapsUrl,
+        };
+        if (savedId) {
+          const orig = (user?.addresses || []).find((x) => x._id === savedId);
+          const same = orig && ["fullName", "phone", "province", "city", "area", "street", "postalCode"]
+            .every((f) => (orig[f] || "") === (payload[f] || ""));
+          if (!same) await api.put(`/auth/addresses/${savedId}`, payload);
+        } else if (address.street && address.city) {
+          await api.post("/auth/addresses", {
+            ...payload, label: "Home",
+            isDefault: (user?.addresses || []).length === 0,
+          });
+        }
+      } catch { /* address book is a convenience, never a blocker */ }
       if (checkoutKeys) {
         // Only the ordered (ticked) items leave the cart.
         orderItems.forEach((i) => remove(i.key));
@@ -208,18 +247,66 @@ export default function Checkout() {
 
         {step === 0 && (
           <form className="grid sm:grid-cols-2 gap-3" onSubmit={(e) => { e.preventDefault(); setStep(1); }}>
-            {(user?.addresses?.length > 0) && (
-              <label className="block sm:col-span-2">
-                <span className="text-xs font-medium text-gray-500">Deliver to a saved address</span>
-                <select className={`${input} mt-1`} value={savedId} onChange={(e) => pickSaved(e.target.value)}>
-                  <option value="">Enter a new address manually</option>
-                  {user.addresses.map((a) => (
-                    <option key={a._id} value={a._id}>
-                      {a.label || "Home"} — {a.street}, {a.area}, {a.city}{a.province ? `, ${a.province}` : ""}{a.lat != null && a.lng != null ? " 📍" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            {(user?.addresses?.length > 0) ? (
+              <div className="sm:col-span-2 border rounded-md p-3 bg-brand-light/40">
+                <div className="flex items-start gap-2">
+                  <MapPin size={17} className="text-brand shrink-0 mt-0.5" />
+                  <p className="flex-1 min-w-0 font-semibold text-sm">
+                    {address.fullName || user?.name}, {address.phone || user?.phone}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setPickerOpen((o) => !o)}
+                    className="shrink-0 text-brand font-semibold text-sm"
+                  >
+                    CHANGE
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-1.5 break-words">
+                  <span className="inline-block bg-white border rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide mr-1.5 align-middle">
+                    {selSaved?.label || "Home"}
+                  </span>
+                  {address.street}, {address.area ? `${address.area}, ` : ""}{address.city}
+                  {address.province ? `, ${address.province}` : ""}
+                  {address.postalCode ? ` — ${address.postalCode}` : ""}
+                  {address.lat != null && address.lng != null ? " 📍" : ""}
+                </p>
+                {pickerOpen && (
+                  <div className="mt-3 space-y-2">
+                    {(user?.addresses || []).map((a) => (
+                      <button
+                        key={a._id}
+                        type="button"
+                        onClick={() => { pickSaved(a._id); setPickerOpen(false); }}
+                        className={`block w-full text-left border rounded-md p-2.5 bg-white ${a._id === savedId ? "border-brand" : ""}`}
+                      >
+                        <span className="text-sm font-medium">
+                          <span className="inline-block bg-gray-100 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide mr-1.5">
+                            {a.label || "Home"}
+                          </span>
+                          {a.fullName}, {a.phone}
+                          {a.isDefault && <span className="text-brand text-xs font-semibold"> · Default</span>}
+                        </span>
+                        <span className="block text-xs text-gray-500 mt-0.5 break-words">
+                          {a.street}, {a.area ? `${a.area}, ` : ""}{a.city}{a.province ? `, ${a.province}` : ""}{a.lat != null && a.lng != null ? " 📍" : ""}
+                        </span>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { pickSaved(""); setPickerOpen(false); }}
+                      className="block w-full text-left border border-dashed rounded-md p-2.5 bg-white text-sm text-brand font-medium"
+                    >
+                      + Naya address likhein
+                    </button>
+                    <p className="text-[11px] text-gray-400">Neeche form me is address ko badal bhi sakte hain — order ke sath changes save ho jayengi.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="sm:col-span-2 text-xs text-gray-400 -mb-1">
+                Ye address aap ke account me save ho jayega — agli baar checkout par khud bhar jayega, baar baar likhna nahi parega.
+              </p>
             )}
             <input required placeholder="Full name" className={input} value={address.fullName} onChange={(e) => setAddress({ ...address, fullName: e.target.value })} />
             <PhoneInput required className={input} value={address.phone} onChange={(v) => setAddress({ ...address, phone: v })} />
