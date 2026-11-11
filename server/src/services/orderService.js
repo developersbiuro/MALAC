@@ -3,7 +3,7 @@ import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Settings from "../models/Settings.js";
 import env from "../config/env.js";
-import { sendStoreEmail } from "./emailService.js";
+import { sendEmail } from "./emailService.js";
 import { reviewInviteEmail } from "./emailTemplates.js";
 import { onOrderCancelled, onOrderShipped, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
@@ -16,6 +16,11 @@ import { validateCoupon, redeemCoupon } from "./couponService.js";
 // pin must never fail an otherwise valid order.
 function sanitizeAddressSnapshot(address) {
   const snap = { ...(address || {}) };
+  // The checkout email rides in the snapshot: keep it only when it is a
+  // real, well-formed address (never a synthetic placeholder).
+  const email = typeof snap.email === "string" ? snap.email.trim().toLowerCase() : "";
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && !email.endsWith("@malac.local")) snap.email = email;
+  else delete snap.email;
   const lat = Number(snap.lat);
   const lng = Number(snap.lng);
   const latOk = snap.lat !== null && snap.lat !== "" && Number.isFinite(lat) && lat >= -90 && lat <= 90;
@@ -37,6 +42,13 @@ function sanitizeAddressSnapshot(address) {
 // Prices are always recomputed on the server from the database.
 export async function createOrder({ user, items, address, paymentMethod, deliveryMethod, couponCode, paymentScreenshot, transactionId, senderAccount, senderTitle }) {
   if (!items?.length) throw new Error("Cart is empty");
+  // Email is REQUIRED on every order (owner's rule, 2026-11-11): the
+  // confirmation and shipping updates go to the checkout email, so an
+  // order without a real one is refused here, not silently unmailed.
+  const contactEmail = String(address?.email || "").trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail) || contactEmail.endsWith("@malac.local")) {
+    throw new Error("A valid email address is required to place an order — order updates will be sent to it.");
+  }
   const orderItems = [];
   let subtotal = 0;
   for (const item of items) {
@@ -251,7 +263,11 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
 // product links straight to its page's review section.
 async function sendDeliveredReviewInvite(order) {
   const user = await User.findById(order.user).select("name email");
-  const email = user?.email || "";
+  // Prefer the email given at checkout for THIS order; fall back to the
+  // account email (skipped when it is a synthetic placeholder).
+  const email = (order.address?.email && !order.address.email.endsWith("@malac.local"))
+    ? order.address.email
+    : (user?.email || "");
   if (!email || email.endsWith("@malac.local")) return;
   const productIds = [...new Set((order.items || []).filter((i) => i.product).map((i) => String(i.product)))];
   const products = await Product.find({ _id: { $in: productIds } }).select("title slug");
@@ -267,5 +283,5 @@ async function sendDeliveredReviewInvite(order) {
   }
   if (!items.length) return;
   const { html, text } = reviewInviteEmail({ name: user?.name, orderId: order.orderId, items });
-  await sendStoreEmail({ to: email, subject: `Your MALAC order ${order.orderId} was delivered — review your purchase`, html, text });
+  await sendEmail({ to: email, subject: `Your MALAC order ${order.orderId} was delivered — review your purchase`, html, text });
 }

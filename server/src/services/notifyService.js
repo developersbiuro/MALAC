@@ -1,7 +1,7 @@
 import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import { sendPushToStaff, sendPushToUser, sendPushToAllCustomers } from "./pushService.js";
-import { sendStoreEmail } from "./emailService.js";
+import { sendEmail } from "./emailService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
 // Order-event side effects, in one place: the customer's lifecycle email
@@ -9,11 +9,17 @@ import { orderStatusEmail } from "./emailTemplates.js";
 // mail or notification failure must never fail or delay the order action
 // itself, so callers fire-and-forget and errors are swallowed after a log.
 
-// Only customers with a REAL email can be mailed: phone-method accounts
-// carry a synthetic …@malac.local placeholder that must never be mailed
-// (the same rule the delivered review-invite already follows).
+// Order mail goes to the email the customer gave at CHECKOUT for this
+// order (required since 2026-11-11) — that is how phone-signup customers
+// get order mail too. The account email is only a fallback for older
+// orders, and a synthetic …@malac.local placeholder must never be
+// mailed (the same rule the delivered review-invite already follows).
 async function customerEmailOf(order) {
   const user = await User.findById(order.user).select("name email");
+  const orderEmail = String(order?.address?.email || "").trim();
+  if (orderEmail && !orderEmail.endsWith("@malac.local")) {
+    return { email: orderEmail, name: user?.name || order.address?.fullName || "Customer" };
+  }
   const email = user?.email || "";
   if (!email || email.endsWith("@malac.local")) return null;
   return { email, name: user?.name || "Customer" };
@@ -67,7 +73,7 @@ async function mailCustomer(order, build) {
       name: target.name, orderId: order.orderId, heading, intro, extra,
       items: order.items || [], total: order.total,
     });
-    await sendStoreEmail({ to: target.email, subject, html, text });
+    await sendEmail({ to: target.email, subject, html, text });
   } catch (err) {
     console.error(`[MALAC] order email failed (${order.orderId}): ${err.message}`);
   }

@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { rs, deliveryWindow } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
 import { MANUAL_METHODS, WALLET_KEY } from "../utils/payments.js";
+import { isRealEmail } from "../utils/customerContact.js";
 
 // NOTE: This page is wrapped in <ProtectedRoute> — guests are redirected to
 // /login?redirect=/checkout and return here after login. The server also
@@ -30,6 +31,11 @@ export default function Checkout() {
     lat: null, lng: null, mapsUrl: "",
   });
   const [savedId, setSavedId] = useState(""); // "" = typing a new address
+  // Order email is REQUIRED at checkout (owner's rule, 2026-11-11,
+  // Daraz-style): every order carries a real email so the confirmation
+  // and shipping updates always reach the customer — including
+  // phone-signup accounts whose account email is a placeholder.
+  const [email, setEmail] = useState(isRealEmail(user?.email) ? user.email : "");
   const [deliveryMethod, setDeliveryMethod] = useState("Standard");
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [wallets, setWallets] = useState(null); // from GET /settings/public
@@ -130,6 +136,7 @@ export default function Checkout() {
 
   const placeOrder = async () => {
     setError("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError("Please enter a valid email address — order ki confirmation aur updates isi email par jayengi.");
     if (isManual) {
       if (!walletInfo?.configured) return setError(`${paymentMethod} is not configured by the store yet. Please choose another payment method.`);
       if (!manual.screenshotPath) return setError(`Please upload your ${paymentMethod} payment screenshot first.`);
@@ -140,7 +147,7 @@ export default function Checkout() {
     try {
       const r = await api.post("/orders", {
         items: items.map((i) => ({ product: i.product, qty: i.qty, variantLabel: i.variantLabel })),
-        address, paymentMethod, deliveryMethod, couponCode: coupon?.code || "",
+        address: { ...address, email: email.trim() }, paymentMethod, deliveryMethod, couponCode: coupon?.code || "",
         ...(isManual ? {
           paymentScreenshot: manual.screenshotPath,
           transactionId: manual.transactionId.trim(),
@@ -196,6 +203,7 @@ export default function Checkout() {
             )}
             <input required placeholder="Full name" className={input} value={address.fullName} onChange={(e) => setAddress({ ...address, fullName: e.target.value })} />
             <PhoneInput required className={input} value={address.phone} onChange={(v) => setAddress({ ...address, phone: v })} />
+            <input required type="email" placeholder="Email address (order updates ke liye lazmi)" className={`${input} sm:col-span-2`} value={email} onChange={(e) => setEmail(e.target.value)} />
             <LocationSelect
               inputClassName={input}
               value={{ province: address.province, city: address.city, area: address.area }}

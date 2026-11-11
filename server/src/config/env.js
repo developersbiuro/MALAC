@@ -29,19 +29,6 @@ export const env = {
     user: process.env.SMTP_USER || "",
     pass: process.env.SMTP_PASS || "",
   },
-  // Zoho SMTP — used ONLY for store emails (order lifecycle + review
-  // invites) so they go out from info@malac.pp.ua. Account-access mail
-  // (email OTP, password resets) ALWAYS stays on the Gmail SMTP above —
-  // the owner's standing rule (2026-11-11). If Zoho is unconfigured or a
-  // send fails, store mail falls back to Gmail so it never dies silently.
-  zohoSmtp: {
-    host: process.env.ZOHO_SMTP_HOST || "smtp.zoho.com",
-    port: Number(process.env.ZOHO_SMTP_PORT || 587),
-    user: process.env.ZOHO_SMTP_USER || "",
-    pass: process.env.ZOHO_SMTP_PASS || "",
-    senderEmail: process.env.STORE_SENDER_EMAIL || "info@malac.pp.ua",
-    senderName: process.env.STORE_SENDER_NAME || "MALAC",
-  },
   whatsapp: {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
