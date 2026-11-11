@@ -112,6 +112,13 @@ function AdminShell() {
 export default function App() {
   const { pathname } = useLocation();
   const isAdmin = pathname.startsWith("/admin");
+  // Daraz-style (owner, 2026-11-11): the bottom nav disappears inside
+  // the buying flow — product page, cart, checkout, order confirmation
+  // — so nothing competes with the buy actions there.
+  const hideNav = pathname.startsWith("/product/")
+    || pathname === "/cart"
+    || pathname === "/checkout"
+    || pathname.startsWith("/order-confirmation");
   // App mode (Android WebView): the website footer disappears (the app
   // uses its bottom nav instead) and the bottom nav is always rendered,
   // so the content wrapper keeps nav clearance at every width.
@@ -120,7 +127,7 @@ export default function App() {
     <>
       {!isAdmin && <Header />}
       {!isAdmin && <CartDrawer />}
-      <div className={appMode && !isAdmin ? "pb-20" : undefined}>
+      <div className={appMode && !isAdmin && !hideNav ? "pb-20" : undefined}>
       <Suspense fallback={PageLoading}>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -155,7 +162,7 @@ export default function App() {
       </Suspense>
       </div>
       {!isAdmin && !appMode && <Footer />}
-      {!isAdmin && <MobileBottomNav />}
+      {!isAdmin && !hideNav && <MobileBottomNav />}
       {!isAdmin && <ChatWidget />}
     </>
   );

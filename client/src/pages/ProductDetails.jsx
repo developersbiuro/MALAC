@@ -301,18 +301,15 @@ export default function ProductDetails() {
         </aside>
       </div>
 
-      {/* Sticky buy bar */}
-      <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 bg-white border-t mt-3 rounded-md p-3 z-30">
+      {/* Sticky buy bar — Daraz-style: buttons only, no trust text under
+          them (owner, 2026-11-11), and the bottom nav is hidden on this
+          page so the bar sits flush at the screen bottom. */}
+      <div className="sticky bottom-0 bg-white border-t mt-3 rounded-md px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] z-30">
         <div className="flex gap-3">
           <button onClick={onAdd} disabled={variantStock === 0}
             className="btn-lux flex-1 py-2.5 min-h-[44px]">Add to Cart</button>
           <button onClick={onBuy} disabled={variantStock === 0}
             className="flex-1 bg-lux-ink text-white rounded-full py-2.5 min-h-[44px] font-semibold disabled:opacity-50 hover:bg-lux-deep transition-colors">Buy Now</button>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 mt-2.5 text-[12px] text-gray-500">
-          <span className="flex items-center gap-1"><Lock size={13} className="text-[#059669]" /> SSL Secured Checkout</span>
-          <span className="flex items-center gap-1"><Truck size={13} className="text-[#059669]" /> Free Shipping Over {rs(fees.freeThreshold)}</span>
-          {payments?.codEnabled !== false && <span className="flex items-center gap-1"><BadgeCheck size={13} className="text-[#059669]" /> Cash on Delivery</span>}
         </div>
       </div>
 
