@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Settings2, Printer } from "lucide-react";
+import { Settings2, Printer, Star } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
@@ -38,6 +38,7 @@ export default function MyOrders() {
   const bucket = bucketByKey(searchParams.get("bucket"));
   const [tab, setTab] = useState("All");
   const [orders, setOrders] = useState([]);
+  const [reviewedByOrder, setReviewedByOrder] = useState({}); // orderId -> Set(productId)
   const [tickets, setTickets] = useState([]);
   const [msg, setMsg] = useState("");
   // Inline cancel panel: which order is being cancelled + chosen reason.
@@ -69,6 +70,19 @@ export default function MyOrders() {
     api.get("/orders/my", { params }).then((r) => setOrders(r.data.orders)).catch(() => setOrders([]));
   };
   useEffect(load, [tab, bucket]);
+
+  // Which delivered items have I already reviewed? (reviews are saved
+  // with their order — drives the "Review dein / ✓ Reviewed" state.)
+  useEffect(() => {
+    api.get("/orders/my-reviews").then((r) => {
+      const map = {};
+      (r.data.reviews || []).forEach((rev) => {
+        if (!rev.orderId) return;
+        (map[rev.orderId] = map[rev.orderId] || new Set()).add(String(rev.product));
+      });
+      setReviewedByOrder(map);
+    }).catch(() => {});
+  }, []);
 
   // Support tickets the customer opened from the MALAC Assistant chat.
   useEffect(() => {
@@ -183,6 +197,17 @@ export default function MyOrders() {
                 Request Return
               </button>
             )}
+            {o.status === "Delivered" && (() => {
+              const done = reviewedByOrder[o.orderId] || new Set();
+              const pendingReview = (o.items || []).some((i) => !done.has(String(i.product)));
+              return pendingReview ? (
+                <Link to={`/orders/${o.orderId}`} className="mt-2 ml-2 inline-flex items-center gap-1 border border-amber-400 text-amber-700 bg-amber-50 rounded px-4 py-2 sm:py-1.5 text-xs font-medium">
+                  <Star size={13} /> Review dein
+                </Link>
+              ) : (
+                <span className="mt-2 ml-2 inline-flex items-center gap-1 text-green-600 text-xs font-medium">✓ Reviewed</span>
+              );
+            })()}
             {returningId === o.orderId && (
               <div className="mt-3 border border-orange-200 bg-orange-50 rounded-lg p-3 fade-up">
                 <p className="font-semibold text-orange-700">Request a return</p>

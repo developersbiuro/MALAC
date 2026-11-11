@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Printer, MapPin } from "lucide-react";
+import { ArrowLeft, Printer, MapPin, Star } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
 import { useSeo } from "../utils/seo.js";
@@ -28,6 +28,24 @@ const RETURN_REASONS = [
   "Damaged item received", "Defective / not working", "Wrong item delivered",
   "Wrong size or colour", "Missing parts or accessories", "Other",
 ];
+// Review photos: shrink big phone photos before upload (same approach
+// as the product page) so the ≤1 MB review-image route accepts them.
+const downscalePhoto = (file) => new Promise((resolve) => {
+  const url = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => {
+    const scale = Math.min(1, 1000 / Math.max(image.width, image.height));
+    if (scale >= 1) { URL.revokeObjectURL(url); return resolve(file); }
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(image.width * scale);
+    canvas.height = Math.round(image.height * scale);
+    canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((b) => { URL.revokeObjectURL(url); resolve(b || file); }, "image/jpeg", 0.82);
+  };
+  image.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+  image.src = url;
+});
+
 const STAGES = ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered"];
 const stageIndex = (status) => {
   const cs = customerStatus(status);
@@ -54,6 +72,15 @@ export default function OrderDetail() {
   const [returnNote, setReturnNote] = useState("");
   const [returnBusy, setReturnBusy] = useState(false);
   const [printSeq, setPrintSeq] = useState(0);
+  // Daraz-style order reviews: each delivered item can be reviewed from
+  // THIS page, and the review is saved with this order's ID.
+  const [myReviews, setMyReviews] = useState({}); // productId -> review
+  const [reviewFor, setReviewFor] = useState(null); // item _id in the form
+  const [rvRating, setRvRating] = useState(5);
+  const [rvComment, setRvComment] = useState("");
+  const [rvPhotos, setRvPhotos] = useState([]);
+  const [rvBusy, setRvBusy] = useState(false);
+  const [rvMsg, setRvMsg] = useState("");
 
   const load = () => {
     api.get(`/orders/${orderId}`)
@@ -67,6 +94,47 @@ export default function OrderDetail() {
     const t = setTimeout(() => printBlock("invoice"), 80);
     return () => clearTimeout(t);
   }, [printSeq]);
+
+  // Which items of this order have I already reviewed?
+  useEffect(() => {
+    if (!order || order.status !== "Delivered") return;
+    api.get(`/orders/${orderId}/reviews`)
+      .then((r) => {
+        const map = {};
+        (r.data.reviews || []).forEach((rev) => { map[String(rev.product)] = rev; });
+        setMyReviews(map);
+      })
+      .catch(() => {});
+  }, [order, orderId]);
+
+  const pickRvPhotos = async (e) => {
+    const files = [...(e.target.files || [])].slice(0, 3 - rvPhotos.length);
+    e.target.value = "";
+    if (!files.length) return;
+    setRvBusy(true);
+    try {
+      const fd = new FormData();
+      for (const f of files) fd.append("images", await downscalePhoto(f), "review.jpg");
+      const r = await api.post("/uploads/review-images", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setRvPhotos((prev) => [...prev, ...(r.data.images || [])].slice(0, 3));
+    } catch {
+      setRvMsg("Photo upload nahi hua — baghair photo ke bhi review de sakte hain.");
+    } finally { setRvBusy(false); }
+  };
+
+  const submitReview = async (item) => {
+    setRvBusy(true); setRvMsg("");
+    try {
+      const r = await api.post(`/products/${item.product}/reviews`, {
+        rating: rvRating, comment: rvComment, images: rvPhotos, orderId,
+      });
+      setMyReviews((m) => ({ ...m, [String(item.product)]: r.data.review }));
+      setReviewFor(null); setRvComment(""); setRvPhotos([]); setRvRating(5);
+      setRvMsg(`Review save ho gaya — order ${orderId} ke sath. Admin approval ke baad product page par nazar ayega. Shukriya!`);
+    } catch (e) {
+      setRvMsg(e.response?.data?.message || "Review submit nahi hua — dobara try karein.");
+    } finally { setRvBusy(false); }
+  };
 
   const confirmCancel = async () => {
     if (!cancelReason) return;
@@ -170,21 +238,67 @@ export default function OrderDetail() {
         )}
       </section>
 
-      {/* Items */}
+      {/* Items — on a Delivered order every item carries its own
+          Daraz-style review: the review is saved with THIS order's ID. */}
       <section className="bg-white rounded-md p-4 text-sm mt-3">
         <h2 className="font-semibold mb-2">Items</h2>
         <div className="space-y-2">
-          {o.items.map((i) => (
-            <div key={i._id} className="flex gap-3 items-center">
-              {i.image && <img src={i.image} alt="" className="w-12 h-12 rounded object-cover shrink-0" />}
-              <span className="flex-1 min-w-0">
-                <span className="line-clamp-2">{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""}</span>
-                <span className="text-gray-400 text-xs">Qty {i.qty} · {rs(i.price)} each</span>
-              </span>
-              <span className="shrink-0 font-medium">{rs(i.price * i.qty)}</span>
-            </div>
-          ))}
+          {o.items.map((i) => {
+            const rev = myReviews[String(i.product)];
+            return (
+              <div key={i._id}>
+                <div className="flex gap-3 items-center">
+                  {i.image && <img src={i.image} alt="" className="w-12 h-12 rounded object-cover shrink-0" />}
+                  <span className="flex-1 min-w-0">
+                    <span className="line-clamp-2">{i.title}{i.variantLabel ? ` (${i.variantLabel})` : ""}</span>
+                    <span className="text-gray-400 text-xs">Qty {i.qty} · {rs(i.price)} each</span>
+                  </span>
+                  <span className="shrink-0 font-medium">{rs(i.price * i.qty)}</span>
+                </div>
+                {o.status === "Delivered" && (
+                  <div className="ml-[60px] mt-1.5">
+                    {rev ? (
+                      <p className="text-xs text-green-600">★ {rev.rating}/5 — Review diya gaya{rev.status === "pending" ? " (approval ka intezaar hai)" : ""} · Order {o.orderId} ke sath save hai</p>
+                    ) : reviewFor === i._id ? (
+                      <div className="border border-amber-200 bg-amber-50/60 rounded-lg p-3 fade-up">
+                        <p className="text-xs font-semibold text-amber-800">Apna review dein — ye review order {o.orderId} ke sath save hoga</p>
+                        <div className="flex gap-1 mt-2">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <button key={n} type="button" onClick={() => setRvRating(n)} aria-label={`${n} star`}>
+                              <Star size={22} className={n <= rvRating ? "fill-amber-400 text-amber-400" : "text-gray-300"} />
+                            </button>
+                          ))}
+                        </div>
+                        <textarea value={rvComment} onChange={(e) => setRvComment(e.target.value)} rows={3} maxLength={1000}
+                          placeholder="Product kaisa laga? Quality, size, packing — apna tajurba likhein…"
+                          className="mt-2 w-full border rounded px-3 py-2 bg-white text-sm" />
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          {rvPhotos.map((src, idx) => <img key={idx} src={src} alt="" className="w-12 h-12 rounded object-cover" />)}
+                          {rvPhotos.length < 3 && (
+                            <label className="border border-dashed border-amber-300 text-amber-700 rounded px-3 py-2 text-xs cursor-pointer bg-white">
+                              + Photo add karein (max 3)
+                              <input type="file" accept="image/*" multiple hidden onChange={pickRvPhotos} />
+                            </label>
+                          )}
+                        </div>
+                        {rvMsg && <p className="text-xs text-gray-600 mt-2">{rvMsg}</p>}
+                        <div className="flex gap-2 mt-3">
+                          <button onClick={() => submitReview(i)} disabled={rvBusy} className="btn-lux px-4 py-2 text-xs disabled:opacity-60">{rvBusy ? "Save ho raha hai…" : "Review submit karein"}</button>
+                          <button onClick={() => setReviewFor(null)} className="border rounded px-4 py-2 text-xs bg-white">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={() => { setReviewFor(i._id); setRvMsg(""); }} className="inline-flex items-center gap-1 border border-amber-300 text-amber-700 bg-amber-50 rounded px-3 py-1.5 text-xs font-medium">
+                        <Star size={13} /> Review dein
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
+        {o.status === "Delivered" && rvMsg && !reviewFor && <p className="text-xs text-green-700 mt-2">{rvMsg}</p>}
       </section>
 
       {/* Payment + summary */}

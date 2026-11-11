@@ -109,6 +109,7 @@ export default function AdminReviews() {
                   ? <Link className="text-lux-burnt underline" to={`/product/${r.product.slug}`}>{r.product.title}</Link>
                   : (r.product?.title || "—")}
                 {" · "}{new Date(r.createdAt).toLocaleString()}
+                {r.orderId ? ` · Order ${r.orderId}` : ""}
                 {contact ? ` · ${contact}` : ""}
               </p>
               <div className="flex gap-2 mt-3 flex-wrap">
