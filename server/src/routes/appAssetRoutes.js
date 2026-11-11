@@ -55,10 +55,10 @@ router.get("/api/admin/app-download", protect, isStaff, sendApk(adminApk, "MALAC
 // in the APK (AndroidManifest + MainActivity) whenever a new APK ships.
 router.get("/api/app/version", (req, res) => {
   res.json({
-    versionCode: 5,
-    versionName: "1.4",
+    versionCode: 6,
+    versionName: "1.5",
     apkUrl: "/download/malac-app.apk",
-    notes: "Notifications ab Daraz-style ayengi — app pehle launch par notification, photos aur location ki permission khud mangegi; order updates naam ke sath",
+    notes: "Notifications me ab poora MALAC logo background ke sath ayega; order updates naam ke sath",
   });
 });
 
@@ -70,8 +70,8 @@ router.get("/api/app/version", (req, res) => {
 // admin APK's version whenever a new admin build ships.
 router.get("/api/admin/app/version", protect, isStaff, (req, res) => {
   res.json({
-    versionCode: 5,
-    versionName: "1.4",
+    versionCode: 6,
+    versionName: "1.5",
     apkUrl: "/api/admin/app-download",
   });
 });

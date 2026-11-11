@@ -80,7 +80,12 @@ async function sendToToken(sa, auth, deviceToken, title, body, data) {
         token: deviceToken,
         notification: { title, body },
         data: Object.fromEntries(Object.entries(data || {}).map(([k, v]) => [k, String(v ?? "")])),
-        android: { priority: "high" },
+        android: {
+          priority: "high",
+          // Full MALAC logo WITH its background, shown as the notification's
+          // large image when the system displays the push (app closed).
+          notification: { image: "https://www.malac.pp.ua/og-image.png" },
+        },
       },
     }),
   });
