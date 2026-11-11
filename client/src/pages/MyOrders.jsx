@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Settings2, Printer } from "lucide-react";
 import api from "../api/client.js";
 import { rs } from "../utils/format.js";
@@ -7,6 +7,7 @@ import { useSeo } from "../utils/seo.js";
 import { isManualMethod } from "../utils/payments.js";
 import { printBlock } from "../utils/print.js";
 import OrderInvoice from "../components/OrderInvoice.jsx";
+import { bucketByKey } from "../utils/orderBuckets.js";
 
 const TABS = ["All", "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Returned"];
 // Badges are keyed by the customer-facing label; Confirmed/Packed show
@@ -29,6 +30,11 @@ const RETURN_REASONS = [
 
 export default function MyOrders() {
   useSeo({ title: "My Orders — MALAC", robots: "noindex" });
+  const [searchParams] = useSearchParams();
+  // Daraz-style bucket deep-link from the My Account hub
+  // (/orders?bucket=toship …): one shared definition (orderBuckets.js)
+  // filters the full list client-side.
+  const bucket = bucketByKey(searchParams.get("bucket"));
   const [tab, setTab] = useState("All");
   const [orders, setOrders] = useState([]);
   const [tickets, setTickets] = useState([]);
@@ -54,10 +60,14 @@ export default function MyOrders() {
   }, [printState]);
 
   const load = () => {
+    if (bucket) {
+      api.get("/orders/my").then((r) => setOrders((r.data.orders || []).filter(bucket.test))).catch(() => setOrders([]));
+      return;
+    }
     const params = tab === "All" ? {} : { status: tab };
     api.get("/orders/my", { params }).then((r) => setOrders(r.data.orders)).catch(() => setOrders([]));
   };
-  useEffect(load, [tab]);
+  useEffect(load, [tab, bucket]);
 
   // Support tickets the customer opened from the MALAC Assistant chat.
   useEffect(() => {
@@ -102,12 +112,19 @@ export default function MyOrders() {
           <Settings2 size={14} /> Profile Settings
         </Link>
       </div>
-      <div className="flex gap-2 overflow-x-auto no-scrollbar bg-white rounded-md p-2">
-        {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`whitespace-nowrap text-sm px-3 py-1.5 rounded-full ${tab === t ? "bg-brand text-white" : "text-gray-600"}`}>{t}</button>
-        ))}
-      </div>
+      {bucket ? (
+        <p className="bg-white rounded-md px-3 py-2.5 text-sm flex items-center justify-between">
+          <span>Showing: <b>{bucket.label}</b></span>
+          <Link to="/orders" className="text-brand font-medium hover:underline">View all orders</Link>
+        </p>
+      ) : (
+        <div className="flex gap-2 overflow-x-auto no-scrollbar bg-white rounded-md p-2">
+          {TABS.map((t) => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`whitespace-nowrap text-sm px-3 py-1.5 rounded-full ${tab === t ? "bg-brand text-white" : "text-gray-600"}`}>{t}</button>
+          ))}
+        </div>
+      )}
       {msg && <p className="text-sm text-gray-600 mt-2">{msg}</p>}
       <div className="space-y-3 mt-3">
         {orders.map((o) => (

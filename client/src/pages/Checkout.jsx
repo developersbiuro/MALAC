@@ -109,6 +109,9 @@ export default function Checkout() {
     return subtotal - discount >= (wallets?.freeShippingThreshold ?? 3000) ? 0 : (wallets?.defaultShippingFee ?? 249);
   }, [items, deliveryMethod, subtotal, discount, wallets]);
   const total = subtotal - discount + shipping;
+  // Daraz-style "Total Saving": coupon discount + the standard fee saved
+  // when this order ships free.
+  const totalSaving = discount + (shipping === 0 && deliveryMethod === "Standard" && items.length > 0 ? (wallets?.defaultShippingFee ?? 249) : 0);
   const isManual = MANUAL.includes(paymentMethod);
   const walletInfo = isManual && wallets ? wallets[WALLET_KEY[paymentMethod]] : null;
 
@@ -327,6 +330,7 @@ export default function Checkout() {
         <div className="flex justify-between"><span>Subtotal</span><span>{rs(subtotal)}</span></div>
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>
         <div className="flex justify-between"><span>Shipping ({deliveryMethod})</span><span>{shipping === 0 ? "Free" : rs(shipping)}</span></div>
+        {totalSaving > 0 && <div className="flex justify-between text-green-600 font-medium"><span>Total Saving</span><span>{rs(totalSaving)}</span></div>}
         <div className="flex justify-between border-t pt-2 font-bold"><span>Total</span><span className="text-brand">{rs(total)}</span></div>
         {address.lat != null && address.lng != null && (
           <p className="pt-1">

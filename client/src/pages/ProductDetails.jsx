@@ -26,6 +26,7 @@ export default function ProductDetails() {
   const [zoom, setZoom] = useState(false);
   const [selected, setSelected] = useState({}); // variant group -> variant object
   const [qty, setQty] = useState(1);
+  const [sheet, setSheet] = useState(null); // Daraz-style variant sheet: null | "add" | "buy"
   const [city, setCity] = useState("Lahore");
   const [openQa, setOpenQa] = useState(null);
   const [question, setQuestion] = useState("");
@@ -140,6 +141,18 @@ export default function ProductDetails() {
   };
   const toggleWish = () => {
     if (!toggle(product)) navigate(`/login?redirect=${encodeURIComponent(`/product/${slug}`)}`);
+  };
+  // Daraz-style: when the product has variants, the buy bar first opens
+  // the selection sheet (colour/size + quantity); without variants the
+  // buttons act immediately, exactly as before.
+  const hasVariants = Object.keys(groups).length > 0;
+  const onAdd = () => (hasVariants ? setSheet("add") : doAdd());
+  const onBuy = () => (hasVariants ? setSheet("buy") : buyNow());
+  const confirmSheet = () => {
+    const mode = sheet;
+    setSheet(null);
+    if (mode === "add") doAdd();
+    else if (mode === "buy") buyNow();
   };
 
   // Downscale a picked photo to at most 1024px (JPEG) before upload, so
@@ -291,9 +304,9 @@ export default function ProductDetails() {
       {/* Sticky buy bar */}
       <div className="sticky bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 bg-white border-t mt-3 rounded-md p-3 z-30">
         <div className="flex gap-3">
-          <button onClick={doAdd} disabled={variantStock === 0}
+          <button onClick={onAdd} disabled={variantStock === 0}
             className="btn-lux flex-1 py-2.5 min-h-[44px]">Add to Cart</button>
-          <button onClick={buyNow} disabled={variantStock === 0}
+          <button onClick={onBuy} disabled={variantStock === 0}
             className="flex-1 bg-lux-ink text-white rounded-full py-2.5 min-h-[44px] font-semibold disabled:opacity-50 hover:bg-lux-deep transition-colors">Buy Now</button>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 mt-2.5 text-[12px] text-gray-500">
@@ -380,6 +393,56 @@ export default function ProductDetails() {
             {related.slice(0, 5).map((p) => <ProductCard key={p._id} product={p} />)}
           </div>
         </section>
+      )}
+
+      {/* Daraz-style variant sheet — opened by the buy bar when the
+          product has variants; shares the page's selection state. */}
+      {sheet && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSheet(null)} />
+          <div className="relative bg-white w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-4 pb-5 max-h-[85vh] overflow-y-auto fade-up">
+            <div className="flex gap-3">
+              {product.images?.[0] && <img src={product.images[0]} alt="" className="w-16 h-16 rounded object-cover shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <p className="text-lux-amber text-xl font-extrabold">{rs(unitPrice)}</p>
+                <p className="text-xs text-gray-500 line-clamp-1">{variantLabel || "Options select karein"}</p>
+                <p className="text-xs text-gray-400">{product.title}</p>
+              </div>
+              <button onClick={() => setSheet(null)} aria-label="Close" className="text-gray-400 shrink-0 self-start"><X size={20} /></button>
+            </div>
+            {Object.entries(groups).map(([name, variants]) => (
+              <div key={name} className="mt-4">
+                <p className="text-sm text-gray-500">{name}: <b className="text-gray-800">{selected[name]?.value || "Select"}</b></p>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  {variants.map((v) => (
+                    <button key={v._id} onClick={() => setSelected((s) => ({ ...s, [name]: v }))}
+                      className={`border rounded px-3 py-1.5 text-sm inline-flex items-center gap-1.5 ${selected[name]?._id === v._id ? "border-lux-amber text-lux-burnt" : ""}`}>
+                      {/colou?r/i.test(name) && colorHex(v.value) && <span className="w-3.5 h-3.5 rounded-full border border-black/10 shrink-0" style={{ backgroundColor: colorHex(v.value) }} />}
+                      {v.value}{v.priceDelta ? ` (+${rs(v.priceDelta)})` : ""}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <div className="flex items-center gap-3 mt-4">
+              <span className="text-sm text-gray-500">Quantity</span>
+              <div className="flex items-center border rounded">
+                <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-3 py-2" aria-label="Decrease quantity"><Minus size={14} /></button>
+                <span className="px-2 min-w-[1.5rem] text-center">{qty}</span>
+                <button onClick={() => setQty(Math.min(variantStock, qty + 1))} className="px-3 py-2" aria-label="Increase quantity"><Plus size={14} /></button>
+              </div>
+              <span className={`text-sm ${variantStock <= 5 ? "text-red-500" : "text-gray-400"}`}>
+                {variantStock > 0 ? `${variantStock} items in stock` : "Out of stock"}
+              </span>
+            </div>
+            <button onClick={confirmSheet} disabled={variantStock === 0}
+              className={sheet === "add"
+                ? "btn-lux w-full py-3 mt-5 min-h-[44px]"
+                : "w-full bg-lux-ink text-white rounded-full py-3 mt-5 min-h-[44px] font-semibold disabled:opacity-50 hover:bg-lux-deep transition-colors"}>
+              {sheet === "add" ? "Add to Cart" : "Buy Now"}
+            </button>
+          </div>
+        </div>
       )}
     </main>
   );
