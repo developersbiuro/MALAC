@@ -8,6 +8,12 @@ const reviewSchema = new mongoose.Schema({
   comment: { type: String, default: "" },
   images: [{ type: String }],
   verifiedPurchase: { type: Boolean, default: false },
+  // Order link (Daraz-style, owner's ask 2026-11-12): a review given
+  // from a delivered order is saved WITH that order, so "To Review"
+  // knows exactly which purchase was reviewed and the admin sees the
+  // order next to the review. orderId is the public MLC- code.
+  order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", index: true },
+  orderId: { type: String, default: "" },
   // Moderation (Abdullah, 2026-11-07): every review needs admin approval
   // before it is public — no defamation surprises. New reviews start
   // "pending". Documents created before this field existed have no status

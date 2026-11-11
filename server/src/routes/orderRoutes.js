@@ -12,7 +12,9 @@ router.post("/track", protect, rateLimit({ windowMs: 15 * 60 * 1000, max: 60, ke
 router.use(protect);
 router.post("/", orders.placeOrder);
 router.get("/my", orders.myOrders);
+router.get("/my-reviews", orders.myReviews);
 router.get("/:orderId", orders.getOrder);
+router.get("/:orderId/reviews", orders.myOrderReviews);
 router.patch("/:orderId/cancel", orders.cancelMyOrder);
 router.post("/:orderId/return-request", orders.requestReturn);
 export default router;

@@ -1,5 +1,6 @@
 import Order, { ORDER_STATUSES, CUSTOMER_STATUS, COURIERS, RETURN_REASONS, MANUAL_PAYMENT_METHODS } from "../models/Order.js";
 import Notification from "../models/Notification.js";
+import Review from "../models/Review.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
 import { onOrderPlaced, onReturnRequested } from "../services/notifyService.js";
@@ -110,6 +111,25 @@ export const getOrder = asyncHandler(async (req, res) => {
   const order = await Order.findOne({ orderId: req.params.orderId, user: req.user._id });
   if (!order) return res.status(404).json({ message: "Order not found" });
   res.json({ order });
+});
+
+// Reviews this customer has submitted against ONE of their orders —
+// drives the Daraz-style "Review dein / Review diya gaya" state on the
+// order detail page (reviews are saved WITH the order, 2026-11-12).
+export const myOrderReviews = asyncHandler(async (req, res) => {
+  const order = await Order.findOne({ orderId: req.params.orderId, user: req.user._id });
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  const reviews = await Review.find({ user: req.user._id, order: order._id })
+    .select("product rating comment status createdAt").lean();
+  res.json({ reviews });
+});
+
+// Every order-linked review by this customer — My Orders uses it to
+// show "Review dein" only on delivered orders with unreviewed items.
+export const myReviews = asyncHandler(async (req, res) => {
+  const all = await Review.find({ user: req.user._id })
+    .select("product order orderId status").limit(500).lean();
+  res.json({ reviews: all.filter((r) => r.order) });
 });
 
 // Self-service cancellation: only before the parcel ships (enforced in

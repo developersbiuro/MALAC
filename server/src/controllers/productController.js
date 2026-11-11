@@ -162,15 +162,37 @@ export const listReviews = asyncHandler(async (req, res) => {
 export const createReview = asyncHandler(async (req, res) => {
   const product = await Product.findById(req.params.id);
   if (!product) return res.status(404).json({ message: "Product not found" });
+  const rating = Number(req.body.rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: "Rating 1 se 5 ke darmiyan dein." });
+  }
+  // Daraz-style order-linked review (owner's ask, 2026-11-12): when the
+  // review comes from an order page, orderId (the MLC- code) rides
+  // along and the review is saved WITH that order. The order must be
+  // the customer's own, Delivered, and contain this product — and only
+  // ONE review per product per order, like Daraz.
+  let linkedOrder = null;
+  if (req.body.orderId) {
+    linkedOrder = await Order.findOne({ orderId: String(req.body.orderId), user: req.user?._id });
+    if (!linkedOrder) return res.status(404).json({ message: "Order not found" });
+    if (linkedOrder.status !== "Delivered") {
+      return res.status(400).json({ message: "Review sirf delivered order par diya ja sakta hai." });
+    }
+    if (!linkedOrder.items.some((i) => String(i.product) === String(product._id))) {
+      return res.status(400).json({ message: "Ye product is order me nahi hai." });
+    }
+    const dup = await Review.exists({ user: req.user._id, product: product._id, order: linkedOrder._id });
+    if (dup) return res.status(409).json({ message: "Aap is order ke liye is product ka review pehle de chuke hain." });
+  }
   // Verified purchase: this customer has a Delivered order containing the
   // product. Anyone logged in may still review (it stays pending for admin
   // approval either way), but only buyers get the badge.
-  const bought = req.user?._id
+  const bought = linkedOrder ? true : (req.user?._id
     ? await Order.exists({
         user: req.user._id, status: "Delivered",
         "items.product": product._id,
       })
-    : null;
+    : null);
   // Review images: only data URIs produced by POST /api/uploads/review-images
   // (max 3, ~1.4 MB each incl. base64 overhead). Arbitrary URLs are dropped
   // so a review can never hot-link or embed an external address.
@@ -180,8 +202,9 @@ export const createReview = asyncHandler(async (req, res) => {
   const review = await Review.create({
     product: product._id, user: req.user?._id,
     authorName: req.user?.name || req.body.authorName || "MALAC Customer",
-    rating: req.body.rating, comment: req.body.comment || "", images: reviewImages,
+    rating, comment: String(req.body.comment || "").slice(0, 1000), images: reviewImages,
     verifiedPurchase: !!bought,
+    order: linkedOrder?._id, orderId: linkedOrder?.orderId || "",
     status: "pending",
   });
   // Public aggregates do NOT change yet — the review publishes only when
