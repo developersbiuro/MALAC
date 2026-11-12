@@ -4,6 +4,12 @@ const addressSchema = new mongoose.Schema({
   label: { type: String, default: "Home" },
   fullName: String,
   phone: String,
+  // The email that belongs WITH this delivery address (owner's rule,
+  // 2026-11-12, Daraz-style): the customer enters it once and it stays
+  // saved with the address — checkout pre-fills it from here instead of
+  // asking again on every order. It is the per-address contact email;
+  // the order snapshot still copies it to order.address.email.
+  email: String,
   // Province / territory picked from the national dataset (see
   // client/src/data/pakLocations.js). Optional so addresses saved
   // before the field existed keep loading untouched.

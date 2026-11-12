@@ -10,6 +10,7 @@ import PhoneInput from "../components/PhoneInput.jsx";
 import PasswordInput from "../components/PasswordInput.jsx";
 import { useSeo } from "../utils/seo.js";
 import { appVersion } from "../utils/appMode.js";
+import { isRealEmail } from "../utils/customerContact.js";
 
 // Profile Settings (/account/settings, login required — see
 // ProtectedRoute in App.jsx). Four sections:
@@ -25,7 +26,7 @@ import { appVersion } from "../utils/appMode.js";
 //  3. Address book — add / edit / delete / set-default against
 //     /api/auth/addresses (own addresses only, server-enforced).
 const input = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
-const emptyAddress = { label: "Home", fullName: "", phone: "", province: "Punjab", city: "Lahore", area: "", street: "", postalCode: "", lat: null, lng: null, mapsUrl: "", isDefault: false };
+const emptyAddress = { label: "Home", fullName: "", phone: "", email: "", province: "Punjab", city: "Lahore", area: "", street: "", postalCode: "", lat: null, lng: null, mapsUrl: "", isDefault: false };
 const mapLink = (a) => a.mapsUrl || (a.lat != null && a.lng != null ? `https://www.google.com/maps?q=${a.lat},${a.lng}` : "");
 
 function Section({ eyebrow, title, children }) {
@@ -200,7 +201,7 @@ export default function ProfileSettings() {
 
   const openAdd = () => {
     setAddrMsg("");
-    setForm({ ...emptyAddress, fullName: profile?.name || "", phone: profile?.phone || "", isDefault: addresses.length === 0 });
+    setForm({ ...emptyAddress, fullName: profile?.name || "", phone: profile?.phone || "", email: isRealEmail(profile?.email) ? profile.email : "", isDefault: addresses.length === 0 });
     setEditingId(null);
   };
   const openEdit = (a) => {
@@ -211,6 +212,7 @@ export default function ProfileSettings() {
     const city = a.city || "Lahore";
     setForm({
       label: a.label || "Home", fullName: a.fullName || "", phone: a.phone || "",
+      email: a.email || "",
       province: a.province || findCity(city)?.province || "",
       city, area: a.area || "", street: a.street || "",
       postalCode: a.postalCode || "",
@@ -431,6 +433,7 @@ export default function ProfileSettings() {
                   {a.fullName} · {a.phone}<br />
                   {a.street}, {a.area}, {a.city}{a.province ? `, ${a.province}` : ""}{a.postalCode ? ` — ${a.postalCode}` : ""}
                 </p>
+                {a.email && <p className="text-xs text-gray-400 mt-0.5">{a.email}</p>}
                 {a.lat != null && a.lng != null && (
                   <p className="text-xs mt-1">
                     <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 border border-green-200 rounded-full px-2 py-0.5 font-medium">📍 Location attached</span>{" "}
@@ -473,6 +476,10 @@ export default function ProfileSettings() {
             <label className="block">
               <span className="text-xs font-medium text-gray-500">Phone</span>
               <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} required className={`${input.replace("focus:border-lux-amber", "focus-within:border-lux-amber")} mt-1`} />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-gray-500">Email (order updates ke liye — address ke sath save hoti hai)</span>
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" className={`${input} mt-1`} />
             </label>
             <LocationSelect
               inputClassName={input}

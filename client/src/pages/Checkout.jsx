@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud, Landmark, MapPin } from "lucide-react";
+import { CheckCircle2, Truck, Banknote, Smartphone, UploadCloud, Landmark, MapPin, ArrowLeft } from "lucide-react";
 import api from "../api/client.js";
 import LiveLocationButton from "../components/LiveLocationButton.jsx";
 import LocationSelect from "../components/LocationSelect.jsx";
@@ -47,6 +47,17 @@ export default function Checkout() {
   // and shipping updates always reach the customer — including
   // phone-signup accounts whose account email is a placeholder.
   const [email, setEmail] = useState(isRealEmail(user?.email) ? user.email : "");
+  // Daraz-style address flow (owner's ask, 2026-11-12): step 1 shows
+  // ONE of three views — "card" (the saved address, Daraz checkout
+  // style, with EDIT), "book" (the Select Shipping Address page) or
+  // "form" (add/edit one address). Name, phone AND email are saved
+  // WITH the address the first time and applied automatically on every
+  // later checkout; nothing is asked again until the customer edits it.
+  const [addrView, setAddrView] = useState("form"); // "card" | "book" | "form"
+  const [book, setBook] = useState(null); // freshest address book (API responses)
+  const bookList = book ?? user?.addresses ?? [];
+  const [savingAddr, setSavingAddr] = useState(false);
+  const [addrMsg, setAddrMsg] = useState("");
   const [deliveryMethod, setDeliveryMethod] = useState("Standard");
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [wallets, setWallets] = useState(null); // from GET /settings/public
@@ -73,7 +84,7 @@ export default function Checkout() {
   // live-location pin when it has one, so the pin rides into the order.
   const pickSaved = (id) => {
     setSavedId(id);
-    const a = (user?.addresses || []).find((x) => x._id === id);
+    const a = bookList.find((x) => x._id === id);
     if (!a) {
       setAddress({
         fullName: user?.name || "", phone: user?.phone || "",
@@ -93,23 +104,61 @@ export default function Checkout() {
       postalCode: a.postalCode || "",
       lat: a.lat ?? null, lng: a.lng ?? null, mapsUrl: a.mapsUrl || "",
     });
+    // The email saved WITH this address wins over the account email —
+    // it is the address's own contact email, entered once by the
+    // customer and never asked again (owner's rule, 2026-11-12).
+    if (isRealEmail(a.email)) setEmail(a.email);
   };
 
   // Daraz-style default address: the customer's saved default (or
   // first) address is applied automatically when checkout opens, so
   // they never re-type it — CHANGE on the address card picks another.
-  const [pickerOpen, setPickerOpen] = useState(false);
   const autoAppliedRef = useRef(false);
   useEffect(() => {
     if (autoAppliedRef.current) return;
-    const list = user?.addresses || [];
+    const list = book ?? user?.addresses ?? [];
     if (!list.length) return;
     autoAppliedRef.current = true;
     const def = list.find((a) => a.isDefault) || list[0];
-    if (def?._id) pickSaved(def._id);
+    if (def?._id) { pickSaved(def._id); setAddrView("card"); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-  const selSaved = (user?.addresses || []).find((a) => a._id === savedId) || null;
+  }, [user, book]);
+  const selSaved = bookList.find((a) => a._id === savedId) || null;
+
+  // Saving the address form writes it to the address book IMMEDIATELY
+  // (Daraz-style: Edit/Add saves the address itself, not just this
+  // order) — including the email, which from then on rides with the
+  // address. After saving, the customer lands back on the address card.
+  const saveAddressToBook = async (e) => {
+    e.preventDefault();
+    setAddrMsg("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setAddrMsg("Please enter a valid email address — order ki confirmation aur updates isi email par jayengi.");
+      return;
+    }
+    setSavingAddr(true);
+    try {
+      const payload = {
+        label: selSaved?.label || "Home",
+        fullName: address.fullName, phone: address.phone, email: email.trim(),
+        province: address.province, city: address.city, area: address.area,
+        street: address.street, postalCode: address.postalCode,
+        lat: address.lat, lng: address.lng, mapsUrl: address.mapsUrl,
+      };
+      const r = savedId
+        ? await api.put(`/auth/addresses/${savedId}`, payload)
+        : await api.post("/auth/addresses", { ...payload, isDefault: bookList.length === 0 });
+      const list = r.data.addresses || [];
+      setBook(list);
+      if (!savedId) {
+        const added = [...list].reverse().find((a) => a.street === address.street && a.phone === address.phone) || list[list.length - 1];
+        if (added?._id) setSavedId(added._id);
+      }
+      setAddrView("card");
+    } catch (err) {
+      setAddrMsg(err.response?.data?.message || "Address save nahi ho saka — dobara try karein.");
+    } finally { setSavingAddr(false); }
+  };
 
   const applyLocation = ({ lat, lng, mapsUrl, addressLine, area, city }) => {
     setAddress((cur) => {
@@ -209,21 +258,26 @@ export default function Checkout() {
       // affect a placed order.
       try {
         const payload = {
-          fullName: address.fullName, phone: address.phone, province: address.province,
+          fullName: address.fullName, phone: address.phone, email: email.trim(),
+          province: address.province,
           city: address.city, area: address.area, street: address.street,
           postalCode: address.postalCode, lat: address.lat, lng: address.lng,
           mapsUrl: address.mapsUrl,
         };
         if (savedId) {
-          const orig = (user?.addresses || []).find((x) => x._id === savedId);
-          const same = orig && ["fullName", "phone", "province", "city", "area", "street", "postalCode"]
+          const orig = bookList.find((x) => x._id === savedId);
+          const same = orig && ["fullName", "phone", "email", "province", "city", "area", "street", "postalCode"]
             .every((f) => (orig[f] || "") === (payload[f] || ""));
-          if (!same) await api.put(`/auth/addresses/${savedId}`, payload);
+          if (!same) {
+            const r = await api.put(`/auth/addresses/${savedId}`, payload);
+            if (r.data.addresses) setBook(r.data.addresses);
+          }
         } else if (address.street && address.city) {
-          await api.post("/auth/addresses", {
+          const r = await api.post("/auth/addresses", {
             ...payload, label: "Home",
-            isDefault: (user?.addresses || []).length === 0,
+            isDefault: bookList.length === 0,
           });
+          if (r.data.addresses) setBook(r.data.addresses);
         }
       } catch { /* address book is a convenience, never a blocker */ }
       if (checkoutKeys) {
@@ -263,63 +317,126 @@ export default function Checkout() {
           ))}
         </div>
 
-        {step === 0 && (
-          <form className="grid sm:grid-cols-2 gap-3" onSubmit={(e) => { e.preventDefault(); setStep(1); }}>
-            {(user?.addresses?.length > 0) ? (
-              <div className="sm:col-span-2 border rounded-md p-3 bg-brand-light/40">
-                <div className="flex items-start gap-2">
-                  <MapPin size={17} className="text-brand shrink-0 mt-0.5" />
-                  <p className="flex-1 min-w-0 font-semibold text-sm">
-                    {address.fullName || user?.name}, {address.phone || user?.phone}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setPickerOpen((o) => !o)}
-                    className="shrink-0 text-brand font-semibold text-sm"
-                  >
-                    CHANGE
-                  </button>
-                </div>
-                <p className="text-sm text-gray-600 mt-1.5 break-words">
-                  <span className="inline-block bg-white border rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide mr-1.5 align-middle">
-                    {selSaved?.label || "Home"}
-                  </span>
-                  {address.street}, {address.area ? `${address.area}, ` : ""}{address.city}
-                  {address.province ? `, ${address.province}` : ""}
-                  {address.postalCode ? ` — ${address.postalCode}` : ""}
-                  {address.lat != null && address.lng != null ? " 📍" : ""}
+        {step === 0 && addrView === "card" && (
+          <div>
+            <div className="border rounded-md p-3 bg-brand-light/40">
+              <div className="flex items-start gap-2">
+                <MapPin size={17} className="text-brand shrink-0 mt-0.5" />
+                <p className="flex-1 min-w-0 font-semibold text-sm break-words">
+                  {address.fullName || user?.name}, {address.phone || user?.phone}
                 </p>
-                {pickerOpen && (
-                  <div className="mt-3 space-y-2">
-                    {(user?.addresses || []).map((a) => (
-                      <button
-                        key={a._id}
-                        type="button"
-                        onClick={() => { pickSaved(a._id); setPickerOpen(false); }}
-                        className={`block w-full text-left border rounded-md p-2.5 bg-white ${a._id === savedId ? "border-brand" : ""}`}
-                      >
-                        <span className="text-sm font-medium">
-                          <span className="inline-block bg-gray-100 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide mr-1.5">
-                            {a.label || "Home"}
-                          </span>
-                          {a.fullName}, {a.phone}
-                          {a.isDefault && <span className="text-brand text-xs font-semibold"> · Default</span>}
-                        </span>
-                        <span className="block text-xs text-gray-500 mt-0.5 break-words">
-                          {a.street}, {a.area ? `${a.area}, ` : ""}{a.city}{a.province ? `, ${a.province}` : ""}{a.lat != null && a.lng != null ? " 📍" : ""}
-                        </span>
-                      </button>
-                    ))}
+                <button
+                  type="button"
+                  onClick={() => setAddrView("book")}
+                  className="shrink-0 text-brand font-semibold text-sm"
+                >
+                  EDIT
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1.5 break-words">
+                <span className="inline-block bg-white border rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide mr-1.5 align-middle">
+                  {selSaved?.label || "Home"}
+                </span>
+                {selSaved?.isDefault && (
+                  <span className="inline-block border border-rose-300 text-rose-600 rounded px-1.5 py-0.5 text-[10px] font-semibold mr-1.5 align-middle">
+                    Default shipping address
+                  </span>
+                )}
+                {address.street}, {address.area ? `${address.area}, ` : ""}{address.city}
+                {address.province ? `, ${address.province}` : ""}
+                {address.postalCode ? ` — ${address.postalCode}` : ""}
+                {address.lat != null && address.lng != null ? " 📍" : ""}
+              </p>
+              {email && (
+                <p className="text-xs text-gray-500 mt-1.5">
+                  Order updates isi email par jayengi: <span className="font-medium">{email}</span>
+                </p>
+              )}
+            </div>
+            <button
+              onClick={() => setStep(1)}
+              className="bg-brand text-white rounded px-6 py-2.5 sm:py-2 text-sm font-medium w-full sm:w-auto mt-3"
+            >
+              Continue to Delivery
+            </button>
+          </div>
+        )}
+
+        {step === 0 && addrView === "book" && (
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <button
+                type="button"
+                aria-label="Back"
+                onClick={() => setAddrView(savedId ? "card" : "form")}
+                className="p-1 -ml-1 text-gray-600"
+              >
+                <ArrowLeft size={19} />
+              </button>
+              <p className="font-semibold">Select Shipping Address</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { pickSaved(""); setAddrView("form"); }}
+              className="block w-full border-2 border-dashed border-brand/60 text-brand rounded-md py-4 text-sm font-semibold mb-3 bg-white"
+            >
+              + Add address
+            </button>
+            <div className="space-y-3">
+              {bookList.map((a) => (
+                <div
+                  key={a._id}
+                  onClick={() => { pickSaved(a._id); setAddrView("card"); }}
+                  className={`border rounded-md p-3 cursor-pointer bg-white ${a._id === savedId ? "border-brand ring-1 ring-brand/40" : ""}`}
+                >
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="text-brand shrink-0 mt-0.5" />
+                    <p className="flex-1 min-w-0 text-sm font-semibold break-words">
+                      {a.fullName} <span className="text-gray-500 font-normal">{a.phone}</span>
+                    </p>
                     <button
                       type="button"
-                      onClick={() => { pickSaved(""); setPickerOpen(false); }}
-                      className="block w-full text-left border border-dashed rounded-md p-2.5 bg-white text-sm text-brand font-medium"
+                      onClick={(e) => { e.stopPropagation(); pickSaved(a._id); setAddrView("form"); }}
+                      className="shrink-0 text-brand text-sm font-medium"
                     >
-                      + Naya address likhein
+                      Edit
                     </button>
-                    <p className="text-[11px] text-gray-400">Neeche form me is address ko badal bhi sakte hain — order ke sath changes save ho jayengi.</p>
                   </div>
-                )}
+                  <p className="text-sm text-gray-600 mt-1 break-words">
+                    {a.street}, {a.area ? `${a.area}, ` : ""}{a.city}
+                    {a.province ? `, ${a.province}` : ""}
+                    {a.postalCode ? ` — ${a.postalCode}` : ""}
+                    {a.lat != null && a.lng != null ? " 📍" : ""}
+                  </p>
+                  <p className="mt-1.5 flex flex-wrap gap-1.5">
+                    <span className="inline-block bg-gray-100 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                      {a.label || "Home"}
+                    </span>
+                    {a.isDefault && (
+                      <span className="inline-block border border-rose-300 text-rose-600 rounded px-1.5 py-0.5 text-[10px] font-semibold">
+                        Default shipping address
+                      </span>
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {step === 0 && addrView === "form" && (
+          <form className="grid sm:grid-cols-2 gap-3" onSubmit={saveAddressToBook}>
+            {bookList.length > 0 ? (
+              <div className="sm:col-span-2 flex items-center gap-2 -mb-1">
+                <button
+                  type="button"
+                  aria-label="Back to addresses"
+                  onClick={() => setAddrView("book")}
+                  className="p-1 -ml-1 text-gray-600"
+                >
+                  <ArrowLeft size={19} />
+                </button>
+                <p className="font-semibold text-sm">{savedId ? "Edit Address" : "Add Address"}</p>
               </div>
             ) : (
               <p className="sm:col-span-2 text-xs text-gray-400 -mb-1">
@@ -348,7 +465,15 @@ export default function Checkout() {
                 <p className="text-xs text-gray-400 mt-1.5">Ya apni live location se order karein — rider seedha aap ki location par ayega (optional).</p>
               )}
             </div>
-            <div className="sm:col-span-2"><button className="bg-brand text-white rounded px-6 py-2.5 sm:py-2 text-sm font-medium w-full sm:w-auto">Continue to Delivery</button></div>
+            {addrMsg && <p className="sm:col-span-2 text-sm text-red-500">{addrMsg}</p>}
+            <div className="sm:col-span-2">
+              <button disabled={savingAddr} className="bg-brand text-white rounded px-6 py-2.5 sm:py-2 text-sm font-medium w-full sm:w-auto disabled:opacity-60">
+                {savingAddr ? "Saving..." : "Save Address"}
+              </button>
+              <p className="text-[11px] text-gray-400 mt-1.5">
+                Save karne ke baad yehi address har checkout par khud lag jayega — badalna ho to Edit se badal jayega.
+              </p>
+            </div>
           </form>
         )}
 
