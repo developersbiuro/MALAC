@@ -33,6 +33,14 @@ export const env = {
     accessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
     phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
     senderNumber: process.env.WHATSAPP_SENDER_NUMBER || "+923236016684",
+    // ZapClaw REST API key (dashboard → API keys). Since 2026-11-12 all
+    // WhatsApp sends ride ZapClaw's Tech-Provider gateway instead of the
+    // owner's own Meta app token: the MALAC app is in Development mode
+    // with Standard access, so Meta refused every recipient outside its
+    // 5-number test list (error 131030) — only the owner's own number
+    // received OTPs. ZapClaw's approved app has no such list. The key
+    // lives ONLY in the deployment environment.
+    zapclawApiKey: process.env.ZAPCLAW_API_KEY || "",
     // Approved Meta AUTHENTICATION template used for OTP delivery.
     // Template messages are required: plain text only reaches users
     // inside a 24-hour service window opened by the user messaging first.
