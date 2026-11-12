@@ -72,6 +72,32 @@ export default function Checkout() {
     api.get("/settings/public").then((r) => setWallets(r.data.payments)).catch(() => setWallets(null));
   }, []);
 
+  // The address book is fetched FRESH on checkout mount: the auth
+  // context loads /auth/me once at app start, so an address the
+  // customer saved minutes ago in Account Settings would otherwise be
+  // missing here until a full reload (owner report, 2026-11-12 —
+  // "settings me save kiya, checkout par nahi aa raha"). If the fresh
+  // book no longer contains the address that was auto-applied from the
+  // stale context copy (edited/deleted in Settings), re-apply from the
+  // fresh list instead.
+  useEffect(() => {
+    let alive = true;
+    api.get("/auth/me")
+      .then((r) => {
+        if (!alive || !Array.isArray(r.data.user?.addresses)) return;
+        const list = r.data.user.addresses;
+        setBook(list);
+        if (savedIdRef.current && !list.some((a) => a._id === savedIdRef.current)) {
+          const def = list.find((a) => a.isDefault) || list[0];
+          if (def?._id) { pickSaved(def._id); setAddrView("card"); }
+          else { pickSaved(""); setAddrView("form"); }
+        }
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // The owner's Settings switch: COD disabled in Admin → Settings hides
   // the COD option here (the server refuses COD orders too), and a
   // pre-selected COD moves to the first manual method.
@@ -84,6 +110,7 @@ export default function Checkout() {
   // live-location pin when it has one, so the pin rides into the order.
   const pickSaved = (id) => {
     setSavedId(id);
+    savedIdRef.current = id;
     const a = bookList.find((x) => x._id === id);
     if (!a) {
       setAddress({
@@ -114,6 +141,7 @@ export default function Checkout() {
   // first) address is applied automatically when checkout opens, so
   // they never re-type it — CHANGE on the address card picks another.
   const autoAppliedRef = useRef(false);
+  const savedIdRef = useRef("");
   useEffect(() => {
     if (autoAppliedRef.current) return;
     const list = book ?? user?.addresses ?? [];
