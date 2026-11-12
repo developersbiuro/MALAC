@@ -52,6 +52,17 @@ export const env = {
     // sends fail at Meta and are logged only — orders never break.
     orderTemplate: process.env.WHATSAPP_ORDER_TEMPLATE || "malac_order_confirm",
     orderTemplateLang: process.env.WHATSAPP_ORDER_TEMPLATE_LANG || "en_US",
+    // Meta UTILITY template for the shipped ("on its way") notice —
+    // {{1}} name, {{2}} order ID, {{3}} courier, {{4}} tracking ID
+    // (owner's ask, 2026-11-12: customer ke liye tracking ID lazmi ho).
+    // Sent only when BOTH courier and tracking were entered at
+    // dispatch, because Meta rejects blank template parameters.
+    shippedTemplate: process.env.WHATSAPP_SHIPPED_TEMPLATE || "malac_order_shipped",
+    shippedTemplateLang: process.env.WHATSAPP_SHIPPED_TEMPLATE_LANG || "en_US",
+    // Meta UTILITY template for the delivered notice —
+    // {{1}} name, {{2}} order ID (owner's ask, 2026-11-12).
+    deliveredTemplate: process.env.WHATSAPP_DELIVERED_TEMPLATE || "malac_order_delivered",
+    deliveredTemplateLang: process.env.WHATSAPP_DELIVERED_TEMPLATE_LANG || "en_US",
   },
   twilio: {
     accountSid: process.env.TWILIO_ACCOUNT_SID || "",

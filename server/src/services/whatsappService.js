@@ -117,4 +117,50 @@ export async function sendWhatsAppOrderConfirmation({ to, name, orderId, total }
   });
 }
 
+// Shipped ("on its way") notice via the UTILITY template
+// malac_order_shipped: body parameters are {{1}} customer name,
+// {{2}} order ID, {{3}} courier, {{4}} tracking ID — the tracking ID
+// is its own variable at the owner's direction (2026-11-12).
+// Best-effort by contract — the caller catches failures.
+export async function sendWhatsAppOrderShipped({ to, name, orderId, courier, trackingId }) {
+  const { shippedTemplate, shippedTemplateLang } = env.whatsapp;
+  return sendTemplateMessage({
+    to,
+    templateName: shippedTemplate,
+    lang: shippedTemplateLang,
+    components: [
+      {
+        type: "body",
+        parameters: [
+          { type: "text", text: String(name || "Customer") },
+          { type: "text", text: String(orderId || "") },
+          { type: "text", text: String(courier || "") },
+          { type: "text", text: String(trackingId || "") },
+        ],
+      },
+    ],
+  });
+}
+
+// Delivered notice via the UTILITY template malac_order_delivered:
+// body parameters are {{1}} customer name, {{2}} order ID.
+// Best-effort by contract — the caller catches failures.
+export async function sendWhatsAppOrderDelivered({ to, name, orderId }) {
+  const { deliveredTemplate, deliveredTemplateLang } = env.whatsapp;
+  return sendTemplateMessage({
+    to,
+    templateName: deliveredTemplate,
+    lang: deliveredTemplateLang,
+    components: [
+      {
+        type: "body",
+        parameters: [
+          { type: "text", text: String(name || "Customer") },
+          { type: "text", text: String(orderId || "") },
+        ],
+      },
+    ],
+  });
+}
+
 export default sendWhatsAppOtp;

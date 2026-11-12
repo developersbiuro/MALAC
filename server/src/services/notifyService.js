@@ -2,7 +2,7 @@ import Notification from "../models/Notification.js";
 import User from "../models/User.js";
 import { sendPushToStaff, sendPushToUser, sendPushToAllCustomers } from "./pushService.js";
 import { sendEmail } from "./emailService.js";
-import { sendWhatsAppOrderConfirmation } from "./whatsappService.js";
+import { sendWhatsAppOrderConfirmation, sendWhatsAppOrderShipped, sendWhatsAppOrderDelivered } from "./whatsappService.js";
 import { orderStatusEmail } from "./emailTemplates.js";
 
 // Order-event side effects, in one place: the customer's lifecycle email
@@ -107,6 +107,35 @@ async function whatsappCustomer(order, name) {
   }
 }
 
+// Shipped ("on its way") notice on WhatsApp (owner's ask, 2026-11-12).
+// Sent ONLY when the dispatch carries both a courier and a tracking
+// ID: the approved template has the tracking ID as its own variable
+// and Meta rejects blank parameters, so a shipment without tracking
+// simply skips WhatsApp (email + push still go). Best-effort.
+async function whatsappShipped(order, name) {
+  try {
+    const phone = order.address?.phone || "";
+    if (!phone || !order.courier || !order.trackingId) return;
+    await sendWhatsAppOrderShipped({
+      to: phone, name, orderId: order.orderId,
+      courier: order.courier, trackingId: order.trackingId,
+    });
+  } catch (err) {
+    console.error(`[MALAC] shipped WhatsApp failed (${order.orderId}): ${err.message}`);
+  }
+}
+
+// Delivered notice on WhatsApp (owner's ask, 2026-11-12). Best-effort.
+async function whatsappDelivered(order, name) {
+  try {
+    const phone = order.address?.phone || "";
+    if (!phone) return;
+    await sendWhatsAppOrderDelivered({ to: phone, name, orderId: order.orderId });
+  } catch (err) {
+    console.error(`[MALAC] delivered WhatsApp failed (${order.orderId}): ${err.message}`);
+  }
+}
+
 export async function onOrderPlaced(order) {
   const name = await customerNameOf(order);
   await pushCustomer(order, "MALAC — Order confirm ho gaya",
@@ -166,6 +195,7 @@ export async function onOrderShipped(order) {
       ? `Please keep Rs. ${Number(order.total).toLocaleString("en-PK")} ready — you pay the courier when your parcel arrives.`
       : undefined,
   });
+  whatsappShipped(order, name);
 }
 
 export async function onOrderDelivered(order) {
@@ -175,6 +205,7 @@ export async function onOrderDelivered(order) {
   // Staff hear about deliveries too (owner's rule) — bell + admin push.
   notifyStaff("order_delivered", order,
     `Order ${order.orderId} delivered — ${name} · Rs. ${Number(order.total).toLocaleString("en-PK")}`);
+  whatsappDelivered(order, name);
 }
 
 export async function onReturnRequested(order) {
