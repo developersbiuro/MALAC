@@ -16,6 +16,10 @@ const buildFaqs = (fees) => [
     a: "MALAC stands for M.A Luxury Apparel Collection — you may also see the name written as MalacPK. It is an online shopping store from Faisalabad, Pakistan. There is no physical shop and no counter to visit: everything is sold through this website and delivered to your door, anywhere in Pakistan.",
   },
   {
+    q: "How do you pronounce MALAC?",
+    a: "MALAC is pronounced \u201Cma-LEEK\u201D — in Urdu script, \u0645\u0627\u200C\u0644\u06CC\u06A9. The name is short for M.A Luxury Apparel Collection.",
+  },
+  {
     q: "Is MALAC a genuine store? Can I trust it?",
     a: "Yes. MALAC is run by a real team in Faisalabad, and a person checks every order before it is packed — nothing is dispatched on autopilot. If paying in advance feels risky, choose Cash on Delivery and hand over your money only when the parcel is in your hands. And if anything feels unclear before or after ordering, message us on WhatsApp at +92 323 6016684 or email info@malac.pp.ua and a person will answer you.",
   },
