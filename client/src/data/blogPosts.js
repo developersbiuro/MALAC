@@ -12,6 +12,69 @@
 // adding their /blog/<slug> URL to server/src/routes/sitemapRoutes.js.
 export const BLOG_POSTS = [
   {
+    slug: "cash-on-delivery-online-shopping-pakistan",
+    title: "Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands",
+    excerpt:
+      "Most Pakistanis still pay at the door — and for good reason. Here is how Cash on Delivery actually works at MALAC, what it costs, how long it takes, and the small checks that keep a COD order safe from start to finish.",
+    date: "2026-11-14",
+    displayDate: "14 November 2026",
+    readTime: "4 min read",
+    faqs: [
+      {
+        q: "Can I pay Cash on Delivery at MALAC?",
+        a: "Yes. Choose COD at checkout and pay when the parcel is in your hands — no advance payment, no card, no transfer needed.",
+      },
+      {
+        q: "Is there an extra charge for COD?",
+        a: "No. COD costs the same as any other payment method at MALAC. Standard delivery is Rs. 249, and it is completely free on orders above Rs. 3,000.",
+      },
+      {
+        q: "How long does a COD order take?",
+        a: "Standard delivery is 2 to 5 working days, depending on your city. Express, where available, is 1 to 2 working days.",
+      },
+      {
+        q: "Can I check my parcel before paying?",
+        a: "The courier hands you the parcel and collects the payment shown on the label. If the parcel looks damaged or wrong, tell the courier and message us on WhatsApp right away — do not accept a parcel you can see is damaged.",
+      },
+      {
+        q: "What if my COD order arrives damaged?",
+        a: "Message us within 7 days of delivery, or request a return from your orders page. Damaged, defective or wrong items are our responsibility, and we will make it right.",
+      },
+    ],
+    body: [
+      { t: "p", x: "Ask ten people in Pakistan how they pay for an online order and most of them will give you the same answer: cash, at the door, parcel in hand. It is not old-fashioned. It is the one payment method where the customer never has to trust a stranger first — and after years of parcels that never arrived and pages that vanished after taking advance payments, that caution is completely fair." },
+      { t: "p", x: "At **MALAC**, Cash on Delivery is not a favour we do for hesitant customers. It is our main payment method, and this page explains exactly how it works here — what it costs, how long it takes, and the small checks that keep a COD order safe." },
+      { t: "h", x: "How a COD order works at MALAC, step by step" },
+      { t: "p", x: "Nothing about the process is hidden, so here it is, start to finish:" },
+      { t: "ol", x: [
+        "Browse the [Shop page](/shop) and add what you like to your cart — 38 products across 9 categories, from fashion and electronics to groceries and toys.",
+        "Sign in with your mobile number, email, or Google account. A one-time code keeps your account safe.",
+        "Confirm your delivery address. After your first order it is saved, so next time checkout is almost one tap.",
+        "Choose **Cash on Delivery** at checkout and confirm. No card number, no transfer screenshot, nothing to send in advance.",
+        "We pack your order here in Faisalabad and hand it to the courier — **TCS, Leopards, Trax or PostEx**. Your tracking ID reaches you on WhatsApp, and you can follow the order on our Track Order page: packed, shipped, out for delivery, delivered.",
+        "The courier arrives, you take the parcel, and you pay the amount printed on the label. That is the whole transaction.",
+      ] },
+      { t: "h", x: "What COD costs — and what it does not cost" },
+      { t: "p", x: "Some stores quietly add a \"COD fee\" at the last step. We do not. A COD order at MALAC costs exactly the same as a JazzCash or Easypaisa order: **standard delivery is Rs. 249, completely free on orders above Rs. 3,000**, and **express delivery is Rs. 399** where available. The full amount is shown to you before you confirm the order, and the same amount is printed on the parcel label — so the figure the courier asks for is the figure you already agreed to." },
+      { t: "h", x: "How long a COD order takes" },
+      { t: "p", x: "Payment method does not change the speed. Standard delivery takes **2 to 5 working days**, depending on your city, and express takes **1 to 2 working days** where it is offered. A parcel going to Karachi, Lahore or Islamabad usually moves faster than one going to a small town — that is the courier's route, not a penalty for paying cash, and we will not promise you a date we cannot keep." },
+      { t: "h", x: "Five small checks that keep a COD order safe" },
+      { t: "p", x: "COD protects you, but a little care on your side makes it airtight:" },
+      { t: "ol", x: [
+        "Order from a store that shows a real address, a real phone number and a real returns policy — not just a WhatsApp number on a page with no name.",
+        "Read the price and the delivery charge on the screen before confirming. At MALAC the total you confirm is the total on the label.",
+        "Keep your order ID from the confirmation message. If anything goes wrong, that one ID is all we need to find your parcel.",
+        "When the courier arrives, look at the parcel before paying. If the box is torn open or crushed, say so on the spot and message us on WhatsApp — a damaged parcel is our problem, not yours.",
+        "Never pay anyone who comes without your parcel, and never pay more than the amount on the label.",
+      ] },
+      { t: "h", x: "What if something arrives wrong?" },
+      { t: "p", x: "This is where trust is actually built, so we say it plainly: if your item arrives **damaged, defective, or different from what you ordered**, tell us within **7 days** of delivery and we will sort it out with an exchange or a solution. You can request a return right from your orders page. Change-of-mind returns are the one thing we do not accept, and we would rather tell you that honestly here than surprise you later." },
+      { t: "h", x: "COD, or pay in advance — your choice" },
+      { t: "p", x: "If you would rather pay before dispatch, you can send the amount through **JazzCash** or **Easypaisa**, or by transfer to our **Meezan Bank, NayaPay, SadaPay or FirstPay — HBL Microfinance Bank** accounts, sharing the transaction screenshot during checkout. Our team checks it before dispatch. But if you would rather pay at your door, nobody at MALAC will ever push you to pay first. That is the whole point of Cash on Delivery." },
+      { t: "p", x: "First-time customers can use the voucher **WELCOME10** for 10% off their first order — COD orders included. Start with the [Shop page](/shop), or read [how MALAC works](/blog/online-shopping-in-pakistan-malac). And if you are still unsure about anything, WhatsApp us on **+92 323 6016684** and ask. A real person will answer." },
+    ],
+  },
+  {
     slug: "online-shopping-in-pakistan-malac",
     title: "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust",
     excerpt:

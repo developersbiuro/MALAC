@@ -53,6 +53,7 @@ router.get("/sitemap.xml", async (req, res) => {
     { loc: `${SITE_URL}/about`, lastmod: today, changefreq: "monthly", priority: "0.4" },
     { loc: `${SITE_URL}/blog`, lastmod: today, changefreq: "weekly", priority: "0.5" },
     { loc: `${SITE_URL}/blog/online-shopping-in-pakistan-malac`, lastmod: "2026-11-14", changefreq: "monthly", priority: "0.6" },
+    { loc: `${SITE_URL}/blog/cash-on-delivery-online-shopping-pakistan`, lastmod: "2026-11-14", changefreq: "monthly", priority: "0.6" },
     { loc: `${SITE_URL}/terms`, lastmod: today, changefreq: "monthly", priority: "0.3" },
     { loc: `${SITE_URL}/policy`, lastmod: today, changefreq: "monthly", priority: "0.3" },
   ];
