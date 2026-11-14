@@ -149,7 +149,13 @@ export default function Login() {
         {method === "otp" && (step === 1 ? (
           <form onSubmit={request} className="space-y-3 mt-4">
             <div className="flex gap-2 text-sm">
-              {[["email", "Email"], ["whatsapp", "WhatsApp"], ["sms", "SMS"]].map(([v, label]) => (
+              {/* TEMP (2026-11-09): WhatsApp/SMS OTP paused until Meta Business
+                  Verification decides (check Wed 2026-11-11 11:00 PKT). Meta
+                  rejects the OTP template until then, so a phone code can
+                  never arrive — offering the buttons only strands customers.
+                  Revert: restore ["whatsapp", "WhatsApp"] and ["sms", "SMS"]
+                  to this list and remove the note below. */}
+              {[["email", "Email"]].map(([v, label]) => (
                 <button type="button" key={v} onClick={() => {
                   setChannel(v); setError("");
                   // The identifier box is shared across channels: drop a
@@ -160,6 +166,8 @@ export default function Login() {
                   className={`flex-1 border rounded py-2 ${channel === v ? "border-brand text-brand bg-brand-light" : ""}`}>{label}</button>
               ))}
             </div>
+            {/* TEMP (2026-11-09): remove with the WhatsApp/SMS revert above. */}
+            <p className="text-xs text-gray-500">WhatsApp and SMS codes are paused until Meta finishes verification (expected Wed 11 Nov) — Email OTP, password and Google sign-in all work.</p>
             {channel === "email" ? (
               <input required type="email" autoComplete="email" className={input} placeholder="Email address"
                 value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
@@ -186,7 +194,6 @@ export default function Login() {
         <div className="flex items-center gap-3 my-4"><span className="flex-1 border-t" /><span className="text-xs text-gray-400">OR</span><span className="flex-1 border-t" /></div>
         <GoogleButton onDone={finish} />
         <p className="text-sm text-center mt-4">New to MALAC? <Link to={`/signup${redirect !== "/" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`} className="text-brand font-medium">Sign up</Link></p>
-        <p className="text-xs text-center mt-2 text-gray-400">Staff? Use the <Link to="/admin" className="text-brand">Admin Login</Link> instead.</p>
       </div>
     </main>
   );

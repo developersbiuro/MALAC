@@ -26,6 +26,14 @@ export function getClientIp(req) {
 
 export const ipKey = (req) => `ip:${getClientIp(req)}`;
 
+// Per-signed-in-user key (routes behind `protect`): one account shares one
+// counter no matter which device or network it orders from — this is the
+// fake-order brake, since order spam needs an account first.
+export function userKey(req) {
+  const id = req.user?._id || req.user?.id;
+  return id ? `user:${id}` : null;
+}
+
 // Per-account-identifier key: whichever identifier the endpoint accepts
 // (identifier / email / phone), normalized so the same account typed in
 // different shapes shares one counter.

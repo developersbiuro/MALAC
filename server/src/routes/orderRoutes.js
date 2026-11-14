@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { protect } from "../middleware/auth.js";
-import { rateLimit, ipKey } from "../middleware/rateLimit.js";
+import { rateLimit, ipKey, userKey } from "../middleware/rateLimit.js";
 import * as orders from "../controllers/orderController.js";
 
 const router = Router();
@@ -10,7 +10,14 @@ const router = Router();
 // first; the per-IP limit stays as the second guard.
 router.post("/track", protect, rateLimit({ windowMs: 15 * 60 * 1000, max: 60, key: ipKey }), orders.trackOrder);
 router.use(protect);
-router.post("/", orders.placeOrder);
+// Fake-order brake (Abdullah, 2026-11-14): placing an order needs a verified
+// account, totals are priced server-side from the DB and stock is claimed
+// atomically — these caps stop one account (or one network) from flooding
+// the store with bogus COD orders. Real customers never come close.
+router.post("/",
+  rateLimit({ windowMs: 60 * 60 * 1000, max: 15, key: userKey }),
+  rateLimit({ windowMs: 60 * 60 * 1000, max: 40, key: ipKey }),
+  orders.placeOrder);
 router.get("/my", orders.myOrders);
 router.get("/my-reviews", orders.myReviews);
 router.get("/:orderId", orders.getOrder);

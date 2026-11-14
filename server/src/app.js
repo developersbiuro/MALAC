@@ -24,6 +24,7 @@ import cronRoutes from "./routes/cronRoutes.js";
 import { uploadsDir } from "./middleware/upload.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import { securityHeaders } from "./middleware/securityHeaders.js";
+import { rateLimit, ipKey } from "./middleware/rateLimit.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -64,6 +65,13 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "2mb" }));
+
+// Global API backstop (Abdullah's hardening ask, 2026-11-14): a generous
+// per-IP ceiling over the whole API so scraping / flooding runs into a
+// wall, while real shoppers — even many sharing one carrier NAT address —
+// never notice it. Sensitive routes (auth, OTP, orders, tracking) carry
+// their own much tighter limits on top of this.
+app.use("/api", rateLimit({ windowMs: 15 * 60 * 1000, max: 3000, key: ipKey }));
 
 // Gzip JSON API responses (built-in zlib, no dependency). Product lists
 // carry long image URLs and descriptions; compressing them cuts the bytes
