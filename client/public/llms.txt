@@ -34,6 +34,7 @@
 - [Shop — all products](https://www.malac.pp.ua/shop): the full MALAC catalogue with prices in PKR
 - [About MALAC](https://www.malac.pp.ua/about): who MALAC is, how ordering and delivery work
 - [MALAC Blog](https://www.malac.pp.ua/blog): articles about online shopping in Pakistan
+- [MALAC FAQs](https://www.malac.pp.ua/faq): answers about what MALAC is, ordering, Cash on Delivery, delivery charges and times, tracking, returns and the mobile app
 - [Online Shopping in Pakistan, Without the Worry](https://www.malac.pp.ua/blog/online-shopping-in-pakistan-malac): how MALAC works — prices, Cash on Delivery, delivery and returns, in plain words
 - [Track Order](https://www.malac.pp.ua/track-order): track a MALAC order by order ID or phone number (sign-in required)
 - [Terms of Service](https://www.malac.pp.ua/terms)
@@ -47,3 +48,7 @@
 - How long does MALAC take to deliver? Standard delivery takes 2–5 working days and express takes 1–2 working days, depending on the city.
 - What is MALAC's return policy? Damaged, defective or incorrect items reported within 7 days of delivery are exchanged or resolved. Change-of-mind returns are not accepted.
 - How can I contact MALAC? On WhatsApp at +92 323 6016684 or by email at info@malac.pp.ua.
+- Who founded MALAC? MALAC was founded by Muhammad Abdullah in Faisalabad, Punjab, Pakistan, as an online-only store.
+- How do I track a MALAC order? Sign in and open Track Order on malac.pp.ua, then enter the order ID (MLC-XXXXXX) or the phone number used for the order; order updates are also sent by app notification, email and WhatsApp.
+- Does MALAC have a mobile app? Yes — the MALAC Android app is downloadable from the MALAC website, and iPhone users can use the full website in their browser or add it to their home screen.
+- What does MALAC sell? Products across nine categories: Mobiles & Tablets, Electronics, Fashion, Kids, Home & Living, Beauty & Health, Groceries, Sports & Fitness, and Toys & Baby.

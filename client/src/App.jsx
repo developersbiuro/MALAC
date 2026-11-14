@@ -38,6 +38,7 @@ const Terms = lazy(() => import("./pages/Terms.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Blog = lazy(() => import("./pages/Blog.jsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.jsx"));
+const Faq = lazy(() => import("./pages/Faq.jsx"));
 const Policy = lazy(() => import("./pages/Policy.jsx"));
 
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
@@ -163,6 +164,7 @@ export default function App() {
         <Route path="/terms" element={<Terms />} />
         <Route path="/about" element={<About />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/faq" element={<Faq />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/policy" element={<Policy />} />
         <Route path="/admin/*" element={<AdminShell />} />

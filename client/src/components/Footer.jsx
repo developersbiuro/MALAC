@@ -49,6 +49,7 @@ export default function Footer() {
           <Link to="/orders" className="block text-gray-600 hover:text-lux-burnt py-0.5">Track Your Order</Link>
           <Link to="/about" className="block text-gray-600 hover:text-lux-burnt py-0.5">About MALAC</Link>
           <Link to="/blog" className="block text-gray-600 hover:text-lux-burnt py-0.5">MALAC Blog</Link>
+          <Link to="/faq" className="block text-gray-600 hover:text-lux-burnt py-0.5">FAQs</Link>
           <Link to="/terms" className="block text-gray-600 hover:text-lux-burnt py-0.5">Terms of Service</Link>
           <Link to="/policy" className="block text-gray-600 hover:text-lux-burnt py-0.5">Privacy Policy</Link>
           <Link to="/shop" className="block text-gray-600 hover:text-lux-burnt py-0.5">All Products</Link>
