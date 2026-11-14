@@ -17,7 +17,7 @@ const buildFaqs = (fees) => [
   },
   {
     q: "How do you pronounce MALAC?",
-    a: "MALAC is pronounced \u201Cma-LACK\u201D (two syllables: ma-lack) — in Urdu script, \u0645\u0627\u200C\u0644\u06CC\u06A9. The name is short for M.A Luxury Apparel Collection.",
+    a: "MALAC is pronounced \u201Cma-LAAK\u201D (two syllables: maa-laak) — in Urdu script, \u0645\u0627\u0644\u0627\u06A9. The name is short for M.A Luxury Apparel Collection.",
   },
   {
     q: "Is MALAC a genuine store? Can I trust it?",
