@@ -2,19 +2,48 @@ import { Link, useParams } from "react-router-dom";
 import { useSeo } from "../utils/seo.js";
 import { getBlogPost } from "../data/blogPosts.js";
 
-// Renders **bold** segments inside a plain-text string as <strong>;
-// everything else stays plain text (no HTML injection anywhere).
+// Renders **bold** segments and [label](url) links inside a plain-text
+// string; everything else stays plain text (no HTML injection anywhere).
+// Internal "/..." links use react-router so navigation stays in the SPA.
+const INLINE_TOKEN = /(\*\*.+?\*\*|\[[^\]]+\]\([^)]+\))/;
+
 function renderInline(text, keyPrefix) {
-  const parts = String(text).split("**");
-  return parts.map((part, i) =>
-    i % 2 === 1 ? (
-      <strong key={`${keyPrefix}-${i}`} className="font-semibold text-neutral-900">
-        {part}
-      </strong>
-    ) : (
-      <span key={`${keyPrefix}-${i}`}>{part}</span>
-    )
-  );
+  return String(text)
+    .split(INLINE_TOKEN)
+    .map((part, i) => {
+      const key = `${keyPrefix}-${i}`;
+      if (!part) return null;
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return (
+          <strong key={key} className="font-semibold text-neutral-900">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      const link = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (link) {
+        const [, label, url] = link;
+        if (url.startsWith("/")) {
+          return (
+            <Link key={key} to={url} className="font-medium text-lux-burnt hover:underline">
+              {label}
+            </Link>
+          );
+        }
+        return (
+          <a
+            key={key}
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-lux-burnt hover:underline"
+          >
+            {label}
+          </a>
+        );
+      }
+      return <span key={key}>{part}</span>;
+    });
 }
 
 function Block({ block, index }) {
@@ -61,13 +90,29 @@ export default function BlogPost() {
           description: post.excerpt,
           jsonLd: {
             "@context": "https://schema.org",
-            "@type": "BlogPosting",
-            headline: post.title,
-            description: post.excerpt,
-            datePublished: post.date,
-            author: { "@type": "Organization", name: "MALAC" },
-            publisher: { "@type": "Organization", name: "MALAC" },
-            mainEntityOfPage: `https://www.malac.pp.ua/blog/${post.slug}`,
+            "@graph": [
+              {
+                "@type": "BlogPosting",
+                headline: post.title,
+                description: post.excerpt,
+                datePublished: post.date,
+                author: { "@type": "Organization", name: "MALAC" },
+                publisher: { "@type": "Organization", name: "MALAC" },
+                mainEntityOfPage: `https://www.malac.pp.ua/blog/${post.slug}`,
+              },
+              ...(post.faqs?.length
+                ? [
+                    {
+                      "@type": "FAQPage",
+                      mainEntity: post.faqs.map((f) => ({
+                        "@type": "Question",
+                        name: f.q,
+                        acceptedAnswer: { "@type": "Answer", text: f.a },
+                      })),
+                    },
+                  ]
+                : []),
+            ],
           },
         }
       : { title: "Post not found — MALAC Blog" }

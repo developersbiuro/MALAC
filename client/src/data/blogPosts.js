@@ -1,74 +1,85 @@
 // MALAC Blog posts. Content lives in the client (no DB model) — each post
 // is a plain object with structured body blocks so BlogPost.jsx can render
 // it without any HTML injection:
-//   { t: "p",  x: "paragraph text (**bold** is supported)" }
+//   { t: "p",  x: "paragraph text (**bold** and [links](/shop) supported)" }
 //   { t: "h",  x: "Section heading" }
 //   { t: "ul", x: ["bullet", ...] }
 //   { t: "ol", x: ["step", ...] }
+// Writing rules for posts (owner's standard): 100% original wording that
+// exists nowhere else, natural human language, and honest SEO — real
+// keywords and internal links, never keyword stuffing or invented claims.
 // New posts are added by appending an object here (newest first) and
 // adding their /blog/<slug> URL to server/src/routes/sitemapRoutes.js.
 export const BLOG_POSTS = [
   {
     slug: "online-shopping-in-pakistan-malac",
-    title: "MALAC — Online Shopping in Pakistan, Made Simple",
+    title: "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust",
     excerpt:
-      "Quality products, honest prices and delivery to your doorstep — anywhere in Pakistan. What MALAC is, what you can buy, how ordering and Cash on Delivery work, and how to reach us.",
+      "Shopping online in Pakistan should not feel like a gamble. MALAC is an online store from Faisalabad with honest prices in rupees, Cash on Delivery, JazzCash and Easypaisa payments, and delivery to every city and town — here is how we work, in plain words.",
     date: "2026-11-14",
     displayDate: "14 November 2026",
-    readTime: "4 min read",
+    readTime: "5 min read",
+    faqs: [
+      {
+        q: "Do you deliver to my city?",
+        a: "Almost certainly, yes. MALAC delivers all over Pakistan — Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, Quetta, Hyderabad, Sialkot, Gujranwala, and the smaller towns around them. At checkout you pick your province, city and area from a list that covers the whole country.",
+      },
+      {
+        q: "How long will my order take?",
+        a: "Standard delivery is 2 to 5 working days, depending on your city. Express, where available, is 1 to 2 working days.",
+      },
+      {
+        q: "Is Cash on Delivery really available?",
+        a: "Yes — choose COD at checkout and pay when the parcel is in your hands.",
+      },
+      {
+        q: "Do I need an account just to look around?",
+        a: "No. Browsing is open to everyone. You sign in only when you want to order, so your orders, addresses and details stay safe in one place.",
+      },
+      {
+        q: "What if my order arrives damaged?",
+        a: "Message us within 7 days or request a return from your orders page. Damaged, defective or wrong items are our responsibility, and we will make it right.",
+      },
+    ],
     body: [
-      { t: "p", x: "Online shopping in Pakistan has grown fast, but one problem never went away: can you trust the store? Will the product look like its picture? Will it even arrive? **MALAC** was built to answer those questions properly. Based in Faisalabad and serving customers all over Pakistan, MALAC is an online store where you can shop fashion, electronics, home essentials and much more — with Cash on Delivery, easy mobile payments, and real human support on WhatsApp." },
-      { t: "h", x: "What is MALAC?" },
-      { t: "p", x: "MALAC stands for **M.A Luxury Apparel Collection**. What started with apparel has grown into a full online shopping store for everyday needs. The idea is simple: a clean, easy store — much like the big marketplaces you already know — but with personal service, clear prices, and no hidden charges. What you see on the product page is the price you pay, plus a delivery charge that is shown honestly before you place your order." },
-      { t: "p", x: "You can shop on this website from any phone or computer, or download the **MALAC Android app** from the homepage for a faster, app-style experience." },
-      { t: "h", x: "What can you buy at MALAC?" },
-      { t: "p", x: "The store is organised into nine categories, so finding things is easy:" },
-      { t: "ul", x: [
-        "**Fashion** — Men, Women, Shoes and Unisex styles",
-        "**Mobiles & Tablets** — phones and accessories",
-        "**Electronics** — everyday gadgets and devices",
-        "**Home & Living** — useful things for your home",
-        "**Beauty & Health** — personal care essentials",
-        "**Groceries** — daily-use items",
-        "**Sports & Fitness** — gear for an active life",
-        "**Toys & Baby** — for the little ones",
-        "**Kids** — boys' and girls' fashion, kids' shoes and school supplies",
-      ] },
-      { t: "p", x: "New products are added regularly, and a **Flash Sale** section brings special prices on selected items. New customers can also use the welcome voucher **WELCOME10** for 10% off their first order." },
-      { t: "h", x: "How ordering works" },
+      { t: "p", x: "If you have ever ordered something online in Pakistan, you probably know the feeling. The parcel arrives, you open the box with full excitement — and inside is something that looks nothing like the picture. Wrong colour. Cheap material. Sometimes the parcel never comes at all, and the \"customer support\" number rings forever." },
+      { t: "p", x: "We started **MALAC** because we were tired of exactly that. This page is our honest introduction: who we are, what we sell, how our prices and delivery work, and what happens if something goes wrong with your order. No big claims, no marketing tricks — just how the store actually runs." },
+      { t: "h", x: "A small online store from Faisalabad, not a faceless warehouse" },
+      { t: "p", x: "MALAC stands for **M.A Luxury Apparel Collection**. The store was founded by **Muhammad Abdullah** in Faisalabad, Punjab, and it runs completely online — there is no walk-in shop. Every order is packed here and sent out through courier, and when you message us on WhatsApp, you are talking to a real person from our own small team, not a call centre reading a script." },
+      { t: "p", x: "That small size is honestly our advantage. When a customer has a problem, we cannot hide behind a ticket number. We have to fix it — and that is exactly what keeps a small store alive in Pakistan." },
+      { t: "h", x: "What you can buy at MALAC" },
+      { t: "p", x: "What began with apparel is now a full store. You will find **Mobiles & Tablets**, **Electronics**, **Fashion** for men, women and kids, **Home & Living**, **Beauty & Health**, **Groceries**, **Sports & Fitness**, and **Toys & Baby** — all on our [Shop page](/shop)." },
+      { t: "p", x: "A few things customers pick up again and again: everyday fashion like kurtis, polos and Peshawari chappals; small electronics that make load-shedding bearable, like rechargeable fans and power banks; kitchen basics from kettles to dinner sets; and daily groceries like pure desi ghee and honey. New products are added regularly, and first-time customers can use the voucher **WELCOME10** for 10% off their first order." },
+      { t: "h", x: "Prices in rupees, written plainly" },
+      { t: "p", x: "Here is a small thing we feel strongly about. Many stores show a scratched-out \"Rs. 40,000\" next to a \"Rs. 3,999\" price, when the product was never sold at Rs. 40,000 in its life. We do not play that game. When MALAC shows an old price, it is a real old price — and the price you see on the product page is the price you pay." },
+      { t: "p", x: "Delivery is just as plain: **standard delivery is Rs. 249**, it is **completely free on orders above Rs. 3,000**, and **express delivery is Rs. 399** where available. The full amount is shown to you before you confirm the order. Nothing is added at your door that you did not already see on the screen." },
+      { t: "h", x: "Cash on Delivery, JazzCash and Easypaisa — pay the way that suits you" },
+      { t: "p", x: "Most of our customers still prefer **Cash on Delivery**, and we completely understand why. You should not have to send money into the dark and hope for the best. With COD, you pay at your doorstep, parcel in hand." },
+      { t: "p", x: "If you prefer to pay in advance, you can send the amount through **JazzCash** or **Easypaisa**, or by transfer to our **Meezan Bank, NayaPay, SadaPay or FirstPay — HBL Microfinance Bank** accounts. For transfers, you simply share the transaction screenshot during checkout. Our team checks it before dispatch — this one manual step is what makes sure a payment sent to the wrong number never becomes a lost order." },
+      { t: "h", x: "Delivery to Karachi, Lahore, Islamabad — and the towns in between" },
+      { t: "p", x: "Big cities are easy for every store. The real test of online shopping in Pakistan is a small town in Sindh or a village outside Multan — and yes, we deliver there too. Orders go out through **TCS, Leopards, Trax and PostEx**, standard delivery takes **2 to 5 working days**, and express takes **1 to 2 working days** where offered." },
+      { t: "p", x: "The moment your parcel is shipped, your tracking ID reaches you on WhatsApp, and you can follow the order from our Track Order page at any time — packed, shipped, out for delivery, delivered. No guessing, no \"sir, kal aa jayega\" without proof." },
+      { t: "h", x: "If something arrives wrong, we fix it" },
+      { t: "p", x: "Let us say it clearly, because this is where trust is actually built: if your item arrives **damaged, defective, or different from what you ordered**, tell us within **7 days** of delivery and we will sort it out with an exchange or a solution. You can request a return right from your orders page — no long forms, no begging anyone on the phone. Change-of-mind returns are the one thing we do not accept, and we would rather tell you that honestly here than surprise you later." },
+      { t: "h", x: "How to place your first order" },
+      { t: "p", x: "It takes a few minutes:" },
       { t: "ol", x: [
-        "**Browse or search** the store and add items to your cart.",
-        "**Sign in** with your mobile number, email, or Google account — a quick one-time code (OTP) keeps your account safe.",
-        "**Check out** with your saved address. Your address, phone and email are saved after the first order, so next time checkout is almost one tap.",
-        "**Choose how to pay** (see below) and confirm your order.",
-        "**Track your order** any time from the Track Order page, and get updates on WhatsApp, email and in the app at every step — packed, shipped, out for delivery, and delivered.",
+        "Browse the [Shop page](/shop) and add what you like to your cart.",
+        "Sign in with your mobile number, email, or Google account. A one-time code keeps your account safe.",
+        "Confirm your delivery address — after your first order it is saved, so next time checkout is almost one tap.",
+        "Choose Cash on Delivery or one of the transfer options, and confirm.",
+        "Sit back. Your confirmation arrives right away, and every step after that — packed, shipped, out for delivery, delivered — is shared with you.",
       ] },
-      { t: "h", x: "Pay the way that suits you" },
-      { t: "p", x: "Not everyone in Pakistan has — or wants to use — a bank card. MALAC keeps it practical:" },
-      { t: "ul", x: [
-        "**Cash on Delivery (COD)** — pay at your doorstep when your order arrives.",
-        "**JazzCash** and **Easypaisa** — send the amount from your mobile account and share the transaction screenshot in checkout; our team verifies it and processes your order.",
-        "**Bank and wallet transfers** — Meezan Bank, NayaPay, SadaPay and FirstPay (HBL Microfinance Bank) are also supported.",
-      ] },
-      { t: "p", x: "Every order is confirmed properly, and if a payment ever needs checking, our support team is one WhatsApp message away." },
-      { t: "h", x: "Delivery charges — clear and simple" },
-      { t: "ul", x: [
-        "**Standard delivery: Rs. 249** (2–5 working days)",
-        "**FREE delivery on orders over Rs. 3,000**",
-        "**Express delivery: Rs. 399** (1–2 working days)",
-      ] },
-      { t: "p", x: "Orders are dispatched through trusted couriers including **TCS, Leopards, Trax and PostEx**, and your tracking ID is shared with you as soon as your parcel is shipped." },
-      { t: "h", x: "Returns, without the headache" },
-      { t: "p", x: "If your item arrives **damaged, defective, or different from what you ordered**, you can request a return within **7 days** of delivery from your orders page. We check the request and arrange an exchange or solution — that is a promise we keep written in our store policy, not just in this blog." },
-      { t: "h", x: "Real support, from real people" },
-      { t: "p", x: "Questions about a product? A problem with an order? Talk to us on **WhatsApp: +92 323 6016684**, email **info@malac.pp.ua**, or chat with the **MALAC Assistant** right here on the website — it can show you products, compare options, and help you track your order." },
-      { t: "h", x: "Frequently asked questions" },
-      { t: "p", x: "**Is MALAC available in my city?** Yes — we deliver all over Pakistan, to big cities and small towns alike. At checkout, you can pick your province, city and area from a list covering the whole country." },
-      { t: "p", x: "**Do I need an account to browse?** No. Anyone can browse the store freely. You only sign in when you want to add items to your cart or place an order — this keeps your orders and addresses safe." },
-      { t: "p", x: "**How long does delivery take?** Standard delivery takes 2–5 working days. Express delivery, where available, takes 1–2 working days." },
-      { t: "p", x: "**Can I really pay cash on delivery?** Yes. COD is available — simply choose it at checkout and pay when your parcel arrives." },
-      { t: "h", x: "Start shopping" },
-      { t: "p", x: "Good products, fair prices, honest delivery charges and support that actually replies — that is what MALAC is trying to bring to online shopping in Pakistan, one order at a time. Visit the Shop page to see what is new, and don't forget your **WELCOME10** voucher for 10% off your first order." },
+      { t: "p", x: "Do not forget to apply **WELCOME10** at checkout for 10% off your first order." },
+      { t: "h", x: "Questions people actually ask us" },
+      { t: "p", x: "**Do you deliver to my city?** Almost certainly, yes. We deliver all over Pakistan — Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, Quetta, Hyderabad, Sialkot, Gujranwala, and the smaller towns around them. At checkout you pick your province, city and area from a list that covers the whole country." },
+      { t: "p", x: "**How long will my order take?** Standard delivery is 2 to 5 working days, depending on your city. Express, where available, is 1 to 2 working days." },
+      { t: "p", x: "**Is Cash on Delivery really available?** Yes — choose COD at checkout and pay when the parcel is in your hands." },
+      { t: "p", x: "**Do I need an account just to look around?** No. Browsing is open to everyone. You sign in only when you want to order, so your orders, addresses and details stay safe in one place." },
+      { t: "p", x: "**What if my order arrives damaged?** Message us within 7 days or request a return from your orders page. Damaged, defective or wrong items are our responsibility, and we will make it right." },
+      { t: "h", x: "One last thing" },
+      { t: "p", x: "MALAC will probably never be the biggest online store in Pakistan. That is fine with us. We would rather be the store a family in Faisalabad, a student in Lahore, and a shopkeeper in Hyderabad can order from without worrying — and come back to because the first order went exactly as promised." },
+      { t: "p", x: "Start with the [Shop page](/shop), or read a little more [about MALAC](/about). And if you are still unsure about anything, just WhatsApp us on **+92 323 6016684** and ask. A real person will answer." },
     ],
   },
 ];
