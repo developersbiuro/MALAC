@@ -144,6 +144,7 @@ export default function Header() {
       <nav className="hidden lg:flex gap-5 max-w-7xl mx-auto px-3 pb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-600 overflow-x-auto no-scrollbar">
         <Link to="/" className={`whitespace-nowrap hover:text-lux-burnt ${pathname === "/" ? "text-lux-burnt" : ""}`}>Home</Link>
         <Link to="/shop" className="whitespace-nowrap hover:text-lux-burnt">All Products</Link>
+        <Link to="/blog" className={`whitespace-nowrap hover:text-lux-burnt ${pathname.startsWith("/blog") ? "text-lux-burnt" : ""}`}>Blog</Link>
         {categories.map((c) => (
           <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-lux-burnt">{c.name}</Link>
         ))}
@@ -153,6 +154,7 @@ export default function Header() {
         {categories.map((c) => (
           <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
         ))}
+        <Link to="/blog" className="whitespace-nowrap">Blog</Link>
         {!appMode && <InstallAppButton variant="link" className="text-lux-burnt" />}
       </nav>
     </header>

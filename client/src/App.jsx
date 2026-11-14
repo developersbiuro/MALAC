@@ -36,6 +36,8 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 const Terms = lazy(() => import("./pages/Terms.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
+const Blog = lazy(() => import("./pages/Blog.jsx"));
+const BlogPost = lazy(() => import("./pages/BlogPost.jsx"));
 const Policy = lazy(() => import("./pages/Policy.jsx"));
 
 import AdminLogin from "./pages/admin/AdminLogin.jsx";
@@ -160,6 +162,8 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/about" element={<About />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
         <Route path="/policy" element={<Policy />} />
         <Route path="/admin/*" element={<AdminShell />} />
         <Route path="*" element={<NotFound />} />
