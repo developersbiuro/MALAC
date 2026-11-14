@@ -20,6 +20,10 @@ const buildFaqs = (fees) => [
     a: "MALAC is spoken as \u0645\u0627\u0644\u0627\u06A9 (two syllables). The name is short for M.A Luxury Apparel Collection.",
   },
   {
+    q: "What does MALAC stand for? What is the meaning of MALAC?",
+    a: "MALAC is the short form of M.A Luxury Apparel Collection. The M.A are the initials of our founder, Muhammad Abdullah, so the store carries its founder's own name — and the idea he built it on: good clothes and everyday things, chosen with care in Faisalabad and delivered honestly to homes all over Pakistan.",
+  },
+  {
     q: "Is MALAC a genuine store? Can I trust it?",
     a: "Yes. MALAC is run by a real team in Faisalabad, and a person checks every order before it is packed — nothing is dispatched on autopilot. If paying in advance feels risky, choose Cash on Delivery and hand over your money only when the parcel is in your hands. And if anything feels unclear before or after ordering, message us on WhatsApp at +92 323 6016684 or email info@malac.pp.ua and a person will answer you.",
   },
