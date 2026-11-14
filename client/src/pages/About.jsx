@@ -96,7 +96,7 @@ export default function About() {
       <LegalSection title="MALAC at a glance">
         <p>
           <b>Store:</b> MALAC — M.A Luxury Apparel Collection (also known as MalacPK)<br />
-          <b>Pronounced:</b> ma-LEEK (ما‌لیک)<br />
+          <b>Pronounced:</b> ma-LACK (two syllables: ma-lack) (ما‌لیک)<br />
           <b>Founded by:</b> Muhammad Abdullah, in Faisalabad, Punjab, Pakistan<br />
           <b>Store type:</b> Online only — orders are placed on this website and delivered by courier<br />
           <b>Delivery area:</b> All of Pakistan, through TCS, Leopards, Trax and PostEx<br />
