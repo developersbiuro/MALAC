@@ -17,15 +17,64 @@ export default function About() {
     description: "MALAC (MalacPK) — M.A Luxury Apparel Collection — is an online shopping store based in Faisalabad, Pakistan: mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and nationwide delivery.",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "AboutPage",
-      name: "About MALAC",
-      url: "https://www.malac.pp.ua/about",
-      mainEntity: {
-        "@type": "Organization",
-        name: "MALAC",
-        alternateName: ["MALAC Store", "MalacPK", "MALAC Pakistan"],
-        url: "https://www.malac.pp.ua/",
-      },
+      "@graph": [
+        {
+          "@type": "AboutPage",
+          name: "About MALAC",
+          url: "https://www.malac.pp.ua/about",
+          mainEntity: {
+            "@type": "Organization",
+            name: "MALAC",
+            alternateName: ["MALAC Store", "MalacPK", "MALAC Pakistan"],
+            url: "https://www.malac.pp.ua/",
+          },
+        },
+        {
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "What is MALAC?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "MALAC (M.A Luxury Apparel Collection, also known as MalacPK) is an online shopping store based in Faisalabad, Pakistan, founded by Muhammad Abdullah. It sells mobiles, electronics, fashion, home & living, beauty, groceries, sports and toys products with Cash on Delivery and delivery all over Pakistan.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Does MALAC deliver to my city?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes — MALAC delivers all over Pakistan, including Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, Quetta, Hyderabad, Sialkot and Gujranwala, through TCS, Leopards, Trax and PostEx.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does MALAC charge for delivery?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Standard delivery is Rs. 249 and is free on orders over Rs. 3,000; it usually takes 2–5 working days. Express delivery is Rs. 399 where available and usually takes 1–2 working days.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Does MALAC offer Cash on Delivery?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes. MALAC offers Cash on Delivery across Pakistan, plus JazzCash, Easypaisa and bank transfer (Meezan Bank, NayaPay, SadaPay, FirstPay — HBL Microfinance Bank).",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "What is MALAC's return policy?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "If an item arrives damaged, defective or incorrect, it can be reported within 7 days of delivery for a replacement or refund after inspection. Change-of-mind returns are not accepted.",
+              },
+            },
+          ],
+        },
+      ],
     },
   });
   return (
@@ -41,6 +90,19 @@ export default function About() {
           anywhere in Pakistan. Our full catalogue is organised into Mobiles &amp; Tablets, Electronics,
           Fashion, Kids, Home &amp; Living, Beauty &amp; Health, Groceries, Sports &amp; Fitness and
           Toys &amp; Baby. Browse everything on the <Link to="/shop" className="text-lux-burnt font-medium hover:underline">Shop page</Link>.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="MALAC at a glance">
+        <p>
+          <b>Store:</b> MALAC — M.A Luxury Apparel Collection (also known as MalacPK)<br />
+          <b>Founded by:</b> Muhammad Abdullah, in Faisalabad, Punjab, Pakistan<br />
+          <b>Store type:</b> Online only — orders are placed on this website and delivered by courier<br />
+          <b>Delivery area:</b> All of Pakistan, through TCS, Leopards, Trax and PostEx<br />
+          <b>Delivery charges:</b> Standard {rs(fees.standard)} (free on orders over {rs(fees.freeThreshold)}), Express {rs(fees.express)} where available<br />
+          <b>Payment:</b> Cash on Delivery, JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay and FirstPay — HBL Microfinance Bank<br />
+          <b>Returns:</b> Damaged, defective or incorrect items reported within 7 days of delivery<br />
+          <b>Contact:</b> WhatsApp +92 323 6016684 · info@malac.pp.ua
         </p>
       </LegalSection>
 
