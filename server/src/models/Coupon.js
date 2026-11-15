@@ -10,6 +10,10 @@ const couponSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
   usageLimit: { type: Number, default: 0 },         // 0 = unlimited
   usedCount: { type: Number, default: 0 },
+  // Referral rewards carry the account they were issued to, so the
+  // customer's Invite page can list exactly their own earned coupons.
+  issuedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
+  source: { type: String, default: "" }, // "" = admin-created; "referral" = Invite-a-Friend reward
 }, { timestamps: true });
 
 couponSchema.methods.isValidFor = function (subtotal) {

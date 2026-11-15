@@ -8,6 +8,7 @@ import { reviewInviteEmail } from "./emailTemplates.js";
 import { onOrderCancelled, onOrderPacked, onOrderShipped, onOrderOutForDelivery, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
+import { hasFreeFirstShipping, issueReferralReward } from "./referralService.js";
 
 // The delivery address is stored as a snapshot on the order. When the
 // customer ordered with their live location, the pin (lat/lng/mapsUrl)
@@ -91,9 +92,16 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
   if ((paymentMethod || "COD") === "COD" && store.codEnabled === false) {
     throw new Error("Cash on Delivery is not available right now — please choose a bank/wallet transfer method");
   }
-  const shipping = deliveryMethod === "Express"
+  let shipping = deliveryMethod === "Express"
     ? store.expressShippingFee
     : (subtotal - discount >= store.freeShippingThreshold ? 0 : store.defaultShippingFee);
+  // Invite-a-Friend (owner, 2026-11-15): a referred customer's FIRST
+  // order ships free — the standard fee is waived, so Express keeps only
+  // the upgrade difference. Server-side check; the client flag is only
+  // for display.
+  if (await hasFreeFirstShipping(user._id || user)) {
+    shipping = Math.max(0, shipping - store.defaultShippingFee);
+  }
   const total = subtotal - discount + shipping;
   // Stock is claimed ATOMICALLY before the coupon is redeemed: each
   // decrement is a single conditional update that only succeeds when
@@ -252,6 +260,7 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
   if (status === "Shipped" && prev !== "Shipped") await onOrderShipped(order); // customer "on its way" email + push
   if (status === "OutForDelivery" && prev !== "OutForDelivery") await onOrderOutForDelivery(order); // customer push
   if (status === "Delivered" && prev !== "Delivered") await onOrderDelivered(order); // customer push
+  if (status === "Delivered" && prev !== "Delivered") await issueReferralReward(order.user); // inviter's Rs. 100 coupon, exactly once
   if (sendReviewInvite) {
     try { await sendDeliveredReviewInvite(order); }
     catch { /* the invite is best-effort; delivery state is already saved */ }

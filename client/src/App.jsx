@@ -1,10 +1,11 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Header from "./components/Header.jsx";
 import Footer from "./components/Footer.jsx";
 import MobileBottomNav from "./components/MobileBottomNav.jsx";
 import CartToast from "./components/CartToast.jsx";
 import ChatWidget from "./components/ChatWidget.jsx";
+import WelcomeGuide from "./components/WelcomeGuide.jsx";
 import { isAppMode } from "./utils/appMode.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
@@ -117,7 +118,15 @@ function AdminShell() {
 }
 
 export default function App() {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  // Invite-a-Friend: an invite link's ?ref= code is stashed the moment
+  // it is seen, so it survives browsing and is still there at sign-up.
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(search).get("ref");
+      if (ref) sessionStorage.setItem("malac_ref", ref);
+    } catch { /* ignore */ }
+  }, [search]);
   const isAdmin = pathname.startsWith("/admin");
   // Daraz-style (owner, 2026-11-11): the bottom nav disappears inside
   // the buying flow — product page, cart, checkout, order confirmation
@@ -176,6 +185,7 @@ export default function App() {
       {!isAdmin && !appMode && <Footer />}
       {!isAdmin && !hideNav && <MobileBottomNav />}
       {!isAdmin && <ChatWidget />}
+      {!isAdmin && <WelcomeGuide />}
     </>
   );
 }

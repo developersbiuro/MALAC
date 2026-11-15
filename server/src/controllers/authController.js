@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import User from "../models/User.js";
+import Coupon from "../models/Coupon.js";
 import OtpToken from "../models/OtpToken.js";
 import PasswordResetRequest from "../models/PasswordResetRequest.js";
 import CustomerPasswordReset from "../models/CustomerPasswordReset.js";
@@ -10,6 +11,7 @@ import { hashPassword, verifyPassword } from "../utils/password.js";
 import { normalizePhone, phoneLast10 } from "../utils/phone.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
 import { effectivePermissions } from "../utils/permissions.js";
+import { generateReferralCode, resolveReferrer, ensureReferralCode, hasFreeFirstShipping } from "../services/referralService.js";
 import { requestOtp, verifyOtp } from "../services/otpService.js";
 import { loginLockStatus, recordLoginFailure, clearLoginFailures } from "../utils/loginGuard.js";
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
@@ -156,6 +158,10 @@ export const signupVerify = asyncHandler(async (req, res) => {
   if (existing) return res.status(409).json({ message: "An account with this email or phone already exists" });
 
   const isOwnerAllowlist = isEmail && identifier === env.superAdminEmail;
+  // Invite-a-Friend: a ?ref= code from an invite link ties this new
+  // account to its inviter (customers only — resolveReferrer enforces
+  // it, and the owner allowlist account never carries a referrer).
+  const referrer = isOwnerAllowlist ? null : await resolveReferrer(req.body.ref);
   const user = await User.create({
     name: token.pendingName,
     email: isEmail ? identifier : `phone-${identifier.replace(/\D/g, "")}@malac.local`,
@@ -164,6 +170,8 @@ export const signupVerify = asyncHandler(async (req, res) => {
     phoneVerified: !isEmail,
     passwordHash: token.pendingPasswordHash,
     role: isOwnerAllowlist ? "admin" : "customer",
+    referralCode: await generateReferralCode(),
+    referredBy: referrer ? referrer._id : null,
   });
   res.status(201).json({ user: publicUser(user), token: generateToken(user) });
 });
@@ -485,11 +493,14 @@ export const googleLogin = asyncHandler(async (req, res) => {
     return res.status(403).json({ message: "Staff accounts cannot sign in with Google. Please use the Admin Login." });
   }
   if (!user) {
+    const referrer = await resolveReferrer(req.body?.ref);
     user = await User.create({
       name: profile.name, email: profile.email,
       phone: `google-${profile.googleId}`.slice(0, 30),
       googleId: profile.googleId, avatar: profile.avatar,
       emailVerified: true, phoneVerified: false, role: "customer",
+      referralCode: await generateReferralCode(),
+      referredBy: referrer ? referrer._id : null,
     });
   } else if (!user.googleId) {
     user.googleId = profile.googleId; user.emailVerified = true; await user.save();
@@ -501,7 +512,24 @@ export const me = asyncHandler(async (req, res) => {
   // Re-fetch with the password hash selected so hasPassword is accurate
   // (passwordHash is select:false and `protect` does not load it).
   const full = await User.findById(req.user._id).select("+passwordHash");
-  res.json({ user: publicUser(full || req.user) });
+  // Invite-a-Friend: a referred customer's first order ships free —
+  // Checkout reads this flag to show the same fee the server will charge
+  // (createOrder re-checks it server-side regardless).
+  const freeFirstShipping = await hasFreeFirstShipping(req.user._id);
+  res.json({ user: publicUser(full || req.user), freeFirstShipping });
+});
+
+// Invite-a-Friend page data: my code, how many friends joined through
+// it, how many rewards that earned, and the reward coupons themselves.
+export const referralInfo = asyncHandler(async (req, res) => {
+  const code = await ensureReferralCode(req.user);
+  const invited = await User.countDocuments({ referredBy: req.user._id });
+  const rewarded = await User.countDocuments({ referredBy: req.user._id, referralRewardedAt: { $ne: null } });
+  const coupons = await Coupon.find({ issuedTo: req.user._id, source: "referral" })
+    .sort({ createdAt: -1 })
+    .select("code value minSpend expiresAt usedCount usageLimit active")
+    .lean();
+  res.json({ code, invited, rewarded, coupons });
 });
 
 // -- Profile settings (signed-in users, own account only) --

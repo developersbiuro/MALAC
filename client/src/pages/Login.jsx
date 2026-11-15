@@ -33,7 +33,7 @@ export function GoogleButton({ onDone }) {
           callback: async (response) => {
             setError("");
             try {
-              const r = await api.post("/auth/google", { credential: response.credential });
+              const r = await api.post("/auth/google", { credential: response.credential, ref: (() => { try { return sessionStorage.getItem("malac_ref") || ""; } catch { return ""; } })() });
               onDoneRef.current(r.data);
             } catch (err) {
               setError(err.response?.data?.message || "Google sign-in failed");

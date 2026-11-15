@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Package, PackageSearch, Heart, UserCog, MapPin, FileText, ShieldCheck,
-  MessageCircle, LogOut, ChevronRight, Wallet, Truck, Star, RotateCcw,
+  MessageCircle, LogOut, ChevronRight, Wallet, Truck, Star, RotateCcw, Sparkles,
 } from "lucide-react";
 import api from "../api/client.js";
 import { ORDER_BUCKETS } from "../utils/orderBuckets.js";
@@ -11,6 +11,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { useSeo } from "../utils/seo.js";
 import { appVersion } from "../utils/appMode.js";
+import InviteFriends from "../components/InviteFriends.jsx";
 
 // "My Account" hub (/account) — Daraz-app-style: identity header, an
 // orders strip with status buckets (To Pay / To Ship / To Receive /
@@ -125,11 +126,14 @@ export default function AccountHub() {
         <MenuRow to="/wishlist" Icon={Heart} label="Wishlist" badge={wishlist.length} />
         {user && <MenuRow to="/account/settings" Icon={UserCog} label="Profile Settings" />}
         {user && <MenuRow to="/account/settings" Icon={MapPin} label="Address Book" />}
+        <MenuRow Icon={Sparkles} label="How MALAC Works — Guide" onClick={() => window.dispatchEvent(new Event("malac:show-guide"))} />
         <MenuRow href={WHATSAPP_URL} Icon={MessageCircle} label="Order on WhatsApp" />
         <MenuRow to="/terms" Icon={FileText} label="Terms & Conditions" />
         <MenuRow to="/policy" Icon={ShieldCheck} label="Privacy Policy" />
         {user && <MenuRow Icon={LogOut} label="Logout" danger onClick={handleLogout} />}
       </section>
+
+      {user && <InviteFriends />}
 
       {appVersion() && (
         <p className="text-center text-[11px] text-gray-400 mt-4">MALAC App · v{appVersion()}</p>

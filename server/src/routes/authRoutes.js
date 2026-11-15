@@ -52,6 +52,7 @@ router.post("/password/forgot", ...resetRequest, auth.forgotCustomerPassword);
 router.post("/password/reset", ...resetComplete, auth.resetCustomerPassword);
 router.post("/google", rateLimit({ windowMs: 15 * MIN, max: 60, key: ipKey }), auth.googleLogin);
 router.get("/me", protect, auth.me);
+router.get("/referral", protect, auth.referralInfo);
 router.put("/me", protect, auth.updateProfile);
 router.put("/me/password", protect, auth.changePassword);
 // Profile photo: memory-storage multer capped at 400 KB (see

@@ -70,6 +70,15 @@ const userSchema = new mongoose.Schema({
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
   googleId: { type: String, index: true, sparse: true },
+  // Referral ("Invite a Friend", owner 2026-11-15): every customer gets a
+  // personal code for their invite link; referredBy is set once, at
+  // sign-up, when a new account arrives through someone's link.
+  referralCode: { type: String, unique: true, sparse: true, index: true },
+  referredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+  // Stamped on the REFERRED account when the inviter's Rs. 100 reward
+  // coupon has been issued (the referred friend's first order reached
+  // Delivered) — the stamp is what makes the reward exactly-once.
+  referralRewardedAt: { type: Date, default: null },
   avatar: String,
 }, { timestamps: true });
 

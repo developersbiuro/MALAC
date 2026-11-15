@@ -19,6 +19,10 @@ export default function Signup() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "/";
+  // Invite-a-Friend: the inviter's code arrives as ?ref= on the invite
+  // link (or was stashed by App when the link was first opened).
+  const inviteRef = params.get("ref") || (() => { try { return sessionStorage.getItem("malac_ref") || ""; } catch { return ""; } })();
+  const markGuidePending = () => { try { sessionStorage.setItem("malac_guide_pending", "1"); } catch { /* ignore */ } };
   const [method, setMethod] = useState("phone"); // phone | email
   const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -54,10 +58,11 @@ export default function Signup() {
   });
   const verify = wrap(async () => {
     const body = method === "email"
-      ? { method, email: form.email, code }
-      : { method, phone: form.phone, code, channel };
+      ? { method, email: form.email, code, ref: inviteRef }
+      : { method, phone: form.phone, code, channel, ref: inviteRef };
     const r = await api.post("/auth/signup/verify", body);
     saveSession(r.data);
+    markGuidePending();
     navigate(redirect, { replace: true });
   });
 
@@ -85,6 +90,11 @@ export default function Signup() {
       <div className="bg-white border border-cream-line rounded-2xl shadow-sm p-6 fade-up">
         <p className="eyebrow">Join MALAC</p>
         <h1 className="font-display text-2xl font-bold mt-1">Create your MALAC account</h1>
+        {inviteRef && (
+          <p className="mt-3 text-xs leading-relaxed bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl px-3 py-2.5">
+            🎉 Aap ko ek dost ne MALAC par invite kia hai! Account banayein — aap k <b>pehle order par delivery bilkul FREE</b> mile gi.
+          </p>
+        )}
         <div className="flex gap-1.5 mt-4">
           {["Details", method === "email" ? "Email OTP" : "WhatsApp OTP"].map((s, i) => (
             <span key={s} className={`flex-1 text-center text-[11px] rounded-full py-1 ${(step === "otp" ? 1 : 0) === i ? "bg-lux-gradient text-white" : "bg-gray-100 text-gray-500"}`}>{s}</span>
@@ -139,7 +149,7 @@ export default function Signup() {
         )}
 
         <div className="flex items-center gap-3 my-4"><span className="flex-1 border-t" /><span className="text-xs text-gray-400">OR</span><span className="flex-1 border-t" /></div>
-        <GoogleButton onDone={(data) => { saveSession(data); navigate(redirect, { replace: true }); }} />
+        <GoogleButton onDone={(data) => { saveSession(data); markGuidePending(); navigate(redirect, { replace: true }); }} />
         <p className="text-sm text-center mt-4">Already have an account? <Link to="/login" className="text-brand font-medium">Log in</Link></p>
       </div>
     </main>

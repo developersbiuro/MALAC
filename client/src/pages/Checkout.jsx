@@ -47,6 +47,9 @@ export default function Checkout() {
   // and shipping updates always reach the customer — including
   // phone-signup accounts whose account email is a placeholder.
   const [email, setEmail] = useState(isRealEmail(user?.email) ? user.email : "");
+  // Invite-a-Friend: a referred customer's FIRST order ships free — the
+  // flag comes from /auth/me below; createOrder re-checks it server-side.
+  const [freeShip, setFreeShip] = useState(false);
   // Daraz-style address flow (owner's ask, 2026-11-12): step 1 shows
   // ONE of three views — "card" (the saved address, Daraz checkout
   // style, with EDIT), "book" (the Select Shipping Address page) or
@@ -84,6 +87,7 @@ export default function Checkout() {
     let alive = true;
     api.get("/auth/me")
       .then((r) => {
+        if (alive && r.data.freeFirstShipping) setFreeShip(true);
         if (!alive || !Array.isArray(r.data.user?.addresses)) return;
         const list = r.data.user.addresses;
         setBook(list);
@@ -209,9 +213,15 @@ export default function Checkout() {
   const discount = coupon?.discount || 0;
   const shipping = useMemo(() => {
     if (orderItems.length === 0) return 0;
-    if (deliveryMethod === "Express") return wallets?.expressShippingFee ?? 399;
-    return subtotal - discount >= (wallets?.freeShippingThreshold ?? 3000) ? 0 : (wallets?.defaultShippingFee ?? 249);
-  }, [orderItems, deliveryMethod, subtotal, discount, wallets]);
+    let fee;
+    if (deliveryMethod === "Express") fee = wallets?.expressShippingFee ?? 399;
+    else fee = subtotal - discount >= (wallets?.freeShippingThreshold ?? 3000) ? 0 : (wallets?.defaultShippingFee ?? 249);
+    // Invite-a-Friend: the standard fee is waived on a referred
+    // customer's first order (Express keeps only the upgrade
+    // difference) — the server applies the identical rule.
+    if (freeShip) fee = Math.max(0, fee - (wallets?.defaultShippingFee ?? 249));
+    return fee;
+  }, [orderItems, deliveryMethod, subtotal, discount, wallets, freeShip]);
   const total = subtotal - discount + shipping;
   // Daraz-style "Total Saving": coupon discount + the standard fee saved
   // when this order ships free.
@@ -613,6 +623,9 @@ export default function Checkout() {
         <div className="flex justify-between"><span>Subtotal</span><span>{rs(subtotal)}</span></div>
         <div className="flex justify-between"><span>Discount</span><span className="text-green-600">-{rs(discount)}</span></div>
         <div className="flex justify-between"><span>Shipping ({deliveryMethod})</span><span>{shipping === 0 ? "Free" : rs(shipping)}</span></div>
+        {freeShip && orderItems.length > 0 && (
+          <p className="text-[11px] text-emerald-600 font-medium">🎉 Invite offer: aap k pehle order ki delivery FREE hai</p>
+        )}
         {totalSaving > 0 && <div className="flex justify-between text-green-600 font-medium"><span>Total Saving</span><span>{rs(totalSaving)}</span></div>}
         <div className="flex justify-between border-t pt-2 font-bold"><span>Total</span><span className="text-brand">{rs(total)}</span></div>
         {address.lat != null && address.lng != null && (
