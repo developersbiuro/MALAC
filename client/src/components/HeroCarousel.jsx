@@ -44,6 +44,7 @@ export default function HeroCarousel() {
         <div className="absolute inset-0 bg-gradient-to-r from-lux-deep/85 via-lux-deep/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-lux-deep/50 via-transparent to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-[3px] bg-lux-gradient" />
+        <div className="pointer-events-none absolute inset-3 sm:inset-4 rounded-lg border border-lux-pale/40" />
         <div className="absolute inset-0 flex flex-col justify-center px-5 sm:px-12" key={idx}>
           <p className="eyebrow !text-lux-pale fade-up flex items-center gap-2">
             <span className="inline-block h-px w-8 bg-lux-gold" />{slide.eyebrow}

@@ -132,7 +132,8 @@ export default function Home() {
       <FlashSale products={flash} />
       <section className="mt-6">
         <p className="eyebrow">Curated Picks</p>
-        <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-3">Just For You</h2>
+        <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-2">Just For You</h2>
+        <div className="lux-divider mb-3" />
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
           {tabs.map((t) => (
             <button key={t} onClick={() => { setTab(t); setPage(1); }}
@@ -155,6 +156,7 @@ export default function Home() {
       <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 px-5 py-6 sm:px-8">
         <p className="eyebrow">About MALAC</p>
         <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Luxury Apparel &amp; Ladies Fashion Online in Pakistan</h2>
+        <div className="lux-divider mt-3" />
         <div className="text-sm sm:text-[15px] text-gray-600 leading-relaxed space-y-3 mt-3 max-w-3xl">
           <p>
             MALAC — M.A Luxury Apparel Collection is an online fashion store in Pakistan for shoppers who want
@@ -183,6 +185,7 @@ export default function Home() {
       <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-5 py-6 sm:px-8 mb-2">
         <p className="eyebrow">Good To Know</p>
         <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Frequently Asked Questions</h2>
+        <div className="lux-divider mt-3" />
         <div className="mt-4 divide-y divide-cream-line">
           {FAQS.map((f) => (
             <div key={f.q} className="py-3.5">

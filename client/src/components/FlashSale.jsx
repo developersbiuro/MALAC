@@ -22,7 +22,7 @@ export default function FlashSale({ products }) {
   if (!products?.length) return null;
   return (
     <section className="bg-white rounded-2xl border border-cream-line shadow-sm mt-4 p-4">
-      <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap">
+      <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap border-b border-cream-line pb-3">
         <h2 className="flex items-center gap-1.5 font-serif text-2xl sm:text-3xl font-semibold leading-none text-lux-burnt">
           <Zap size={22} className="fill-lux-gold text-lux-gold" /> Flash Sale
         </h2>
