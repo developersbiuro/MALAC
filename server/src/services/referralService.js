@@ -4,13 +4,17 @@ import Coupon from "../models/Coupon.js";
 import Order from "../models/Order.js";
 import { sendPushToUser } from "./pushService.js";
 
-// Invite-a-Friend (owner, 2026-11-15): the inviter earns a Rs. 100
-// discount coupon when the invited friend's FIRST order is Delivered;
-// the friend gets free shipping on their first order. The reward rides
-// on a real delivered order only, so fake sign-ups earn nothing.
+// Invite-a-Friend (owner, 2026-11-15; reward stages set by the owner
+// the same day): the inviter earns a Rs. 100 discount coupon the moment
+// the invited friend CREATES AN ACCOUNT, and a Rs. 300 coupon when the
+// friend places their FIRST ORDER. The friend gets free shipping on
+// their first order. Each stage fires exactly once per referred friend
+// (stamp fields on the friend's account).
 
-const REWARD_VALUE = 100; // Rs. off for the inviter
-const REWARD_MIN_SPEND = 500; // the reward coupon needs a Rs. 500+ cart
+const SIGNUP_REWARD = 100; // Rs. off for the inviter at friend sign-up
+const SIGNUP_MIN_SPEND = 500;
+const ORDER_REWARD = 300; // Rs. off for the inviter at friend's 1st order
+const ORDER_MIN_SPEND = 1000;
 const REWARD_VALID_DAYS = 90;
 
 const randomCode = (n) => {
@@ -54,35 +58,62 @@ export async function hasFreeFirstShipping(userId) {
   return prior === 0;
 }
 
-// Called when an order reaches Delivered. If the buyer arrived through
-// an invite link and the inviter has not been rewarded for them yet,
-// issue the inviter a single-use Rs. 100 coupon and push-notify them.
-// Best-effort: any failure is swallowed so a status update never blocks.
-export async function issueReferralReward(buyerId) {
+async function mintRewardCoupon(referrerId, value, minSpend) {
+  let code = "";
+  for (let i = 0; i < 5 && !code; i++) {
+    const candidate = "REF-" + randomCode(6);
+    if (!(await Coupon.exists({ code: candidate }))) code = candidate;
+  }
+  if (!code) return "";
+  await Coupon.create({
+    code, type: "fixed", value, minSpend,
+    expiresAt: new Date(Date.now() + REWARD_VALID_DAYS * 24 * 60 * 60 * 1000),
+    active: true, usageLimit: 1, usedCount: 0,
+    issuedTo: referrerId, source: "referral",
+  });
+  return code;
+}
+
+// One reward stage, shared shape: stamp the friend's account first (so
+// the stage can never fire twice), then mint + push. Best-effort — a
+// reward failure never blocks a sign-up or an order.
+async function issueStage(friendId, stampField, value, minSpend, pushTitle, pushBody) {
   try {
-    const buyer = await User.findById(buyerId);
-    if (!buyer?.referredBy || buyer.referralRewardedAt) return;
-    const referrer = await User.findById(buyer.referredBy);
-    // Stamp even when the referrer is gone/staff, so this never retries.
-    buyer.referralRewardedAt = new Date();
-    await buyer.save();
+    const friend = await User.findById(friendId);
+    if (!friend?.referredBy || friend[stampField]) return;
+    friend[stampField] = new Date();
+    await friend.save();
+    const referrer = await User.findById(friend.referredBy);
     if (!referrer || referrer.role !== "customer") return;
-    let code = "";
-    for (let i = 0; i < 5 && !code; i++) {
-      const candidate = "REF-" + randomCode(6);
-      if (!(await Coupon.exists({ code: candidate }))) code = candidate;
-    }
+    const code = await mintRewardCoupon(referrer._id, value, minSpend);
     if (!code) return;
-    await Coupon.create({
-      code, type: "fixed", value: REWARD_VALUE, minSpend: REWARD_MIN_SPEND,
-      expiresAt: new Date(Date.now() + REWARD_VALID_DAYS * 24 * 60 * 60 * 1000),
-      active: true, usageLimit: 1, usedCount: 0,
-      issuedTo: referrer._id, source: "referral",
-    });
     await sendPushToUser(referrer._id, {
-      title: "🎉 Aap ko Rs. 100 discount mila!",
-      body: `${buyer.name?.split(" ")[0] || "Aap k dost"} ka pehla order deliver ho gaya. Aap ka Rs. 100 coupon code: ${code} — My Account → Invite a Friend me dekhein.`,
+      title: pushTitle,
+      body: pushBody(friend, code),
       data: { type: "referral_reward", code },
     }).catch(() => {});
-  } catch { /* best-effort: a reward failure never blocks an order update */ }
+  } catch { /* best-effort */ }
+}
+
+// Stage 1 — the friend just created their account: inviter gets Rs. 100.
+export async function issueSignupReward(newUserId) {
+  await issueStage(newUserId, "referralSignupRewardedAt", SIGNUP_REWARD, SIGNUP_MIN_SPEND,
+    "🎉 Dost ne account bana lia — Rs. 100 discount mila!",
+    (friend, code) => `${friend.name?.split(" ")[0] || "Aap k dost"} MALAC par aa gaya. Aap ka Rs. 100 coupon code: ${code} — My Account → Invite a Friend me dekhein.`);
+}
+
+// Stage 2 — the friend just placed their FIRST order: inviter gets
+// Rs. 300. Called from createOrder after the order exists; the order
+// count check makes sure it really is the first (cancelled tries do
+// not count, matching the free-shipping rule).
+export async function issueFirstOrderReward(buyerId) {
+  try {
+    const buyer = await User.findById(buyerId).select("referredBy referralFirstOrderRewardedAt");
+    if (!buyer?.referredBy || buyer.referralFirstOrderRewardedAt) return;
+    const orders = await Order.countDocuments({ user: buyerId, status: { $ne: "Cancelled" } });
+    if (orders > 1) return;
+  } catch { return; }
+  await issueStage(buyerId, "referralFirstOrderRewardedAt", ORDER_REWARD, ORDER_MIN_SPEND,
+    "🎉 Dost ne pehla order kar dia — Rs. 300 discount mila!",
+    (friend, code) => `${friend.name?.split(" ")[0] || "Aap k dost"} ne apna pehla order kar dia. Aap ka Rs. 300 coupon code: ${code} — My Account → Invite a Friend me dekhein.`);
 }

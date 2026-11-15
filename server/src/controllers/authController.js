@@ -11,7 +11,7 @@ import { hashPassword, verifyPassword } from "../utils/password.js";
 import { normalizePhone, phoneLast10 } from "../utils/phone.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
 import { effectivePermissions } from "../utils/permissions.js";
-import { generateReferralCode, resolveReferrer, ensureReferralCode, hasFreeFirstShipping } from "../services/referralService.js";
+import { generateReferralCode, resolveReferrer, ensureReferralCode, hasFreeFirstShipping, issueSignupReward } from "../services/referralService.js";
 import { requestOtp, verifyOtp } from "../services/otpService.js";
 import { loginLockStatus, recordLoginFailure, clearLoginFailures } from "../utils/loginGuard.js";
 import { verifyGoogleCredential } from "../services/googleAuthService.js";
@@ -173,6 +173,9 @@ export const signupVerify = asyncHandler(async (req, res) => {
     referralCode: await generateReferralCode(),
     referredBy: referrer ? referrer._id : null,
   });
+  // Invite-a-Friend stage 1: the inviter's Rs. 100 coupon fires on
+  // account creation (best-effort; never blocks the sign-up response).
+  if (referrer) await issueSignupReward(user._id);
   res.status(201).json({ user: publicUser(user), token: generateToken(user) });
 });
 
@@ -502,6 +505,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
       referralCode: await generateReferralCode(),
       referredBy: referrer ? referrer._id : null,
     });
+    if (referrer) await issueSignupReward(user._id);
   } else if (!user.googleId) {
     user.googleId = profile.googleId; user.emailVerified = true; await user.save();
   }
@@ -524,11 +528,11 @@ export const me = asyncHandler(async (req, res) => {
 export const referralInfo = asyncHandler(async (req, res) => {
   const code = await ensureReferralCode(req.user);
   const invited = await User.countDocuments({ referredBy: req.user._id });
-  const rewarded = await User.countDocuments({ referredBy: req.user._id, referralRewardedAt: { $ne: null } });
   const coupons = await Coupon.find({ issuedTo: req.user._id, source: "referral" })
     .sort({ createdAt: -1 })
     .select("code value minSpend expiresAt usedCount usageLimit active")
     .lean();
+  const rewarded = coupons.length;
   res.json({ code, invited, rewarded, coupons });
 });
 

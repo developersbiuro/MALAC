@@ -8,7 +8,7 @@ import { reviewInviteEmail } from "./emailTemplates.js";
 import { onOrderCancelled, onOrderPacked, onOrderShipped, onOrderOutForDelivery, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
-import { hasFreeFirstShipping, issueReferralReward } from "./referralService.js";
+import { hasFreeFirstShipping, issueFirstOrderReward } from "./referralService.js";
 
 // The delivery address is stored as a snapshot on the order. When the
 // customer ordered with their live location, the pin (lat/lng/mapsUrl)
@@ -178,6 +178,10 @@ export async function createOrder({ user, items, address, paymentMethod, deliver
     try { await redeemCoupon(appliedCoupon); }
     catch (e) { await releaseStock(); await Order.deleteOne({ _id: order._id }).catch(() => {}); throw e; }
   }
+  // Invite-a-Friend stage 2: the inviter's Rs. 300 coupon fires when
+  // the referred friend's FIRST order is placed (best-effort, stamped
+  // exactly-once inside the service).
+  await issueFirstOrderReward(user._id || user);
   return order;
 }
 
@@ -260,7 +264,6 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
   if (status === "Shipped" && prev !== "Shipped") await onOrderShipped(order); // customer "on its way" email + push
   if (status === "OutForDelivery" && prev !== "OutForDelivery") await onOrderOutForDelivery(order); // customer push
   if (status === "Delivered" && prev !== "Delivered") await onOrderDelivered(order); // customer push
-  if (status === "Delivered" && prev !== "Delivered") await issueReferralReward(order.user); // inviter's Rs. 100 coupon, exactly once
   if (sendReviewInvite) {
     try { await sendDeliveredReviewInvite(order); }
     catch { /* the invite is best-effort; delivery state is already saved */ }
