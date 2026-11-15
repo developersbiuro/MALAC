@@ -46,6 +46,10 @@ export default function AdminProductForm() {
         .filter((v) => v.name.trim() && v.value.trim())
         .map((v) => ({ name: v.name.trim(), value: v.value.trim(), priceDelta: Number(v.priceDelta || 0), stock: Number(v.stock || 0) })),
     };
+    if (!payload.images.length) {
+      setError("Kam az kam 1 product image zaroor dein — bina image ke product live store par M wala placeholder dikhata hai, jis se customers ka trust kam hota hai.");
+      return;
+    }
     try {
       if (id) await api.put(`/products/${id}`, payload);
       else await api.post("/products", payload);
@@ -105,6 +109,7 @@ export default function AdminProductForm() {
             </div>
           ))}
           <button type="button" onClick={() => set("images", [...form.images, ""])} className="text-brand text-xs mt-1">+ Add another image</button>
+          <p className="text-[11px] text-gray-400 mt-1.5 leading-relaxed">Note: Upload ki gayi tasaveer server par temporary hoti hain aur kuch arse baad gayab ho sakti hain. Behtar hai ke image ka online link (URL) paste karein — wo hamesha rehta hai.</p>
         </div>
         <label className="text-sm">Category
           <select required className={input} value={form.category} onChange={(e) => set("category", e.target.value)}>

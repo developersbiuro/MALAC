@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BadgeCheck, Truck, ShieldCheck, MapPin, PackageSearch } from "lucide-react";
+import { BadgeCheck, Truck, ShieldCheck, MapPin, PackageSearch, ChevronDown } from "lucide-react";
 import api from "../api/client.js";
 import HeroCarousel from "../components/HeroCarousel.jsx";
 import FlashSale from "../components/FlashSale.jsx";
@@ -68,6 +68,7 @@ export default function Home() {
   });
   const navigate = useNavigate();
   const [trackId, setTrackId] = useState("");
+  const [openFaq, setOpenFaq] = useState(0);
   const [categories, setCategories] = useState([]);
   const [flash, setFlash] = useState([]);
   const [products, setProducts] = useState([]);
@@ -140,7 +141,7 @@ export default function Home() {
               className={`whitespace-nowrap text-sm px-4 py-1.5 rounded-full border ${tab === t ? "bg-lux-gradient text-white border-transparent font-semibold" : "bg-white border-cream-line"}`}>{t}</button>
           ))}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {products.map((p) => <ProductCard key={p._id} product={p} />)}
         </div>
         {loading && <p className="text-center text-gray-400 py-4">Loading products...</p>}
@@ -187,12 +188,23 @@ export default function Home() {
         <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Frequently Asked Questions</h2>
         <div className="lux-divider mt-3" />
         <div className="mt-4 divide-y divide-cream-line">
-          {FAQS.map((f) => (
-            <div key={f.q} className="py-3.5">
-              <h3 className="font-serif text-lg font-semibold leading-snug">{f.q}</h3>
-              <p className="text-sm sm:text-[15px] text-gray-600 leading-relaxed mt-1 max-w-3xl">{f.a}</p>
-            </div>
-          ))}
+          {FAQS.map((f, i) => {
+            const open = openFaq === i;
+            return (
+              <div key={f.q}>
+                <button type="button" onClick={() => setOpenFaq(open ? -1 : i)} aria-expanded={open}
+                  className="w-full flex items-center justify-between gap-3 py-3.5 text-left">
+                  <h3 className="font-serif text-lg font-semibold leading-snug">{f.q}</h3>
+                  <ChevronDown size={18} className={`shrink-0 text-lux-burnt transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                </button>
+                <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
+                  <div className="overflow-hidden">
+                    <p className="text-sm sm:text-[15px] text-gray-600 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>

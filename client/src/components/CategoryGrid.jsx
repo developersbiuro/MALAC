@@ -8,7 +8,7 @@ export default function CategoryGrid({ categories }) {
   if (!categories?.length) return null;
   return (
     <section className="bg-white rounded-2xl border border-cream-line shadow-sm mt-3 px-2 py-3">
-      <div className="flex lg:grid lg:grid-cols-8 gap-1 overflow-x-auto no-scrollbar">
+      <div className="flex lg:grid lg:grid-cols-9 gap-1 overflow-x-auto no-scrollbar">
         {categories.map((c) => {
           const Icon = icons[c.icon] || icons.ShoppingBag;
           return (
