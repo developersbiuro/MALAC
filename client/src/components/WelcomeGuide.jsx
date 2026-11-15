@@ -46,7 +46,7 @@ const STEPS = [
   {
     targets: ["[data-tour='account']", "[data-tour='tab-account']"],
     title: "My Account",
-    text: "Aap k orders, address book aur settings yahan hain. Yahi se Invite a Friend kar k dost ko bulayein — dost account banaye to aap ko Rs. 100, dost pehla order kare to Rs. 300 discount, aur dost ko FREE delivery mile gi.",
+    text: "Aap k orders, address book aur settings yahan hain. Yahi se Invite a Friend kar k dost ko bulayein — dost account banaye to aap ko Rs. 100, dost pehla order Rs. 1,500+ ka kare to Rs. 300 discount, aur dost ko FREE delivery mile gi.",
   },
   {
     targets: ["[data-tour='chat']"],

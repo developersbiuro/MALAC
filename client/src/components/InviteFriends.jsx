@@ -4,8 +4,9 @@ import api from "../api/client.js";
 
 // Invite-a-Friend card for My Account (owner, 2026-11-15). The friend
 // who joins through this link gets free shipping on their first order;
-// when that first order is Delivered, the inviter earns a Rs. 100
-// coupon (issued by the server — see referralService). This card shows
+// the inviter earns Rs. 100 when the friend creates an account and
+// Rs. 300 when the friend's first order of Rs. 1,500+ is placed
+// (issued by the server — see referralService). This card shows
 // the personal link, join/reward counts and the earned coupons.
 export default function InviteFriends() {
   const [data, setData] = useState(null);
@@ -45,13 +46,13 @@ export default function InviteFriends() {
         </span>
         <div>
           <h3 className="text-sm font-bold text-lux-ink leading-tight">Invite a Friend</h3>
-          <p className="text-[11px] text-gray-500 leading-tight">Dost aye to Rs. 100, pehla order kare to Rs. 300</p>
+          <p className="text-[11px] text-gray-500 leading-tight">Dost aye to Rs. 100, pehla order Rs. 1,500+ ka kare to Rs. 300</p>
         </div>
       </div>
 
       <p className="text-xs text-gray-600 leading-relaxed mt-3">
         Apna invite link doston ko bhejein. Dost account banaye to <b>aap ko Rs. 100 ka discount coupon</b> mile ga —
-        aur dost apna pehla order kare to <b>Rs. 300 ka ek aur coupon</b>. Dost ko bhi pehle order par <b>FREE delivery</b> mile gi.
+        aur dost pehla order Rs. 1,500 ya zyada ka kare to <b>Rs. 300 ka ek aur coupon</b>. Dost ko bhi pehle order par <b>FREE delivery</b> mile gi.
       </p>
 
       <div className="flex items-center gap-2 mt-3">
