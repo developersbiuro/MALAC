@@ -1,50 +1,62 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { X, ChevronRight, Search, ShoppingBag, PackageSearch, BadgePercent, UserPlus } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { LOGO_FULL } from "../assets/logo.js";
 
-// New-customer guide (owner, 2026-11-15): a short welcome tour like
-// every shopping app has. It shows ONCE per device on the first visit
-// (website or app — the app loads this same site, so one build covers
-// both), once more right after a fresh sign-up, and any time from
-// My Account → "How MALAC Works — Guide". It never interrupts the
-// buying flow: on checkout/cart/auth routes it waits quietly until the
-// customer reaches a calm page.
+// New-customer APP TOUR (owner, 2026-11-15): not slides — a guided
+// tour that highlights the REAL buttons one by one (search, categories,
+// cart, track order, account, assistant) with a spotlight and a tip
+// card, the way shopping apps onboard new users. Shows ONCE per device
+// on the first visit (website or app — the app loads this same site),
+// once more right after a fresh sign-up, and any time from My Account
+// → "How MALAC Works — Guide". Anchors live in Header / MobileBottomNav
+// / ChatWidget via data-tour attributes; a step whose button is not on
+// screen (e.g. the assistant for guests) is skipped automatically.
 const SEEN_KEY = "malac_guide_seen_v1";
 const PENDING_KEY = "malac_guide_pending";
 const CALM_ROUTES = ["/", "/shop", "/categories", "/about", "/blog", "/faq", "/account", "/track-order"];
 const BUSY_PREFIXES = ["/checkout", "/cart", "/order-confirmation", "/login", "/signup", "/forgot-password", "/reset-password", "/product/", "/admin"];
 
-const SLIDES = [
+const STEPS = [
   {
-    logo: true,
     title: "Welcome to MALAC",
-    text: "M.A Luxury Apparel Collection — Pakistan bhar me online shopping. Original products, sahi qeemat, aur Cash on Delivery ki sahulat.",
+    text: "Khush amdeed! Aaiye, aap ko MALAC ka chhota sa tour karwayein — har button khud highlight ho kar samjhaya jaye ga.",
+    logo: true,
   },
   {
-    Icon: Search,
-    title: "Sab kuch, ek hi jaga",
-    text: "Mobiles, electronics, fashion, beauty aur home & living — 9 categories. Upar wale search bar se apni pasandeeda cheez foran dhundhein.",
+    targets: ["[data-tour='search']"],
+    title: "Search Bar",
+    text: "Apni cheez ka naam yahan likhein — mobile, kapre ya shoes — product foran hazir ho jaye ga.",
   },
   {
-    Icon: ShoppingBag,
-    title: "Order karna bohat asan",
-    text: "Product par Add to Cart ya Buy Now dabayein. Payment Cash on Delivery se karein, ya JazzCash / Easypaisa se advance — jesa aap ko easy lage.",
+    targets: ["[data-tour='categories']", "[data-tour='tab-categories']"],
+    title: "Categories",
+    text: "9 categories — Mobiles & Tablets, Fashion, Electronics, Beauty & Health aur bohat kuch. Apni pasand ki category chunain.",
   },
   {
-    Icon: PackageSearch,
-    title: "Parcel ki har khabar",
-    text: "Track Order page se apne parcel ka status kabhi bhi dekhein — aur order k har step par aap ko notification bhi mile gi.",
+    targets: ["[data-tour='cart']", "[data-tour='tab-cart']"],
+    title: "Cart",
+    text: "Pasandeeda cheezain cart me dal kar ek sath order karein. Jaldi ho to product page se Buy Now bhi kar sakte hain.",
   },
   {
-    Icon: BadgePercent,
-    title: "Pehle order par 10% OFF",
-    text: "Naye customers k liye khaas offer: checkout par code WELCOME10 lagayein aur apne pehle order par 10% discount payen.",
+    targets: ["[data-tour='track']", "[data-tour='tab-track-order']"],
+    title: "Track Order",
+    text: "Order k baad apna parcel yahan track karein — aur order k har step par aap ko notification bhi mile gi.",
   },
   {
-    Icon: UserPlus,
-    title: "Dost ko invite karein, Rs. 100 payen",
-    text: "My Account → Invite a Friend se apna link doston ko bhejein. Dost ko pehle order par FREE delivery mile gi — aur dost ka order deliver hote hi aap ko Rs. 100 ka discount coupon mile ga.",
+    targets: ["[data-tour='account']", "[data-tour='tab-account']"],
+    title: "My Account",
+    text: "Aap k orders, address book aur settings yahan hain. Yahi se Invite a Friend kar k dost ko bulayein — dost ko pehle order par FREE delivery, aur aap ko Rs. 100 discount mile ga.",
+  },
+  {
+    targets: ["[data-tour='chat']"],
+    title: "MALAC Assistant",
+    text: "Koi sawal ya masla ho to yahan chat karein — foran jawab mile ga.",
+  },
+  {
+    title: "🎉 Tour Mukammal!",
+    text: "Pehle order par 10% OFF ka code hai: WELCOME10 — checkout par lagana na bhoolein. Khush kharidari!",
+    finish: true,
   },
 ];
 
@@ -61,85 +73,187 @@ const clearPending = () => {
   try { sessionStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
 };
 
+const findTarget = (selectors) => {
+  for (const sel of selectors || []) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    const r = el.getBoundingClientRect();
+    const cs = window.getComputedStyle(el);
+    if (r.width > 0 && r.height > 0 && cs.display !== "none" && cs.visibility !== "hidden") return el;
+  }
+  return null;
+};
+
 export default function WelcomeGuide() {
   const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(0);
+  const [steps, setSteps] = useState([]);
+  const [idx, setIdx] = useState(0);
+  const [rect, setRect] = useState(null);
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const targetRef = useRef(null);
+
+  const close = useCallback(() => {
+    setOpen(false);
+    setRect(null);
+    targetRef.current = null;
+    markSeen();
+    clearPending();
+  }, []);
+
+  const start = useCallback(() => {
+    // Resolve which steps have a visible button right now; welcome and
+    // finish cards are always included.
+    const resolved = STEPS.filter((s) => !s.targets || findTarget(s.targets));
+    setSteps(resolved.length >= 2 ? resolved : STEPS.filter((s) => !s.targets));
+    setIdx(0);
+    setOpen(true);
+  }, []);
 
   // Replay from My Account (or anywhere) via a window event.
   useEffect(() => {
-    const openIt = () => { setStep(0); setOpen(true); };
+    const openIt = () => start();
     window.addEventListener("malac:show-guide", openIt);
     return () => window.removeEventListener("malac:show-guide", openIt);
-  }, []);
+  }, [start]);
 
-  // First-visit + just-registered triggers.
+  // First-visit + just-registered triggers (same rules as before).
   useEffect(() => {
     if (open) return undefined;
     if (BUSY_PREFIXES.some((p) => pathname.startsWith(p))) return undefined;
     if (readPending()) {
-      const t = setTimeout(() => setOpen(true), 700);
+      const t = setTimeout(start, 700);
       return () => clearTimeout(t);
     }
     if (readSeen()) return undefined;
     if (!CALM_ROUTES.includes(pathname) && !pathname.startsWith("/blog/")) return undefined;
-    const t = setTimeout(() => setOpen(true), 1200);
+    const t = setTimeout(start, 1200);
     return () => clearTimeout(t);
-  }, [pathname, open]);
+  }, [pathname, open, start]);
 
-  const close = () => {
-    setOpen(false);
-    markSeen();
-    clearPending();
-  };
-  const last = step === SLIDES.length - 1;
-  const finish = () => {
-    close();
-    navigate("/shop");
-  };
-  if (!open) return null;
-  const slide = SLIDES[step];
-  const SlideIcon = slide.Icon;
+  const step = steps[idx];
+
+  // Measure the current step's target (scroll it into view first).
+  const measure = useCallback(() => {
+    const el = targetRef.current;
+    if (!el) { setRect(null); return; }
+    const r = el.getBoundingClientRect();
+    setRect({ x: r.x, y: r.y, w: r.width, h: r.height });
+  }, []);
+
+  useEffect(() => {
+    if (!open || !step) return undefined;
+    if (!step.targets) { targetRef.current = null; setRect(null); return undefined; }
+    const el = findTarget(step.targets);
+    targetRef.current = el;
+    if (!el) { setRect(null); return undefined; }
+    // Scroll only when the button is actually off-screen — header and
+    // bottom-nav anchors are sticky/fixed and already visible, and
+    // scrolling for them would yank the page around for nothing.
+    const r0 = el.getBoundingClientRect();
+    if (r0.top < 0 || r0.bottom > window.innerHeight) {
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+    const t = setTimeout(measure, 480);
+    const t2 = setTimeout(measure, 900);
+    return () => { clearTimeout(t); clearTimeout(t2); };
+  }, [open, step, measure]);
+
+  // Keep the spotlight glued to its button on scroll / resize.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onMove = () => measure();
+    window.addEventListener("resize", onMove);
+    window.addEventListener("scroll", onMove, true);
+    return () => {
+      window.removeEventListener("resize", onMove);
+      window.removeEventListener("scroll", onMove, true);
+    };
+  }, [open, measure]);
+
+  if (!open || !step) return null;
+  const last = idx === steps.length - 1;
+  const finish = () => { close(); navigate("/shop"); };
+
+  // Tip-card placement: under the spotlight when it sits in the top
+  // half, above it otherwise; centered cards for target-less steps.
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const tipW = Math.min(330, vw - 24);
+  let tipStyle;
+  if (rect) {
+    const centerX = rect.x + rect.w / 2;
+    const left = Math.max(12, Math.min(centerX - tipW / 2, vw - tipW - 12));
+    tipStyle = rect.y + rect.h / 2 < vh * 0.52
+      ? { top: Math.min(rect.y + rect.h + 16, vh - 190), left, width: tipW }
+      : { top: Math.max(rect.y - 176, 12), left, width: tipW };
+  }
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black/55 flex items-end sm:items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Welcome to MALAC — a quick guide">
-      <div className="w-full max-w-sm bg-[#FFFBF2] rounded-3xl shadow-2xl p-6 relative max-h-[88vh] overflow-y-auto">
-        <button onClick={close} aria-label="Guide band karein" className="absolute top-3.5 right-3.5 text-gray-400 hover:text-gray-600 p-1">
-          <X size={20} />
-        </button>
-
-        <div className="flex flex-col items-center text-center pt-2">
-          {slide.logo ? (
-            <img src={LOGO_FULL} alt="MALAC" className="h-20 w-auto object-contain" />
-          ) : (
-            <span className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-md">
-              <SlideIcon size={30} />
-            </span>
-          )}
-          <h2 className="mt-4 text-xl font-bold text-lux-ink">{slide.title}</h2>
-          <p className="mt-2 text-sm leading-relaxed text-gray-600">{slide.text}</p>
+    <div className="fixed inset-0 z-[85]" role="dialog" aria-modal="true" aria-label="MALAC app tour">
+      {rect ? (
+        <>
+          <div className="absolute rounded-2xl pointer-events-none transition-all duration-300"
+            style={{
+              left: rect.x - 6, top: rect.y - 6, width: rect.w + 12, height: rect.h + 12,
+              boxShadow: "0 0 0 9999px rgba(10, 10, 20, 0.62)",
+              outline: "2.5px solid #F59E0B", outlineOffset: 2,
+            }} />
+          <div className="absolute bg-[#FFFBF2] rounded-2xl shadow-2xl p-5" style={tipStyle}>
+            <TourCard step={step} idx={idx} total={steps.length} last={last}
+              onClose={close} onBack={() => setIdx(idx - 1)} onNext={() => setIdx(idx + 1)} onFinish={finish} />
+          </div>
+        </>
+      ) : (
+        <div className="absolute inset-0 bg-[rgba(10,10,20,0.62)] flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-[#FFFBF2] rounded-3xl shadow-2xl p-6 relative">
+            <TourCard step={step} idx={idx} total={steps.length} last={last} centered
+              onClose={close} onBack={() => setIdx(idx - 1)} onNext={() => setIdx(idx + 1)} onFinish={finish} />
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
 
-        <div className="flex items-center justify-center gap-1.5 mt-5" aria-hidden="true">
-          {SLIDES.map((s, i) => (
-            <span key={i} className={`h-2 rounded-full transition-all ${i === step ? "w-6 bg-orange-500" : "w-2 bg-orange-200"}`} />
+function TourCard({ step, idx, total, last, centered, onClose, onBack, onNext, onFinish }) {
+  return (
+    <>
+      <button onClick={onClose} aria-label="Tour band karein" className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1">
+        <X size={18} />
+      </button>
+      <div className={centered ? "flex flex-col items-center text-center" : ""}>
+        {step.logo && <img src={LOGO_FULL} alt="MALAC" className="h-16 w-auto object-contain mb-2" />}
+        <h3 className="text-base font-bold text-lux-ink pr-5">{step.title}</h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-gray-600">{step.text}</p>
+      </div>
+      <div className="flex items-center justify-between mt-4">
+        <span className="text-[11px] font-medium text-gray-400">{idx + 1} / {total}</span>
+        <div className="flex items-center gap-1.5" aria-hidden="true">
+          {Array.from({ length: total }).map((_, i) => (
+            <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-5 bg-orange-500" : "w-1.5 bg-orange-200"}`} />
           ))}
         </div>
-
-        {last ? (
-          <button onClick={finish} className="btn-lux w-full mt-5 py-3 text-sm font-semibold rounded-full">
-            Shopping Shuru Karein
-          </button>
-        ) : (
-          <div className="flex items-center justify-between mt-5">
-            <button onClick={close} className="text-sm font-medium text-gray-500 hover:text-gray-700 px-2 py-2">Skip</button>
-            <button onClick={() => setStep(step + 1)} className="btn-lux inline-flex items-center gap-1 px-6 py-2.5 text-sm font-semibold rounded-full">
-              Next <ChevronRight size={16} />
+      </div>
+      {last ? (
+        <button onClick={onFinish} className="btn-lux w-full mt-3.5 py-2.5 text-sm font-semibold rounded-full">
+          Shopping Shuru Karein
+        </button>
+      ) : (
+        <div className="flex items-center justify-between mt-3.5">
+          <button onClick={onClose} className="text-[13px] font-medium text-gray-500 hover:text-gray-700 px-1 py-1.5">Skip Tour</button>
+          <div className="flex items-center gap-2">
+            {idx > 0 && (
+              <button onClick={onBack} className="inline-flex items-center gap-0.5 px-3.5 py-2 text-[13px] font-semibold rounded-full border border-cream-line text-gray-600">
+                <ChevronLeft size={15} /> Back
+              </button>
+            )}
+            <button onClick={onNext} className="btn-lux inline-flex items-center gap-0.5 px-5 py-2 text-[13px] font-semibold rounded-full">
+              Next <ChevronRight size={15} />
             </button>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

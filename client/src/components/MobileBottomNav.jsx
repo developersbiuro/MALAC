@@ -28,7 +28,7 @@ export default function MobileBottomNav() {
       {items.map(({ to, label, Icon, badge, match }) => {
         const active = match ? match.some((m) => pathname.startsWith(m)) : pathname === to;
         return (
-          <Link key={to} to={to}
+          <Link key={to} to={to} data-tour={to === "/" ? "tab-home" : `tab-${to.slice(1)}`}
             className={`flex-1 py-1.5 flex flex-col items-center gap-0.5 text-[10px] relative ${active ? "text-lux-burnt font-semibold" : "text-gray-500"}`}>
             <Icon size={20} />
             {badge === "cart" && user && count > 0 &&

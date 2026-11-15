@@ -655,6 +655,7 @@ export default function ChatWidget() {
           type="button"
           onClick={() => (authed ? setOpen(true) : navigate(loginPath(pathname)))}
           aria-label="MALAC Assistant se chat karein"
+          data-tour="chat"
           className={`fixed right-4 z-50 w-14 h-14 rounded-full bg-lux-gradient text-white shadow-lg flex items-center justify-center hover:brightness-105 active:brightness-95 transition ${appMode ? "bottom-20" : "bottom-20 sm:bottom-6"}`}
         >
           <MessageCircle size={26} />

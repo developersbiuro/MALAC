@@ -61,7 +61,7 @@ export default function Header() {
 
         {/* Category mega-menu (hover on desktop) */}
         <div className="relative hidden lg:block" onMouseEnter={() => setMenuOpen(true)} onMouseLeave={() => setMenuOpen(false)}>
-          <button className="flex items-center gap-1 text-sm font-medium px-2 py-1">
+          <button data-tour="categories" className="flex items-center gap-1 text-sm font-medium px-2 py-1">
             <Menu size={18} /> Categories <ChevronDown size={14} />
           </button>
           {menuOpen && (
@@ -83,7 +83,7 @@ export default function Header() {
 
         {/* Predictive search — dominant full-width bar on mobile (own row),
             inline flex-1 from sm up */}
-        <div className="relative flex-1 min-w-0 basis-full order-last mt-1 sm:basis-auto sm:order-none sm:mt-0" ref={searchRef}>
+        <div className="relative flex-1 min-w-0 basis-full order-last mt-1 sm:basis-auto sm:order-none sm:mt-0" ref={searchRef} data-tour="search">
           <form onSubmit={submitSearch} className="flex bg-gray-100 rounded-full overflow-hidden border border-gray-200 shadow-sm focus-within:border-lux-amber focus-within:bg-white focus-within:shadow transition-colors">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in MALAC"
               className="flex-1 min-w-0 bg-transparent px-4 py-2.5 text-sm outline-none" />
@@ -101,7 +101,7 @@ export default function Header() {
           )}
         </div>
 
-        <Link to="/track-order" className="btn-lux hidden md:inline-flex text-xs px-4 py-2 shrink-0">
+        <Link to="/track-order" data-tour="track" className="btn-lux hidden md:inline-flex text-xs px-4 py-2 shrink-0">
           <PackageSearch size={15} /> Track Order
         </Link>
         {!appMode && (
@@ -113,13 +113,13 @@ export default function Header() {
           <Heart size={22} />
           {user && wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
         </Link>
-        <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
+        <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} data-tour="cart" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
           <ShoppingCart size={22} />
           {user && count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{count}</span>}
         </button>
 
         <div className="relative">
-          <button onClick={() => setAccountOpen((v) => !v)} className="flex items-center gap-1 text-sm p-2 sm:p-1.5 shrink-0">
+          <button onClick={() => setAccountOpen((v) => !v)} data-tour="account" className="flex items-center gap-1 text-sm p-2 sm:p-1.5 shrink-0">
             <User size={22} /><span className="hidden md:inline">{user ? user.name.split(" ")[0] : "Login"}</span>
           </button>
           {accountOpen && (
