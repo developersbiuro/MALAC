@@ -6,6 +6,7 @@ import HeroCarousel from "../components/HeroCarousel.jsx";
 import FlashSale from "../components/FlashSale.jsx";
 import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
+import InviteBanner from "../components/InviteBanner.jsx";
 
 import { useSeo } from "../utils/seo.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
@@ -127,6 +128,7 @@ export default function Home() {
           <button className="btn-lux px-6 py-2.5 text-sm shrink-0"><PackageSearch size={16} /> Track Order</button>
         </form>
       </section>
+      <InviteBanner />
       <FlashSale products={flash} />
       <section className="mt-6">
         <p className="eyebrow">Curated Picks</p>
