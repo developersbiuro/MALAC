@@ -14,7 +14,7 @@ import { sendPushToUser } from "./pushService.js";
 const SIGNUP_REWARD = 100; // Rs. off for the inviter at friend sign-up
 const SIGNUP_MIN_SPEND = 500;
 const ORDER_REWARD = 300; // Rs. off for the inviter at friend's 1st order
-const ORDER_MIN_SPEND = 1000;
+const ORDER_MIN_SPEND = 2000; // owner, 2026-11-15
 const REWARD_VALID_DAYS = 90;
 
 const randomCode = (n) => {
@@ -58,7 +58,7 @@ export async function hasFreeFirstShipping(userId) {
   return prior === 0;
 }
 
-async function mintRewardCoupon(referrerId, value, minSpend) {
+async function mintRewardCoupon(referrerId, value, minSpend, referralFor = null) {
   let code = "";
   for (let i = 0; i < 5 && !code; i++) {
     const candidate = "REF-" + randomCode(6);
@@ -69,7 +69,7 @@ async function mintRewardCoupon(referrerId, value, minSpend) {
     code, type: "fixed", value, minSpend,
     expiresAt: new Date(Date.now() + REWARD_VALID_DAYS * 24 * 60 * 60 * 1000),
     active: true, usageLimit: 1, usedCount: 0,
-    issuedTo: referrerId, source: "referral",
+    issuedTo: referrerId, source: "referral", referralFor,
   });
   return code;
 }
@@ -77,7 +77,7 @@ async function mintRewardCoupon(referrerId, value, minSpend) {
 // One reward stage, shared shape: stamp the friend's account first (so
 // the stage can never fire twice), then mint + push. Best-effort — a
 // reward failure never blocks a sign-up or an order.
-async function issueStage(friendId, stampField, value, minSpend, pushTitle, pushBody) {
+async function issueStage(friendId, stampField, value, minSpend, pushTitle, pushBody, linkFriend = false) {
   try {
     const friend = await User.findById(friendId);
     if (!friend?.referredBy || friend[stampField]) return;
@@ -85,7 +85,7 @@ async function issueStage(friendId, stampField, value, minSpend, pushTitle, push
     await friend.save();
     const referrer = await User.findById(friend.referredBy);
     if (!referrer || referrer.role !== "customer") return;
-    const code = await mintRewardCoupon(referrer._id, value, minSpend);
+    const code = await mintRewardCoupon(referrer._id, value, minSpend, linkFriend ? friend._id : null);
     if (!code) return;
     await sendPushToUser(referrer._id, {
       title: pushTitle,
@@ -115,5 +115,30 @@ export async function issueFirstOrderReward(buyerId) {
   } catch { return; }
   await issueStage(buyerId, "referralFirstOrderRewardedAt", ORDER_REWARD, ORDER_MIN_SPEND,
     "🎉 Dost ne pehla order kar dia — Rs. 300 discount mila!",
-    (friend, code) => `${friend.name?.split(" ")[0] || "Aap k dost"} ne apna pehla order kar dia. Aap ka Rs. 300 coupon code: ${code} — My Account → Invite a Friend me dekhein.`);
+    (friend, code) => `${friend.name?.split(" ")[0] || "Aap k dost"} ne apna pehla order kar dia. Aap ka Rs. 300 coupon code: ${code} — My Account → Invite a Friend me dekhein.`,
+    true);
+}
+
+// Owner's rule (2026-11-15): if the friend's first order is cancelled
+// or returned, the Rs. 300 coupon it earned is cancelled too. Called
+// from both cancellation paths. If the coupon was already spent on a
+// real order it stays (the reward was consumed by a genuine purchase
+// and the stage does not re-open); if it is still unused it is
+// deactivated and the stage re-opens, so a fresh first order can earn
+// it again — the cancelled try must not eat the benefit.
+export async function revokeFirstOrderReward(buyerId) {
+  try {
+    const buyer = await User.findById(buyerId).select("referredBy referralFirstOrderRewardedAt");
+    if (!buyer?.referredBy || !buyer.referralFirstOrderRewardedAt) return;
+    const coupon = await Coupon.findOne({
+      issuedTo: buyer.referredBy, source: "referral", referralFor: buyerId, value: ORDER_REWARD,
+    });
+    if (coupon && coupon.usedCount > 0) return; // already spent — consumed
+    if (coupon?.active) {
+      coupon.active = false;
+      await coupon.save();
+    }
+    buyer.referralFirstOrderRewardedAt = null;
+    await buyer.save();
+  } catch { /* best-effort */ }
 }

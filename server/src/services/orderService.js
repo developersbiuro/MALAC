@@ -8,7 +8,7 @@ import { reviewInviteEmail } from "./emailTemplates.js";
 import { onOrderCancelled, onOrderPacked, onOrderShipped, onOrderOutForDelivery, onOrderDelivered } from "./notifyService.js";
 import { generateOrderId } from "../utils/generateOrderId.js";
 import { validateCoupon, redeemCoupon } from "./couponService.js";
-import { hasFreeFirstShipping, issueFirstOrderReward } from "./referralService.js";
+import { hasFreeFirstShipping, issueFirstOrderReward, revokeFirstOrderReward } from "./referralService.js";
 
 // The delivery address is stored as a snapshot on the order. When the
 // customer ordered with their live location, the pin (lat/lng/mapsUrl)
@@ -217,6 +217,7 @@ export async function cancelOrder(order, by = "customer", { reason = "", note = 
       ).catch(() => {});
     }
   }
+  await revokeFirstOrderReward(order.user); // a cancelled first order takes its Rs. 300 referral coupon back
   await onOrderCancelled(order, by); // customer push + email (+ staff bell for customer cancels)
   return order;
 }
@@ -264,6 +265,7 @@ export async function setOrderStatus(order, status, by = "admin", { courier = ""
   if (status === "Shipped" && prev !== "Shipped") await onOrderShipped(order); // customer "on its way" email + push
   if (status === "OutForDelivery" && prev !== "OutForDelivery") await onOrderOutForDelivery(order); // customer push
   if (status === "Delivered" && prev !== "Delivered") await onOrderDelivered(order); // customer push
+  if ((status === "Cancelled" || status === "Returned") && prev !== status) await revokeFirstOrderReward(order.user); // Rs. 300 referral coupon clawback
   if (sendReviewInvite) {
     try { await sendDeliveredReviewInvite(order); }
     catch { /* the invite is best-effort; delivery state is already saved */ }

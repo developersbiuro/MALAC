@@ -13,6 +13,10 @@ const couponSchema = new mongoose.Schema({
   // Referral rewards carry the account they were issued to, so the
   // customer's Invite page can list exactly their own earned coupons.
   issuedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null, index: true },
+  // Stage-2 (first-order) reward coupons also record WHICH referred
+  // friend earned them, so the coupon can be revoked if that friend's
+  // first order is cancelled/returned (owner's rule, 2026-11-15).
+  referralFor: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   source: { type: String, default: "" }, // "" = admin-created; "referral" = Invite-a-Friend reward
 }, { timestamps: true });
 
