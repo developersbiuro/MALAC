@@ -44,7 +44,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur shadow-header">
       <div className="bg-lux-ink text-cream-soft text-xs">
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex flex-col items-center gap-0.5 text-center sm:flex-row sm:justify-between sm:text-left">
           <span>{payments?.codEnabled !== false && <><span className="text-lux-pale font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> </>}<span className="block sm:inline">Free Shipping on Orders Over {rs(fees.freeThreshold)}</span></span>

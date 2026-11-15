@@ -22,9 +22,9 @@ export default function ProductCard({ product }) {
     if (!toggle(product)) navigate(loginPath(here));
   };
   return (
-    <div className="group relative flex flex-col h-full bg-white rounded-xl overflow-hidden border border-cream-line hover:shadow-xl hover:-translate-y-0.5 transition fade-up">
+    <div className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-cream-line shadow-[0_1px_3px_rgba(15,23,42,0.06)] hover:shadow-lux hover:-translate-y-0.5 transition fade-up">
       <div className="p-1.5 pb-0 sm:p-2 sm:pb-0">
-        <div className="relative rounded-lg overflow-hidden aspect-square">
+        <div className="relative rounded-xl overflow-hidden aspect-square">
           <Link to={`/product/${product.slug}`}>
             <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.category ? `${product.title} — ${product.category}` : product.title} loading="lazy"
               onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
@@ -59,7 +59,7 @@ export default function ProductCard({ product }) {
             : <p className="text-[11px] font-medium text-[#059669] mt-1">In Stock{product.codAvailable ? " · COD" : ""}</p>}
         <div className="mt-auto pt-2">
           <p className="flex flex-wrap items-baseline gap-x-1.5">
-            <span className="text-lux-amber font-extrabold text-[15px] sm:text-base whitespace-nowrap">{rs(priceOf(product))}</span>
+            <span className="text-lux-amber font-extrabold text-base sm:text-lg tracking-tight whitespace-nowrap">{rs(priceOf(product))}</span>
             {product.salePrice > 0 && <span className="text-xs text-gray-400 line-through whitespace-nowrap">{rs(product.basePrice)}</span>}
           </p>
           <button onClick={addToCart} disabled={out} className="btn-lux w-full mt-2 py-2 min-h-[40px] text-sm">

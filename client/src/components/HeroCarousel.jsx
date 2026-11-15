@@ -26,7 +26,7 @@ export default function HeroCarousel() {
   const go = (d) => setIdx((i) => (i + d + slides.length) % slides.length);
   const slide = slides[idx];
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-md ring-1 ring-black/5"
+    <div className="relative rounded-2xl overflow-hidden shadow-lux ring-1 ring-black/5"
       onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
       onTouchStart={(e) => setTouchX(e.touches[0].clientX)}
       onTouchEnd={(e) => { if (touchX !== null) { const dx = e.changedTouches[0].clientX - touchX; if (Math.abs(dx) > 40) go(dx < 0 ? 1 : -1); setTouchX(null); } }}>

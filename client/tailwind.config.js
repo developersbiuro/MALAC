@@ -17,6 +17,12 @@ export default {
         display: ["Cinzel", "serif"],
         serif: ["Cormorant Garamond", "Georgia", "serif"],
       },
+      boxShadow: {
+        // Premium soft shadows for the cream-luxury polish pass
+        // (owner, 2026-11-15: "isko or acha kr do" on the live theme).
+        lux: "0 16px 40px -16px rgba(15,23,42,0.22)",
+        header: "0 1px 0 0 #f0e7d8, 0 12px 32px -20px rgba(15,23,42,0.35)",
+      },
     },
   },
   plugins: [],
