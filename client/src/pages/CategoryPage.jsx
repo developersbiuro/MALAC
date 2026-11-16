@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../api/client.js";
 import ProductCard from "../components/ProductCard.jsx";
+import { HERO_SILK } from "../assets/hero.js";
 import { useSeo } from "../utils/seo.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
 
@@ -55,9 +56,11 @@ export default function CategoryPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
-      {/* Dark hero band */}
+      {/* Dark hero band — black/silver silk backdrop (second reference design) */}
       <section className="relative overflow-hidden bg-lux-deep text-white rounded-3xl px-5 py-7 sm:px-10 sm:py-10">
-        <div className="absolute inset-x-0 bottom-0 h-[3px] bg-silver-gradient" />
+        <img src={HERO_SILK} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-45" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/35 to-transparent" />
+        <div className="relative">
         <p className="eyebrow !text-neutral-400">The Collection</p>
         <h1 className="font-display text-3xl sm:text-5xl font-bold tracking-wide mt-1.5 uppercase">{categoryName}</h1>
         <p className="text-sm sm:text-[15px] text-neutral-400 leading-relaxed mt-2.5 max-w-2xl">{description}</p>
@@ -75,6 +78,8 @@ export default function CategoryPage() {
             ))}
           </div>
         )}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 h-[3px] bg-silver-gradient" />
       </section>
 
       {/* Toolbar */}

@@ -50,6 +50,7 @@ export default function Header() {
           <span>{payments?.codEnabled !== false && <><span className="text-white font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> </>}<span className="block sm:inline">Free Shipping on Orders Over {rs(fees.freeThreshold)}</span></span>
           <span className="hidden sm:flex gap-3">
             <Link to="/track-order" className="hover:text-white">Track Order</Link>
+            <Link to="/faq" className="hover:text-white">Help</Link>
             {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-white"><ShieldCheck size={12} /> Admin</Link>}
           </span>
         </div>
@@ -143,11 +144,13 @@ export default function Header() {
       {/* Desktop category nav row (uppercase, malacpk-style) */}
       <nav className="hidden lg:flex gap-6 max-w-7xl mx-auto px-3 pt-2.5 pb-3 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400 overflow-x-auto no-scrollbar">
         <Link to="/" className={`whitespace-nowrap hover:text-white ${pathname === "/" ? "text-white" : ""}`}>Home</Link>
-        <Link to="/shop" className="whitespace-nowrap hover:text-white">All Products</Link>
-        <Link to="/blog" className={`whitespace-nowrap hover:text-white ${pathname.startsWith("/blog") ? "text-white" : ""}`}>Blog</Link>
+        <Link to="/shop" className="whitespace-nowrap hover:text-white">Shop</Link>
         {categories.map((c) => (
           <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-white">{c.name}</Link>
         ))}
+        <Link to="/about" className={`whitespace-nowrap hover:text-white ${pathname === "/about" ? "text-white" : ""}`}>About</Link>
+        <Link to="/blog" className={`whitespace-nowrap hover:text-white ${pathname.startsWith("/blog") ? "text-white" : ""}`}>Blog</Link>
+        <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="whitespace-nowrap hover:text-white">Contact</a>
       </nav>
       {/* Mobile category strip */}
       <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
