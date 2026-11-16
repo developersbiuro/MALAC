@@ -315,7 +315,14 @@ const STATIC_PAGES = {
     description:
       "Guides and tips from MALAC: online shopping in Pakistan, Cash on Delivery explained, and how to shop safely and save.",
     heading: "MALAC Blog",
-    body: `<ul><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+    body: `<ul><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+  },
+  "/blog/winter-shopping-in-pakistan-malac": {
+    title: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It — MALAC Blog",
+    description:
+      "A practical winter shopping guide for Pakistan: start with the everyday fleece layer, add one piece for real cold, and do not forget thermals, gloves and the children — with MALAC's eight winter pieces and Cash on Delivery.",
+    heading: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It",
+    body: `<p>Winter in Pakistan never arrives all at once — a cold morning in Faisalabad, a freezing night in the north, a mild evening in Karachi. Start with the layer you will wear every day (a fleece tracksuit or zipper hoodie), then add one piece for real cold (a hooded puffer jacket), and do not skip the quiet heroes: thermal sets and leather gloves. MALAC's winter range has eight pieces, all with Cash on Delivery and standard delivery in 2–5 working days (Rs. 249, free over Rs. 3,000). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
   },
   "/blog/online-shopping-in-pakistan-malac": {
     title: "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust — MALAC Blog",

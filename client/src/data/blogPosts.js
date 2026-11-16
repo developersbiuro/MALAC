@@ -12,6 +12,52 @@
 // adding their /blog/<slug> URL to server/src/routes/sitemapRoutes.js.
 export const BLOG_POSTS = [
   {
+    slug: "winter-shopping-in-pakistan-malac",
+    title: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It",
+    excerpt:
+      "December in Pakistan is not one winter — it is a cold morning in Faisalabad, a freezing night in Murree, and a mild evening in Karachi. Here is how we would shop for it, and the eight winter pieces MALAC has just added for exactly that weather.",
+    date: "2026-11-15",
+    displayDate: "15 November 2026",
+    readTime: "4 min read",
+    faqs: [
+      {
+        q: "When should I start winter shopping in Pakistan?",
+        a: "Mid-November is the honest answer. The cold arrives gradually in the plains and suddenly in the north, so buying your warm layers now means you are not paying full price in a rush when the first cold wave hits.",
+      },
+      {
+        q: "What winter clothes does MALAC have?",
+        a: "Eight winter pieces are live now: a men's fleece tracksuit, a zipper hoodie, a puffer jacket, thermal sets for men and women, leather winter gloves, and fleece winter suits for boys and girls.",
+      },
+      {
+        q: "Can I pay Cash on Delivery for winter orders?",
+        a: "Yes. COD works exactly the same in winter as in summer — pay when the parcel is in your hands. Standard delivery is Rs. 249, free on orders above Rs. 3,000.",
+      },
+      {
+        q: "How long does a winter order take to arrive?",
+        a: "Standard delivery is 2 to 5 working days, depending on your city. Express, where available, is 1 to 2 working days. Ordering early in the season is the only way to beat the December rush.",
+      },
+      {
+        q: "What if a winter item arrives damaged or wrong?",
+        a: "Tell us within 7 days of delivery and we will sort it out with an exchange or a solution. Damaged, defective or wrong items are our responsibility.",
+      },
+    ],
+    body: [
+      { t: "p", x: "Winter in Pakistan never arrives all at once. One week you are fine in a light shirt, the next week the morning air in Faisalabad bites through it, and by December the nights in the north are properly freezing while Karachi is still deciding whether it is winter at all. That is why winter shopping here goes wrong so often: people buy one heavy thing, or they buy everything at the last minute, and either way they spend more than they needed to." },
+      { t: "p", x: "At **MALAC**, we have just added eight winter pieces to the store, and this page is our honest take on how to shop for the season — what to buy first, what can wait, and how the pieces we stock actually fit together." },
+      { t: "h", x: "Start with the layer you will wear every day" },
+      { t: "p", x: "The most-used winter item is never the heaviest one. It is the one you reach for every morning without thinking. For most men that is a fleece tracksuit or a zipper hoodie — something warm enough for a cold morning walk, light enough to wear indoors, and easy to wash again and again. Our **Men's Fleece Zipper Tracksuit (Rs. 2,150)** and **Men's Zipper Hoodie (Rs. 2,100)** are exactly that kind of piece: fleece, zip-up, made for daily wear rather than for one cold night a year." },
+      { t: "h", x: "Then add one piece for real cold" },
+      { t: "p", x: "Once the everyday layer is sorted, one proper cold-weather piece does the heavy work. A puffer jacket is the obvious choice because it packs a lot of warmth into very little weight — you wear it over anything, take it off indoors, and it still looks right. Our **Men's Puffer Jacket (Rs. 4,400)** has a hood, which matters more than people think: on a windy winter evening, the hood is the difference between warm and wishing you had stayed home." },
+      { t: "h", x: "The quiet heroes: thermals and gloves" },
+      { t: "p", x: "Nobody shows off a thermal set, and that is the point. A good thermal worn under your normal clothes keeps you warm all day without a single heavy layer on top. We have a **Men's Thermal Fleece Suit (Rs. 4,650)** and a **Women's Thermal Set (Rs. 1,750)** — both are base layers, worn underneath, and both are the cheapest warmth per rupee in the whole winter range. Hands are the same story: **Leather Winter Gloves (Rs. 900)** keep your hands warm and still let you use your phone, so you are not taking them off every two minutes." },
+      { t: "h", x: "Do not forget the children" },
+      { t: "p", x: "Children feel the cold first and complain about it last, so their winter clothes are the ones worth buying early. A fleece suit they can run around in beats a stiff jacket they hate wearing. Our **Boy's Fleece Tracksuit (Rs. 1,950)** and **Girl's Fleece Co-ord Set (Rs. 2,350)** are both two-piece fleece sets — warm, soft, and made for school days and playtime rather than for photographs." },
+      { t: "h", x: "How to order, and what it costs" },
+      { t: "p", x: "Everything above is live on the [Shop page](/shop) now. You can pay **Cash on Delivery** and settle when the parcel is in your hands, or pay in advance by JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay or FirstPay. **Standard delivery is Rs. 249, completely free on orders above Rs. 3,000**, and express delivery is Rs. 399 where available. Standard delivery takes **2 to 5 working days** — and in December, ordering a week early is worth more than any discount, because the couriers are at their busiest then." },
+      { t: "p", x: "First-time customers can use the voucher **WELCOME10** for 10% off their first order — winter orders included. If an item arrives damaged, defective, or different from what you ordered, tell us within **7 days** of delivery and we will make it right. And if you are unsure about a size or a piece, WhatsApp us on **+92 323 6016684** and ask — a real person will answer. If you are new to MALAC, start with [how online shopping works here](/blog/online-shopping-in-pakistan-malac), or read [how Cash on Delivery works](/blog/cash-on-delivery-online-shopping-pakistan)." },
+    ],
+  },
+  {
     slug: "cash-on-delivery-online-shopping-pakistan",
     title: "Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands",
     excerpt:
