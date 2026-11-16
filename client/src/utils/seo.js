@@ -31,6 +31,29 @@ function upsertProperty(property, content) {
   tag.setAttribute("content", content);
 }
 
+// Canonical: the static index.html hard-codes the homepage canonical for
+// every route, which made Google treat /shop and every product page as
+// duplicates of / (the 2026-11-16 "Soft 404" rejection). The server now
+// prerenders the main public routes with correct canonicals; this keeps
+// the rendered SPA consistent everywhere else: each page canonicalizes
+// to its own path (query string dropped, so /shop?category=X points at
+// /shop). Noindex pages (auth, checkout, account, admin) drop the tag.
+const SITE_ORIGIN = "https://www.malac.pp.ua";
+function syncCanonical(noindex) {
+  let link = document.head.querySelector('link[rel="canonical"]');
+  if (noindex) {
+    link?.remove();
+    return;
+  }
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+  const path = window.location.pathname;
+  link.setAttribute("href", path === "/" ? `${SITE_ORIGIN}/` : `${SITE_ORIGIN}${path}`);
+}
+
 export function useSeo({ title, description, robots, jsonLd, image } = {}) {
   // Serialize during render so the effect only re-runs when the
   // structured data actually changes (callers build fresh objects).
@@ -40,6 +63,7 @@ export function useSeo({ title, description, robots, jsonLd, image } = {}) {
     if (title) document.title = title;
     if (description) upsertMeta("description", description);
     if (robots) upsertMeta("robots", robots);
+    syncCanonical(Boolean(robots && robots.includes("noindex")));
     // Share image: a page may pass its own (e.g. a product photo);
     // otherwise the site-wide default applies.
     const shareImage = image || SITE_IMAGE;

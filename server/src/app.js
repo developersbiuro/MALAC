@@ -16,6 +16,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
+import prerenderRoutes from "./routes/prerenderRoutes.js";
 import feedRoutes from "./routes/feedRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
 import pushRoutes from "./routes/pushRoutes.js";
@@ -154,6 +155,12 @@ app.use(sitemapRoutes);
 // Merchant Center product feed at /google-feed.xml — same outside-the-gate
 // mounting and always-200 reasoning as the sitemap.
 app.use(feedRoutes);
+// Prerendered public pages (/shop, /product/:slug, /about, /faq, /blog,
+// /terms, /policy — routed here by vercel.json): the SPA shell with the
+// route's own canonical/meta and real content for search engines, after
+// Google rejected /shop as a Soft 404 on 2026-11-16. Same outside-the-
+// gate mounting; the handlers fall back to the plain shell on DB errors.
+app.use(prerenderRoutes);
 
 // Public API — mounted under /api, matching the /api/(.*) rewrite to this
 // service in vercel.json and the client's baseURL ("/api").

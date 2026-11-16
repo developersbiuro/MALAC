@@ -105,6 +105,54 @@
       }
     },
     {
+      "source": "/shop",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/product/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/about",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/faq",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/blog",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/blog/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/terms",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
+      "source": "/policy",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/(.*)",
       "destination": {
         "service": "client"
