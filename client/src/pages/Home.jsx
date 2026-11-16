@@ -93,13 +93,21 @@ export default function Home() {
     api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {});
     api.get("/products", { params: { flashSale: "true", limit: 12 } }).then((r) => setFlash(r.data.products)).catch(() => {});
     api.get("/products", { params: { sort: "newest", limit: 10 } }).then((r) => setNewest(r.data.products)).catch(() => {});
-    api.get("/products", { params: { limit: 60 } }).then((r) => setPool(r.data.products)).catch(() => {});
+    api.get("/products", { params: { limit: 100 } }).then((r) => setPool(r.data.products)).catch(() => {});
   }, []);
 
   const tileLink = (tile) => {
     const hit = pool.find((p) => tile.match.test(p.title));
     return hit ? `/product/${hit.slug}` : tile.fallback;
   };
+
+  // New Arrivals (Abdullah's spec): the 5 MALAC design products first —
+  // with "New" badges — then the newest of the rest.
+  const DESIGN_SKUS = ["MALAC-POLO-01", "MALAC-WATCH-01", "MALAC-HOOD-01", "MALAC-SUN-01", "MALAC-WALLET-01"];
+  const arrivals = [
+    ...DESIGN_SKUS.map((sku) => pool.find((p) => p.sku === sku)).filter(Boolean),
+    ...newest.filter((p) => !DESIGN_SKUS.includes(p.sku)),
+  ].slice(0, 10);
 
   return (
     <main>
@@ -137,7 +145,7 @@ export default function Home() {
       </div>
 
       {/* New Arrivals — halki grey band (reference design): intro block left, product row right */}
-      <section className="bg-[#f3f4f6] mt-10 sm:mt-12 py-8 sm:py-12">
+      <section className="bg-[#EAEAEA] mt-10 sm:mt-12 py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-3">
         <div className="flex flex-col lg:flex-row gap-5">
           <div className="shrink-0 lg:w-60 px-1 flex flex-col justify-center">
@@ -148,12 +156,12 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar pb-1 flex-1 min-w-0">
-            {newest.map((p) => (
+            {arrivals.map((p) => (
               <div key={p._id} className="w-[200px] sm:w-[224px] shrink-0">
-                <ProductCard product={p} />
+                <ProductCard product={p} badge={DESIGN_SKUS.includes(p.sku) ? "New" : undefined} />
               </div>
             ))}
-            {newest.length === 0 && <p className="text-gray-400 text-sm py-8">Loading products...</p>}
+            {arrivals.length === 0 && <p className="text-gray-400 text-sm py-8">Loading products...</p>}
           </div>
         </div>
         </div>
