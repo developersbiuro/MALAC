@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Heart, User, ChevronDown, ShieldCheck, Truck } from "lucide-react";
 import api from "../api/client.js";
-import { LOGO_SILVER } from "../assets/logoSilver.js";
+import { LOGO_MARK } from "../assets/logoMark.js";
 import InstallAppButton from "./InstallAppButton.jsx";
 import { useAppMode } from "../utils/appMode.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
@@ -91,8 +91,12 @@ export default function Header() {
 
       {/* Main row — lockup · nav · search · icons */}
       <div className="max-w-7xl mx-auto px-3 py-3 flex items-center gap-3 sm:gap-5">
-        <Link to="/" className="shrink-0" aria-label="MALAC — home">
-          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-11 sm:h-[52px] w-auto" />
+        <Link to="/" className="shrink-0 flex items-center gap-2.5" aria-label="MALAC — home">
+          <img src={LOGO_MARK} alt="" className="h-11 sm:h-[52px] w-auto" />
+          <span className="leading-none">
+            <span className="block text-[21px] sm:text-2xl font-extrabold tracking-[0.05em] text-neutral-50">MALAC</span>
+            <span className="block text-[7.5px] sm:text-[8.5px] tracking-[0.13em] text-neutral-400 mt-1">M.A Luxury Apparel Collection</span>
+          </span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-6 mx-auto">
