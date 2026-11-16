@@ -64,15 +64,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": {
-        "service": "server"
-      }
+      "destination": "https://malac1.vercel.app/api/$1"
     },
     {
       "source": "/uploads/(.*)",
-      "destination": {
-        "service": "server"
-      }
+      "destination": "https://malac1.vercel.app/uploads/$1"
     },
     {
       "source": "/sitemap.xml",
