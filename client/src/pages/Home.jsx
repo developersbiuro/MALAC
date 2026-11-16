@@ -97,19 +97,19 @@ export default function Home() {
 
   const tabs = ["All", ...categories.map((c) => c.name)];
   return (
-    <main className="max-w-7xl mx-auto px-3 pt-3">
+    <main className="max-w-7xl mx-auto px-3 pt-4 sm:pt-6">
       <HeroCarousel />
       <CategoryGrid categories={categories} />
-      <div className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-4 py-3 flex flex-wrap justify-center gap-x-7 gap-y-2">
+      <div className="mt-5 bg-lux-deep rounded-2xl px-4 py-3.5 flex flex-wrap justify-center gap-x-8 gap-y-2.5">
         {TRUST.map(({ Icon, label }) => (
-          <span key={label} className="flex items-center gap-1.5 text-xs sm:text-[13px] font-medium text-gray-700">
-            <Icon size={16} className="text-[#059669]" /> {label}
+          <span key={label} className="flex items-center gap-1.5 text-xs sm:text-[13px] font-medium text-neutral-200">
+            <Icon size={16} className="text-neutral-300" /> {label}
           </span>
         ))}
       </div>
       {/* Track Your Order band — tracking itself is a signed-in function;
           submitting sends guests to login first, then back to tracking. */}
-      <section className="bg-lux-ink text-white rounded-2xl mt-3 px-4 py-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3">
+      <section className="bg-lux-ink text-white rounded-3xl mt-6 px-5 py-6 sm:px-8 flex flex-col lg:flex-row lg:items-center gap-3">
         <div className="shrink-0">
           <p className="eyebrow !text-lux-pale">Order Tracking</p>
           <h2 className="font-serif text-2xl font-semibold leading-tight">Track Your Order</h2>
@@ -126,14 +126,14 @@ export default function Home() {
         >
           <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required placeholder="Order ID (MLC-...) ya phone number"
             className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
-          <button className="btn-lux px-6 py-2.5 text-sm shrink-0"><PackageSearch size={16} /> Track Order</button>
+          <button className="bg-white text-neutral-900 font-semibold rounded-full px-6 py-2.5 text-sm shrink-0 inline-flex items-center justify-center gap-2"><PackageSearch size={16} /> Track Order</button>
         </form>
       </section>
       <InviteBanner />
       <FlashSale products={flash} />
-      <section className="mt-6">
+      <section className="mt-10 sm:mt-12">
         <p className="eyebrow">Curated Picks</p>
-        <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-2">Just For You</h2>
+        <h2 className="font-display text-3xl font-bold leading-none mt-1 mb-2 tracking-wide">JUST FOR YOU</h2>
         <div className="lux-divider mb-3" />
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
           {tabs.map((t) => (
@@ -154,11 +154,11 @@ export default function Home() {
       </section>
 
       {/* About MALAC — SEO content */}
-      <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 px-5 py-6 sm:px-8">
-        <p className="eyebrow">About MALAC</p>
-        <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Luxury Apparel &amp; Ladies Fashion Online in Pakistan</h2>
+      <section className="bg-lux-deep text-white border border-white/10 rounded-3xl shadow-sm mt-10 sm:mt-12 px-6 py-8 sm:px-10">
+        <p className="eyebrow !text-neutral-400">About MALAC</p>
+        <h2 className="font-display text-2xl sm:text-3xl font-bold leading-tight mt-1 tracking-wide">Luxury Apparel &amp; Ladies Fashion Online in Pakistan</h2>
         <div className="lux-divider mt-3" />
-        <div className="text-sm sm:text-[15px] text-gray-600 leading-relaxed space-y-3 mt-3 max-w-3xl">
+        <div className="text-sm sm:text-[15px] text-neutral-300 leading-relaxed space-y-3 mt-3 max-w-3xl">
           <p>
             MALAC — M.A Luxury Apparel Collection is an online fashion store in Pakistan for shoppers who want
             considered, well-made clothing without leaving home. Our Fashion collection brings ladies fashion and
@@ -183,23 +183,23 @@ export default function Home() {
       </section>
 
       {/* FAQ — answers mirror the Terms / Policy pages (see FAQS above) */}
-      <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-5 py-6 sm:px-8 mb-2">
-        <p className="eyebrow">Good To Know</p>
-        <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Frequently Asked Questions</h2>
+      <section className="bg-[#101014] text-white border border-white/10 rounded-3xl shadow-sm mt-10 sm:mt-12 px-6 py-8 sm:px-10 mb-4">
+        <p className="eyebrow !text-neutral-400">Good To Know</p>
+        <h2 className="font-display text-2xl sm:text-3xl font-bold leading-tight mt-1 tracking-wide">Frequently Asked Questions</h2>
         <div className="lux-divider mt-3" />
-        <div className="mt-4 divide-y divide-cream-line">
+        <div className="mt-4 divide-y divide-white/10">
           {FAQS.map((f, i) => {
             const open = openFaq === i;
             return (
               <div key={f.q}>
                 <button type="button" onClick={() => setOpenFaq(open ? -1 : i)} aria-expanded={open}
                   className="w-full flex items-center justify-between gap-3 py-3.5 text-left">
-                  <h3 className="font-serif text-lg font-semibold leading-snug">{f.q}</h3>
-                  <ChevronDown size={18} className={`shrink-0 text-lux-burnt transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                  <h3 className="font-serif text-lg font-semibold leading-snug text-white">{f.q}</h3>
+                  <ChevronDown size={18} className={`shrink-0 text-neutral-300 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                   <div className="overflow-hidden">
-                    <p className="text-sm sm:text-[15px] text-gray-600 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
+                    <p className="text-sm sm:text-[15px] text-neutral-400 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
                   </div>
                 </div>
               </div>

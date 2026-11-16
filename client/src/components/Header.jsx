@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, ShieldCheck, PackageSearch } from "lucide-react";
 import api from "../api/client.js";
-import { LOGO_FULL } from "../assets/logo.js";
+import { LOGO_SILVER } from "../assets/logoSilver.js";
 import InstallAppButton from "./InstallAppButton.jsx";
 import { useAppMode } from "../utils/appMode.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
@@ -44,35 +44,35 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur shadow-header">
-      <div className="bg-lux-deep text-cream-soft text-[11px] uppercase tracking-[0.14em]">
+    <header className="sticky top-0 z-40 bg-[#0a0a0c] text-neutral-100 shadow-header">
+      <div className="bg-black text-neutral-400 text-[11px] uppercase tracking-[0.14em]">
         <div className="max-w-7xl mx-auto px-3 py-1.5 flex flex-col items-center gap-0.5 text-center sm:flex-row sm:justify-between sm:text-left">
-          <span>{payments?.codEnabled !== false && <><span className="text-lux-pale font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> </>}<span className="block sm:inline">Free Shipping on Orders Over {rs(fees.freeThreshold)}</span></span>
+          <span>{payments?.codEnabled !== false && <><span className="text-white font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> </>}<span className="block sm:inline">Free Shipping on Orders Over {rs(fees.freeThreshold)}</span></span>
           <span className="hidden sm:flex gap-3">
-            <Link to="/track-order" className="hover:text-lux-pale">Track Order</Link>
-            {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-lux-pale"><ShieldCheck size={12} /> Admin</Link>}
+            <Link to="/track-order" className="hover:text-white">Track Order</Link>
+            {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-white"><ShieldCheck size={12} /> Admin</Link>}
           </span>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-3 py-2.5 flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="max-w-7xl mx-auto px-3 py-3 sm:py-3.5 flex flex-wrap items-center gap-2 sm:gap-3">
         <Link to="/" className="shrink-0" aria-label="MALAC — home">
-          <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-10 sm:h-12 w-auto" />
+          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-11 sm:h-[52px] w-auto" />
         </Link>
 
         {/* Category mega-menu (hover on desktop) */}
         <div className="relative hidden lg:block" onMouseEnter={() => setMenuOpen(true)} onMouseLeave={() => setMenuOpen(false)}>
-          <button data-tour="categories" className="flex items-center gap-1 text-sm font-medium px-2 py-1">
+          <button data-tour="categories" className="flex items-center gap-1 text-sm font-medium px-2 py-1 text-neutral-200">
             <Menu size={18} /> Categories <ChevronDown size={14} />
           </button>
           {menuOpen && (
-            <div className="absolute left-0 top-full bg-white shadow-xl rounded-b-md w-[560px] grid grid-cols-3 gap-1 p-3 z-50">
+            <div className="absolute left-0 top-full bg-white text-neutral-800 shadow-lux rounded-b-xl border border-neutral-200 border-t-0 w-[560px] grid grid-cols-3 gap-1 p-3 z-50">
               {categories.map((c) => (
                 <div key={c._id}>
-                  <Link to={`/shop?category=${encodeURIComponent(c.name)}`} className="font-medium text-sm hover:text-lux-burnt">{c.name}</Link>
+                  <Link to={`/category/${encodeURIComponent(c.name)}`} className="font-medium text-sm hover:text-black">{c.name}</Link>
                   <div className="mt-1 space-y-0.5">
                     {c.subCategories?.map((s) => (
                       <Link key={s._id} to={`/shop?category=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s.name)}`}
-                        className="block text-xs text-gray-500 hover:text-lux-burnt">{s.name}</Link>
+                        className="block text-xs text-gray-500 hover:text-black">{s.name}</Link>
                     ))}
                   </div>
                 </div>
@@ -84,13 +84,13 @@ export default function Header() {
         {/* Predictive search — dominant full-width bar on mobile (own row),
             inline flex-1 from sm up */}
         <div className="relative flex-1 min-w-0 basis-full order-last mt-1 sm:basis-auto sm:order-none sm:mt-0" ref={searchRef} data-tour="search">
-          <form onSubmit={submitSearch} className="flex bg-gray-100 rounded-full overflow-hidden border border-gray-200 shadow-sm focus-within:border-lux-amber focus-within:bg-white focus-within:shadow transition-colors">
+          <form onSubmit={submitSearch} className="flex bg-white/10 rounded-full overflow-hidden border border-white/15 focus-within:border-neutral-400 focus-within:bg-white/15 transition-all">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in MALAC"
-              className="flex-1 min-w-0 bg-transparent px-4 py-2.5 text-sm outline-none" />
-            <button className="bg-lux-gradient text-white px-5 sm:px-6 shrink-0 flex items-center justify-center" aria-label="Search"><Search size={19} /></button>
+              className="flex-1 min-w-0 bg-transparent px-4 py-2.5 text-sm outline-none text-white placeholder-neutral-400" />
+            <button className="bg-neutral-100 text-neutral-900 px-5 sm:px-6 shrink-0 flex items-center justify-center" aria-label="Search"><Search size={19} /></button>
           </form>
           {suggestions.length > 0 && (
-            <div className="absolute left-0 right-0 top-full mt-1 bg-white shadow-xl rounded-md z-50 overflow-hidden max-h-[60vh] overflow-y-auto">
+            <div className="absolute left-0 right-0 top-full mt-1 bg-white text-neutral-800 shadow-lux rounded-xl border border-neutral-200 z-50 overflow-hidden max-h-[60vh] overflow-y-auto">
               {suggestions.map((s) => (
                 <button key={s._id} onClick={() => { setSuggestions([]); navigate(`/product/${s.slug}`); }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex justify-between gap-2">
@@ -101,7 +101,7 @@ export default function Header() {
           )}
         </div>
 
-        <Link to="/track-order" data-tour="track" className="btn-lux hidden md:inline-flex text-xs px-4 py-2 shrink-0">
+        <Link to="/track-order" data-tour="track" className="bg-white text-neutral-900 font-semibold rounded-full hidden md:inline-flex items-center gap-2 text-xs px-4 py-2 shrink-0">
           <PackageSearch size={15} /> Track Order
         </Link>
         {!appMode && (
@@ -111,11 +111,11 @@ export default function Header() {
         )}
         <Link to="/wishlist" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Wishlist">
           <Heart size={22} />
-          {user && wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{wishlist.length}</span>}
+          {user && wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{wishlist.length}</span>}
         </Link>
         <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} data-tour="cart" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
           <ShoppingCart size={22} />
-          {user && count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-lux-amber text-white text-[10px] rounded-full px-1">{count}</span>}
+          {user && count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{count}</span>}
         </button>
 
         <div className="relative">
@@ -123,7 +123,7 @@ export default function Header() {
             <User size={22} /><span className="hidden md:inline">{user ? user.name.split(" ")[0] : "Login"}</span>
           </button>
           {accountOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-white shadow-xl rounded-md w-44 py-1 z-50 text-sm" onMouseLeave={() => setAccountOpen(false)}>
+            <div className="absolute right-0 top-full mt-1 bg-white text-neutral-800 shadow-lux rounded-xl border border-neutral-200 w-44 py-1 z-50 text-sm" onMouseLeave={() => setAccountOpen(false)}>
               {user ? <>
                 <Link to="/" className="block px-3 py-2 hover:bg-gray-50">Home</Link>
                 <Link to="/orders" className="block px-3 py-2 hover:bg-gray-50">My Orders</Link>
@@ -141,21 +141,21 @@ export default function Header() {
         </div>
       </div>
       {/* Desktop category nav row (uppercase, malacpk-style) */}
-      <nav className="hidden lg:flex gap-5 max-w-7xl mx-auto px-3 pb-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-gray-600 overflow-x-auto no-scrollbar">
-        <Link to="/" className={`whitespace-nowrap hover:text-lux-burnt ${pathname === "/" ? "text-lux-burnt" : ""}`}>Home</Link>
-        <Link to="/shop" className="whitespace-nowrap hover:text-lux-burnt">All Products</Link>
-        <Link to="/blog" className={`whitespace-nowrap hover:text-lux-burnt ${pathname.startsWith("/blog") ? "text-lux-burnt" : ""}`}>Blog</Link>
+      <nav className="hidden lg:flex gap-6 max-w-7xl mx-auto px-3 pt-2.5 pb-3 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400 overflow-x-auto no-scrollbar">
+        <Link to="/" className={`whitespace-nowrap hover:text-white ${pathname === "/" ? "text-white" : ""}`}>Home</Link>
+        <Link to="/shop" className="whitespace-nowrap hover:text-white">All Products</Link>
+        <Link to="/blog" className={`whitespace-nowrap hover:text-white ${pathname.startsWith("/blog") ? "text-white" : ""}`}>Blog</Link>
         {categories.map((c) => (
-          <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-lux-burnt">{c.name}</Link>
+          <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-white">{c.name}</Link>
         ))}
       </nav>
       {/* Mobile category strip */}
-      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-600">
+      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
         {categories.map((c) => (
-          <Link key={c._id} to={`/shop?category=${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
+          <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
         ))}
         <Link to="/blog" className="whitespace-nowrap">Blog</Link>
-        {!appMode && <InstallAppButton variant="link" className="text-lux-burnt" />}
+        {!appMode && <InstallAppButton variant="link" className="text-neutral-200" />}
       </nav>
     </header>
   );

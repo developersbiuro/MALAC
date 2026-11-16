@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 export default function InviteBanner() {
   const { user } = useAuth();
   return (
-    <section className="bg-lux-gradient text-white rounded-2xl mt-3 px-4 py-4 sm:px-6 flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm">
+    <section className="bg-lux-gradient text-white rounded-3xl mt-6 px-5 py-5 sm:px-8 flex flex-col sm:flex-row sm:items-center gap-3 shadow-sm">
       <div className="flex items-start gap-3 flex-1">
         <span className="bg-white/20 rounded-full p-2.5 shrink-0"><UserPlus size={22} /></span>
         <div>

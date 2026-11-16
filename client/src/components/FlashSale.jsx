@@ -21,21 +21,21 @@ export default function FlashSale({ products }) {
   const [h, m, s] = useCountdown(products?.[0]?.flashSaleEndsAt);
   if (!products?.length) return null;
   return (
-    <section className="bg-white rounded-2xl border border-cream-line shadow-sm mt-4 p-4">
-      <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap border-b border-cream-line pb-3">
-        <h2 className="flex items-center gap-1.5 font-serif text-2xl sm:text-3xl font-semibold leading-none text-lux-burnt">
-          <Zap size={22} className="fill-lux-gold text-lux-gold" /> Flash Sale
+    <section className="bg-[#0c0c0f] rounded-3xl border border-white/10 mt-8 sm:mt-10 p-5 sm:p-6">
+      <div className="flex items-center gap-2.5 sm:gap-3 flex-wrap border-b border-white/10 pb-3">
+        <h2 className="flex items-center gap-1.5 font-display text-2xl sm:text-3xl font-bold leading-none text-white tracking-wide">
+          <Zap size={22} className="fill-neutral-200 text-neutral-200" /> FLASH SALE
         </h2>
-        <span className="text-xs sm:text-sm text-gray-500">Ending in</span>
+        <span className="text-xs sm:text-sm text-neutral-400">Ending in</span>
         <span className="flex items-center gap-1 font-mono text-sm font-bold">
           {[h, m, s].map((v, i) => (
             <span key={i} className="flex items-center gap-1">
-              <span className="bg-lux-gradient text-white rounded-md px-1.5 py-0.5 min-w-[2rem] text-center">{v}</span>
-              {i < 2 && <span className="text-lux-burnt font-bold">:</span>}
+              <span className="bg-neutral-100 text-neutral-900 rounded-md px-1.5 py-0.5 min-w-[2rem] text-center">{v}</span>
+              {i < 2 && <span className="text-neutral-500 font-bold">:</span>}
             </span>
           ))}
         </span>
-        <Link to="/shop?flash=1" className="btn-lux ml-auto text-xs px-4 py-1.5">Shop All</Link>
+        <Link to="/shop?flash=1" className="bg-white text-neutral-900 font-semibold rounded-full ml-auto text-xs px-4 py-1.5">Shop All</Link>
       </div>
       <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar mt-3 pb-1">
         {products.map((p) => (

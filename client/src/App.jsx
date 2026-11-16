@@ -20,6 +20,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const Categories = lazy(() => import("./pages/Categories.jsx"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage.jsx"));
 const ProductDetails = lazy(() => import("./pages/ProductDetails.jsx"));
 const CartPage = lazy(() => import("./pages/CartPage.jsx"));
 const Checkout = lazy(() => import("./pages/Checkout.jsx"));
@@ -150,6 +151,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/shop" element={<Shop />} />
         <Route path="/categories" element={<Categories />} />
+        <Route path="/category/:name" element={<CategoryPage />} />
         <Route path="/product/:slug" element={<ProductDetails />} />
         <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
         {/* Checkout + orders require login (no guest ordering) */}
