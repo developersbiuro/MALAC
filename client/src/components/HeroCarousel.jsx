@@ -16,7 +16,7 @@ export default function HeroCarousel() {
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover object-[82%_center] lg:object-center"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#000_0%,#000_54%,rgba(0,0,0,0.45)_68%,transparent_82%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#0B0B0B_0%,#0B0B0B_54%,rgba(11,11,11,0.45)_68%,transparent_82%)]" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent lg:hidden" />
       <div className="relative max-w-[1400px] mx-auto px-5 sm:px-8 min-h-[480px] sm:min-h-[540px] lg:min-h-[560px] flex flex-col justify-center py-16">
         <div className="max-w-[840px]">
@@ -29,7 +29,7 @@ export default function HeroCarousel() {
           >
             MORE THAN STYLE.
             <br />
-            IT'S YOUR IDENTITY.
+            <span className="text-[#A8A8A8]">IT'S YOUR IDENTITY.</span>
           </h1>
           <p
             className="text-sm sm:text-base text-neutral-300 leading-relaxed mt-5 max-w-md fade-up"
@@ -40,7 +40,7 @@ export default function HeroCarousel() {
           <div className="mt-8 fade-up" style={{ animationDelay: "210ms" }}>
             <Link
               to="/shop"
-              className="inline-flex items-center gap-2 bg-neutral-50 text-neutral-950 text-xs font-bold tracking-[0.14em] px-7 py-[15px] rounded-[3px] hover:bg-white transition"
+              className="inline-flex items-center gap-2 bg-[#D4D4D4] text-[#0A0A0A] text-xs font-bold tracking-[0.14em] px-7 py-[15px] rounded-[3px] hover:bg-white transition"
             >
               EXPLORE COLLECTION <ArrowRight size={15} />
             </Link>

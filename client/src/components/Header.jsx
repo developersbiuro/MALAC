@@ -75,7 +75,6 @@ export default function Header() {
             <Truck size={13} className="shrink-0 text-neutral-300" />
             <span className="truncate">Free Delivery All Over Pakistan
               {payments?.codEnabled !== false && <span className="hidden sm:inline"> <span className="text-white/30 mx-1">|</span> Cash on Delivery Available</span>}
-              <span className="hidden md:inline"> <span className="text-white/30 mx-1">|</span> Free Shipping Over {rs(fees.freeThreshold)}</span>
             </span>
           </span>
           <span className="flex items-center gap-3 shrink-0">
