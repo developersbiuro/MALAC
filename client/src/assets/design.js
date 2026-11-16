@@ -8,7 +8,7 @@ import { P_HOODIE, P_SUNGLASSES, P_WALLET, P_CAP, CAT_MOBILE, CAT_WATCH_DARK, CA
 // base64 data-URI modules (designData1-3.js) — the repo's push route is
 // text-only, same pattern as hero.js. The five product photos were also
 // uploaded to the matching catalogue products via the admin panel.
-export const DESIGN_HERO = HERO_MAIN;
+export const DESIGN_HERO = HERO_STANDING;
 // Hero slider (Abdullah's storefront reference, 2026-11-16 23:55): the
 // standing-model shot leads; the seated campaign frame is slide 3.
 export const DESIGN_HERO_SLIDES = [HERO_STANDING, HERO_STANDING2, HERO_MAIN];
