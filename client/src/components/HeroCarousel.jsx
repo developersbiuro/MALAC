@@ -1,94 +1,37 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ShieldCheck, Truck, RefreshCcw, Headphones } from "lucide-react";
-import { DESIGN_HERO_SLIDES } from "../assets/design.js";
+import { Mouse } from "lucide-react";
+import { DESIGN_HERO } from "../assets/design.js";
 
-// Homepage hero — Abdullah's final pick (2026-11-17): the standing-
-// model slider from his storefront reference. Full-width crossfade
-// slider, "WEAR YOUR IDENTITY" eyebrow, giant silver MALAC headline,
-// SHOP NOW button, ‹ › arrows bottom-left, 01/02/03 numbers on the
-// right, and the 4-point trust band attached under the hero. Baqi
-// poora page design 1 ke mutabiq hai.
-const TRUST = [
-  { Icon: ShieldCheck, label: "100% Original Products" },
-  { Icon: Truck, label: "Fast Delivery Across Pakistan" },
-  { Icon: RefreshCcw, label: "Easy Returns & Exchange" },
-  { Icon: Headphones, label: "Dedicated Support" },
-];
-
+// Homepage hero — Abdullah's design-1 reference, exact (2026-11-17
+// 00:43: "bilkul same to same, koi kami na ho"): full-width seated-
+// model photo (couch, silver M + MALAC on the wall), eyebrow
+// "PREMIUM LIFESTYLE STORE", headline "MORE THAN STYLE. IT'S YOUR
+// IDENTITY.", EXPLORE COLLECTION button, SCROLL DOWN bottom-left.
 export default function HeroCarousel() {
-  const [idx, setIdx] = useState(0);
-  const n = DESIGN_HERO_SLIDES.length;
-
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % n), 6000);
-    return () => clearInterval(t);
-  }, [n]);
-
   return (
-    <section className="bg-lux-deep">
-      <div className="relative overflow-hidden">
-        {DESIGN_HERO_SLIDES.map((src, i) => (
-          <img key={i} src={src} alt="" aria-hidden={i !== idx}
-            className={`absolute inset-0 w-full h-full object-cover object-[68%_center] transition-opacity duration-1000 ${i === idx ? "opacity-100" : "opacity-0"}`} />
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/25" />
-
-        <div className="relative max-w-7xl mx-auto w-full flex flex-col justify-center px-5 sm:px-8 py-14 sm:py-20 lg:py-24 min-h-[440px] sm:min-h-[520px] lg:min-h-[600px]">
-          <div className="max-w-2xl">
-            <p className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold tracking-[0.34em] text-neutral-200 uppercase fade-up">
-              Wear Your Identity <span className="inline-block h-px w-12 bg-neutral-300" />
-            </p>
-            <h1 className="font-display text-[64px] sm:text-[92px] lg:text-[120px] font-bold leading-none mt-3 fade-up bg-silver-gradient bg-clip-text text-transparent" style={{ animationDelay: "70ms" }}>
-              MALAC
-            </h1>
-            <p className="text-sm sm:text-lg tracking-[0.42em] text-neutral-100 uppercase mt-2 fade-up" style={{ animationDelay: "140ms" }}>
-              Luxury Apparel Collection
-            </p>
-            <p className="text-white/75 text-sm sm:text-base mt-5 max-w-md leading-relaxed fade-up" style={{ animationDelay: "210ms" }}>
-              Premium Fashion. Timeless Style.<br />Designed for the Modern You.
-            </p>
-            <Link to="/shop"
-              className="mt-7 w-max inline-flex items-center justify-center gap-2 rounded-sm bg-neutral-100 text-neutral-900 font-semibold px-7 py-3.5 text-xs sm:text-sm tracking-[0.1em] uppercase shadow-lg fade-up" style={{ animationDelay: "280ms" }}>
-              Shop Now <span aria-hidden>→</span>
-            </Link>
-          </div>
-
-          {/* Slider arrows — bottom-left, like the reference */}
-          <div className="absolute bottom-6 left-5 sm:left-8 flex gap-2">
-            <button type="button" aria-label="Previous slide" onClick={() => setIdx((idx - 1 + n) % n)}
-              className="w-10 h-10 flex items-center justify-center border border-white/35 text-white/85 hover:bg-white hover:text-black transition-colors">
-              <ChevronLeft size={18} />
-            </button>
-            <button type="button" aria-label="Next slide" onClick={() => setIdx((idx + 1) % n)}
-              className="w-10 h-10 flex items-center justify-center border border-white/35 text-white/85 hover:bg-white hover:text-black transition-colors">
-              <ChevronRight size={18} />
-            </button>
-          </div>
-
-          {/* Slide numbers — right edge, like the reference */}
-          <div className="absolute right-5 sm:right-8 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-center gap-3">
-            {DESIGN_HERO_SLIDES.map((_, i) => (
-              <button key={i} type="button" onClick={() => setIdx(i)} aria-label={`Go to slide ${i + 1}`}
-                className={`text-sm tracking-widest transition-colors ${i === idx ? "text-white font-bold" : "text-white/40 hover:text-white/75"}`}>
-                {String(i + 1).padStart(2, "0")}
-              </button>
-            ))}
-          </div>
+    <section className="relative bg-lux-deep overflow-hidden">
+      <img src={DESIGN_HERO} alt="MALAC — premium lifestyle store" className="absolute inset-0 w-full h-full object-cover object-[68%_30%]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/35 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/15" />
+      <div className="relative max-w-7xl mx-auto w-full flex flex-col justify-center px-5 sm:px-8 py-16 sm:py-24 lg:py-28 min-h-[480px] sm:min-h-[560px] lg:min-h-[620px]">
+        <div className="max-w-2xl">
+          <p className="text-[11px] sm:text-xs font-semibold tracking-[0.42em] text-neutral-300 uppercase fade-up">
+            Premium Lifestyle Store
+          </p>
+          <h1 className="font-sans text-[42px] sm:text-6xl lg:text-[76px] font-extrabold leading-[1.04] tracking-tight text-white mt-4 fade-up" style={{ animationDelay: "70ms" }}>
+            MORE THAN STYLE.<br />IT&apos;S YOUR IDENTITY.
+          </h1>
+          <p className="text-white/75 text-sm sm:text-base mt-5 max-w-md leading-relaxed fade-up" style={{ animationDelay: "140ms" }}>
+            Discover premium fashion, accessories and lifestyle essentials crafted for the modern you.
+          </p>
+          <Link to="/shop"
+            className="mt-7 w-max inline-flex items-center justify-center gap-2 rounded-[3px] bg-neutral-100 text-neutral-900 font-semibold px-6 py-3 text-xs sm:text-[13px] tracking-[0.06em] uppercase shadow-lg fade-up" style={{ animationDelay: "210ms" }}>
+            Explore Collection <span aria-hidden>→</span>
+          </Link>
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-[3px] bg-silver-gradient" />
-      </div>
-
-      {/* Trust band — attached under the hero (reference design) */}
-      <div className="border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-3 grid grid-cols-2 lg:grid-cols-4">
-          {TRUST.map(({ Icon, label }, i) => (
-            <p key={label} className={`flex items-center justify-center gap-2.5 py-4 text-[12px] sm:text-[13px] font-medium text-neutral-200 ${i > 0 ? "lg:border-l lg:border-white/10" : ""}`}>
-              <Icon size={21} className="text-neutral-300 shrink-0" strokeWidth={1.6} /> {label}
-            </p>
-          ))}
-        </div>
+        <p className="absolute bottom-6 left-5 sm:left-8 flex items-center gap-2 text-[10px] font-semibold tracking-[0.3em] text-white/60 uppercase">
+          <Mouse size={16} /> Scroll Down
+        </p>
       </div>
     </section>
   );
