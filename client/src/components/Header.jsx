@@ -50,7 +50,7 @@ export default function Header() {
 
   const catTo = (name) => `/category/${encodeURIComponent(name)}`;
   const byName = (name) => categories.find((c) => c.name === name);
-  const navLink = "whitespace-nowrap text-[13px] font-medium tracking-wide text-neutral-300 hover:text-white transition-colors";
+  const navLink = "whitespace-nowrap text-sm font-medium tracking-wide text-[#E0E0E0] hover:text-white transition-colors";
   const dropItem = "block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-black";
 
   const Dropdown = ({ id, label, to, children }) => (
@@ -67,10 +67,10 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0a0a0c] text-neutral-100 shadow-header">
+    <header className="sticky top-0 z-40 bg-[rgba(12,12,12,0.85)] backdrop-blur-md text-neutral-100 shadow-header">
       {/* Top bar — the reference design's slim strip */}
-      <div className="bg-black text-neutral-400 text-[11px] border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-between gap-3">
+      <div className="bg-[#060606] text-[#BDBDBD] text-[12px] border-b border-[#1F1F1F]">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] h-9 flex items-center justify-between gap-3">
           <span className="flex items-center gap-1.5 truncate">
             <Truck size={13} className="shrink-0 text-neutral-300" />
             <span className="truncate">Free Delivery All Over Pakistan
@@ -89,17 +89,17 @@ export default function Header() {
       </div>
 
       {/* Main row — lockup · nav · search · icons */}
-      <div className="max-w-7xl mx-auto px-3 py-3 flex items-center gap-3 sm:gap-5">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] py-3 lg:py-0 lg:h-[84px] flex items-center gap-3 sm:gap-5 border-b border-[#1A1A1A]">
         <Link to="/" className="shrink-0 flex items-center gap-2.5" aria-label="MALAC — home">
-          <img src={LOGO_MARK} alt="" className="h-11 sm:h-[52px] w-auto" />
+          <img src={LOGO_MARK} alt="" className="h-10 sm:h-[42px] w-auto" />
           <span className="leading-none">
-            <span className="block text-[21px] sm:text-2xl font-extrabold tracking-[0.05em] text-neutral-50">MALAC</span>
-            <span className="block text-[7.5px] sm:text-[8.5px] tracking-[0.13em] text-neutral-400 mt-1">M.A Luxury Apparel Collection</span>
+            <span className="block text-[22px] lg:text-[26px] font-extrabold tracking-[0.077em] text-neutral-50">MALAC</span>
+            <span className="block text-[7.5px] lg:text-[9.5px] tracking-[0.13em] text-[#A0A0A0] mt-1">M.A Luxury Apparel Collection</span>
           </span>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-6 mx-auto">
-          <Link to="/" className={`${navLink} py-2 ${pathname === "/" ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>Home</Link>
+        <nav className="hidden lg:flex items-center gap-8 mx-auto">
+          <Link to="/" className={`${navLink} py-2 ${pathname === "/" ? "text-white underline underline-offset-8 decoration-white decoration-2" : ""}`}>Home</Link>
           <Dropdown id="shop" label="Shop" to="/shop">
             <Link to="/shop" className={dropItem} onClick={() => setOpenMenu("")}>All Products</Link>
             {categories.map((c) => (
@@ -117,15 +117,15 @@ export default function Header() {
             <Link to={catTo("Men's Fashion")} className={dropItem} onClick={() => setOpenMenu("")}>Men&apos;s Fashion</Link>
             <Link to={catTo("Women's Fashion")} className={dropItem} onClick={() => setOpenMenu("")}>Women&apos;s Fashion</Link>
           </Dropdown>
-          <Link to="/about" className={`${navLink} py-2 ${pathname === "/about" ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>About</Link>
+          <Link to="/about" className={`${navLink} py-2 ${pathname === "/about" ? "text-white underline underline-offset-8 decoration-white decoration-2" : ""}`}>About</Link>
           <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className={`${navLink} py-2`}>Contact</a>
         </nav>
 
         {/* Search — the reference's pill */}
-        <div className="relative hidden md:block w-52 xl:w-64 shrink-0 ml-auto lg:ml-0" ref={searchRef} data-tour="search">
-          <form onSubmit={submitSearch} className="flex bg-white/10 rounded-full overflow-hidden border border-white/15 focus-within:border-neutral-400 focus-within:bg-white/15 transition-all">
+        <div className="relative hidden md:block w-52 lg:w-[240px] shrink-0 ml-auto lg:ml-0" ref={searchRef} data-tour="search">
+          <form onSubmit={submitSearch} className="flex bg-[#161616] rounded-full overflow-hidden border border-[#333] focus-within:border-neutral-400 transition-all">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..."
-              className="flex-1 min-w-0 bg-transparent pl-4 pr-1 py-2 text-[13px] outline-none text-white placeholder-neutral-400" />
+              className="flex-1 min-w-0 bg-transparent pl-4 pr-1 h-[38px] text-[13px] outline-none text-white placeholder-neutral-400" />
             <button className="text-neutral-200 px-3.5 shrink-0 flex items-center justify-center hover:text-white" aria-label="Search"><Search size={16} /></button>
           </form>
           {suggestions.length > 0 && (
@@ -143,7 +143,7 @@ export default function Header() {
         <div className="flex items-center gap-0.5 sm:gap-1 ml-auto md:ml-0 shrink-0">
           <div className="relative">
             <button onClick={() => setAccountOpen((v) => !v)} data-tour="account" className="p-2 text-neutral-200 hover:text-white" aria-label="Your account">
-              <User size={21} />
+              <User size={20} />
             </button>
             {accountOpen && (
               <div className="absolute right-0 top-full mt-1 bg-white text-neutral-800 shadow-lux rounded-xl border border-neutral-200 w-44 py-1 z-50 text-sm" onMouseLeave={() => setAccountOpen(false)}>
@@ -162,11 +162,11 @@ export default function Header() {
             )}
           </div>
           <Link to="/wishlist" className="relative p-2 text-neutral-200 hover:text-white" aria-label="Wishlist">
-            <Heart size={21} />
+            <Heart size={20} />
             {user && wishlist.length > 0 && <span className="absolute top-0 right-0 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{wishlist.length}</span>}
           </Link>
           <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} data-tour="cart" className="relative p-2 text-neutral-200 hover:text-white" aria-label="Cart">
-            <ShoppingCart size={21} />
+            <ShoppingCart size={20} />
             {user && count > 0 && <span className="absolute top-0 right-0 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{count}</span>}
           </button>
         </div>
