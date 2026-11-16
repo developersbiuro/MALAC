@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronDown, Gem, ShieldCheck, Truck, Headphones } from "lucide-react";
 import api from "../api/client.js";
 import HeroCarousel from "../components/HeroCarousel.jsx";
+import InviteBanner from "../components/InviteBanner.jsx";
 import FlashSale from "../components/FlashSale.jsx";
 import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
@@ -10,10 +11,11 @@ import { DESIGN_ABOUT_STORE, FEATURED_TILES } from "../assets/design.js";
 import { useSeo } from "../utils/seo.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
 
-// Homepage layout — Abdullah's final reference designs (2026-11-16 night):
-// Hero → New Arrivals → Flash Sale → About → Featured Collections →
-// Shop by Category (neeche, his word) → FAQ. Texts mirror his designs;
-// delivery figures still come from the live store Settings.
+// Homepage layout — Abdullah's final reference designs (2026-11-16 night),
+// section order per his word (23:43): Hero → Invite → Flash Sale →
+// Shop by Category → Featured Collections → New Arrivals → About → FAQ.
+// Texts mirror his designs; delivery figures still come from the live
+// store Settings.
 
 // FAQ answers mirror the store's real rules in Terms of Service /
 // Privacy Policy — keep the visible text and the FAQPage JSON-LD in sync.
@@ -99,7 +101,32 @@ export default function Home() {
     <main className="max-w-7xl mx-auto px-3 pt-4 sm:pt-6">
       <HeroCarousel />
 
-      {/* New Arrivals — his design: intro block left, product row right */}
+      {/* Invite — hero ke foran baad (Abdullah, 23:43) */}
+      <InviteBanner />
+
+      <FlashSale products={flash} />
+
+      {/* Shop by Category */
+      <section className="mt-10 sm:mt-12">
+        <SectionHeading>Shop by Category</SectionHeading>
+        <CategoryGrid categories={categories} />
+      </section>
+
+      {/* Featured Collections — Shop by Category ke neeche (Abdullah) */}
+      <section className="mt-10 sm:mt-12">
+        <SectionHeading>Featured Collections</SectionHeading>
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mt-5">
+          {FEATURED_TILES.map((tile) => (
+            <Link key={tile.label} to={tileLink(tile)}
+              className="group relative rounded-xl overflow-hidden bg-[#e8eaee] aspect-square shadow-sm hover:shadow-lux transition-shadow">
+              <img src={tile.img} alt={tile.label} loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* New Arrivals — Featured ke baad (Abdullah, 23:43): intro block left, product row right */}
       <section className="mt-10 sm:mt-12">
         <div className="flex flex-col lg:flex-row gap-5">
           <div className="shrink-0 lg:w-60 px-1 flex flex-col justify-center">
@@ -119,8 +146,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <FlashSale products={flash} />
 
       {/* About — his design: store photo, story, feature list */}
       <section className="bg-lux-deep text-white rounded-3xl mt-10 sm:mt-12 overflow-hidden">
@@ -151,26 +176,6 @@ export default function Home() {
               </p>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Shop by Category — Abdullah: ye section neeche, Featured is ke neeche */}
-      <section className="mt-10 sm:mt-12">
-        <SectionHeading>Shop by Category</SectionHeading>
-        <CategoryGrid categories={categories} />
-      </section>
-
-      {/* Featured Collections — Shop by Category ke neeche (Abdullah) */}
-      <section className="mt-10 sm:mt-12">
-        <SectionHeading>Featured Collections</SectionHeading>
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mt-5">
-          {FEATURED_TILES.map((tile) => (
-            <Link key={tile.label} to={tileLink(tile)}
-              className="group relative rounded-xl overflow-hidden bg-[#e8eaee] aspect-square shadow-sm hover:shadow-lux transition-shadow">
-              <img src={tile.img} alt={tile.label} loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-            </Link>
-          ))}
         </div>
       </section>
 
