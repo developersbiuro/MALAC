@@ -106,7 +106,7 @@ export default function Home() {
 
       <FlashSale products={flash} />
 
-      {/* Shop by Category */
+      {/* Shop by Category */}
       <section className="mt-10 sm:mt-12">
         <SectionHeading>Shop by Category</SectionHeading>
         <CategoryGrid categories={categories} />
