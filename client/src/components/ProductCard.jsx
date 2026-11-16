@@ -44,7 +44,7 @@ export default function ProductCard({ product, badge }) {
           {product.category}{product.subCategory ? ` · ${product.subCategory}` : ""}
         </p>
         <Link to={`/product/${product.slug}`}
-          className="font-serif font-semibold text-[15px] sm:text-[18px] leading-snug line-clamp-2 min-h-[2.55em] mt-0.5 hover:text-lux-burnt">
+          className="font-serif font-semibold text-[15px] sm:text-[18px] leading-snug line-clamp-2 min-h-[2.55em] mt-0.5 text-lux-ink hover:text-lux-burnt">
           {product.title}
         </Link>
         {(product.ratingCount || 0) > 0 && (
