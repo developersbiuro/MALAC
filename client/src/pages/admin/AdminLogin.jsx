@@ -101,7 +101,7 @@ export default function AdminLogin() {
   const noticeBox = notice && <p className="text-sm bg-green-50 border border-green-200 rounded p-2">{notice}</p>;
 
   return (
-    <main className="min-h-screen bg-[#0f1b29] flex items-center justify-center px-3 py-10">
+    <main className="min-h-screen bg-[#0a0a0c] flex items-center justify-center px-3 py-10">
       <div className="bg-white rounded-lg p-6 w-full max-w-md fade-up">
         <div className="flex items-center gap-2">
           <span className="bg-brand text-white rounded-full p-2"><ShieldCheck size={20} /></span>
