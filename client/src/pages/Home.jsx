@@ -53,6 +53,10 @@ const ABOUT_FEATURES = [
   { Icon: Headphones, label: "Dedicated Support" },
 ];
 
+// Category cards ki tarteeb — Abdullah ke design ki: Men, Women,
+// Watches, Eyewear, Bags, Mobile.
+const CAT_ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
+
 function SectionHeading({ children }) {
   return (
     <div className="flex items-center gap-4 px-1">
@@ -108,10 +112,10 @@ export default function Home() {
         <FlashSale products={flash} />
       </div>
 
-      {/* Shop by Category — reference design ki dark band: sirf photo cards ki row */}
+      {/* Shop by Category — design 1 ki dark band: sirf photo cards ki row */}
       <section className="bg-[#0b0b0d] mt-10 sm:mt-12 py-5 sm:py-7">
         <div className="max-w-7xl mx-auto px-3">
-          <CategoryGrid categories={categories} />
+          <CategoryGrid categories={[...categories].sort((a, b) => CAT_ORDER.indexOf(a.name) - CAT_ORDER.indexOf(b.name))} />
         </div>
       </section>
 
@@ -189,23 +193,23 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-3">
       {/* FAQ — answers mirror the Terms / Policy pages (see FAQS above) */}
-      <section className="bg-[#101014] text-white border border-white/10 rounded-3xl shadow-sm mt-10 sm:mt-12 px-6 py-8 sm:px-10 mb-4">
-        <p className="eyebrow !text-neutral-400">Good To Know</p>
+      <section className="bg-white text-lux-ink border border-cream-line rounded-3xl shadow-sm mt-10 sm:mt-12 px-6 py-8 sm:px-10 mb-4">
+        <p className="eyebrow !text-gray-400">Good To Know</p>
         <h2 className="font-display text-2xl sm:text-3xl font-bold leading-tight mt-1 tracking-wide">Frequently Asked Questions</h2>
         <div className="lux-divider mt-3" />
-        <div className="mt-4 divide-y divide-white/10">
+        <div className="mt-4 divide-y divide-cream-line">
           {FAQS.map((f, i) => {
             const open = openFaq === i;
             return (
               <div key={f.q}>
                 <button type="button" onClick={() => setOpenFaq(open ? -1 : i)} aria-expanded={open}
                   className="w-full flex items-center justify-between gap-3 py-3.5 text-left">
-                  <h3 className="font-serif text-lg font-semibold leading-snug text-white">{f.q}</h3>
-                  <ChevronDown size={18} className={`shrink-0 text-neutral-300 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                  <h3 className="font-serif text-lg font-semibold leading-snug text-lux-ink">{f.q}</h3>
+                  <ChevronDown size={18} className={`shrink-0 text-gray-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                   <div className="overflow-hidden">
-                    <p className="text-sm sm:text-[15px] text-neutral-400 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
+                    <p className="text-sm sm:text-[15px] text-gray-500 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
                   </div>
                 </div>
               </div>

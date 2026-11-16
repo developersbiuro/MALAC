@@ -11,12 +11,11 @@ import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { rs, priceOf } from "../utils/format.js";
 
-// Header — Abdullah's final reference design (2026-11-16 night): slim
-// top bar (delivery promise · Track Order | Help | Your Account), then
-// one black row: MALAC lockup · Home / Shop ▾ / Collections ▾ /
-// Lifestyle ▾ / About / Contact · search pill + account/wishlist/cart.
-// Dropdowns carry the real routes: Shop = all products + categories,
-// Collections = the category pages, Lifestyle = Blog / About / FAQ.
+// Header — Abdullah's design 1 (2026-11-16/17): slim top bar
+// (delivery promise · Track Order | Help | Your Account), then one
+// black row: MALAC lockup · Home / Shop ▾ / Collections ▾ /
+// Lifestyle ▾ / About / Contact · search pill · account, wishlist
+// and cart icons.
 export default function Header() {
   const { fees, payments } = usePublicSettings();
   const appMode = useAppMode();
@@ -49,12 +48,14 @@ export default function Header() {
     navigate(q.trim() ? `/shop?search=${encodeURIComponent(q.trim())}` : "/shop");
   };
 
+  const catTo = (name) => `/category/${encodeURIComponent(name)}`;
+  const byName = (name) => categories.find((c) => c.name === name);
   const navLink = "whitespace-nowrap text-[13px] font-medium tracking-wide text-neutral-300 hover:text-white transition-colors";
   const dropItem = "block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-black";
 
   const Dropdown = ({ id, label, to, children }) => (
     <div className="relative" onMouseEnter={() => setOpenMenu(id)} onMouseLeave={() => setOpenMenu("")}>
-      <Link to={to} className={`${navLink} flex items-center gap-1 py-2 ${pathname === to ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>
+      <Link to={to} className={`${navLink} flex items-center gap-1 py-2`}>
         {label} <ChevronDown size={13} className={`transition-transform ${openMenu === id ? "rotate-180" : ""}`} />
       </Link>
       {openMenu === id && (
@@ -88,7 +89,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Main row — lockup · nav · search + icons */}
+      {/* Main row — lockup · nav · search · icons */}
       <div className="max-w-7xl mx-auto px-3 py-3 flex items-center gap-3 sm:gap-5">
         <Link to="/" className="shrink-0" aria-label="MALAC — home">
           <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-11 sm:h-[52px] w-auto" />
@@ -99,24 +100,25 @@ export default function Header() {
           <Dropdown id="shop" label="Shop" to="/shop">
             <Link to="/shop" className={dropItem} onClick={() => setOpenMenu("")}>All Products</Link>
             {categories.map((c) => (
-              <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className={dropItem} onClick={() => setOpenMenu("")}>{c.name}</Link>
+              <Link key={c._id} to={catTo(c.name)} className={dropItem} onClick={() => setOpenMenu("")}>{c.name}</Link>
             ))}
-          </Dropdown>
-          <Dropdown id="collections" label="Collections" to="/shop">
-            {categories.map((c) => (
-              <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className={dropItem} onClick={() => setOpenMenu("")}>{c.name}</Link>
-            ))}
-          </Dropdown>
-          <Dropdown id="lifestyle" label="Lifestyle" to="/blog">
             <Link to="/blog" className={dropItem} onClick={() => setOpenMenu("")}>Blog</Link>
-            <Link to="/about" className={dropItem} onClick={() => setOpenMenu("")}>About MALAC</Link>
-            <Link to="/faq" className={dropItem} onClick={() => setOpenMenu("")}>FAQs</Link>
+          </Dropdown>
+          <Dropdown id="collections" label="Collections" to={byName("Watches") ? catTo("Watches") : "/shop"}>
+            <Link to={catTo("Watches")} className={dropItem} onClick={() => setOpenMenu("")}>Watches</Link>
+            <Link to={catTo("Eyewear")} className={dropItem} onClick={() => setOpenMenu("")}>Eyewear</Link>
+            <Link to={catTo("Bags & Accessories")} className={dropItem} onClick={() => setOpenMenu("")}>Bags &amp; Accessories</Link>
+          </Dropdown>
+          <Dropdown id="lifestyle" label="Lifestyle" to={byName("Mobile Accessories") ? catTo("Mobile Accessories") : "/shop"}>
+            <Link to={catTo("Mobile Accessories")} className={dropItem} onClick={() => setOpenMenu("")}>Mobile Accessories</Link>
+            <Link to={catTo("Men's Fashion")} className={dropItem} onClick={() => setOpenMenu("")}>Men&apos;s Fashion</Link>
+            <Link to={catTo("Women's Fashion")} className={dropItem} onClick={() => setOpenMenu("")}>Women&apos;s Fashion</Link>
           </Dropdown>
           <Link to="/about" className={`${navLink} py-2 ${pathname === "/about" ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>About</Link>
           <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className={`${navLink} py-2`}>Contact</a>
         </nav>
 
-        {/* Search pill — right side, like the reference */}
+        {/* Search — the reference's pill */}
         <div className="relative hidden md:block w-52 xl:w-64 shrink-0 ml-auto lg:ml-0" ref={searchRef} data-tour="search">
           <form onSubmit={submitSearch} className="flex bg-white/10 rounded-full overflow-hidden border border-white/15 focus-within:border-neutral-400 focus-within:bg-white/15 transition-all">
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..."
@@ -180,7 +182,7 @@ export default function Header() {
       <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400" data-tour="categories">
         <Link to="/shop" className="whitespace-nowrap text-neutral-200">Shop All</Link>
         {categories.map((c) => (
-          <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
+          <Link key={c._id} to={catTo(c.name)} className="whitespace-nowrap">{c.name}</Link>
         ))}
         <Link to="/blog" className="whitespace-nowrap">Blog</Link>
         {!appMode && <InstallAppButton variant="link" className="text-neutral-200" />}

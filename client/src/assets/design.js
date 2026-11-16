@@ -1,6 +1,6 @@
 import { HERO_MAIN, HERO_STANDING, HERO_STANDING2, ABOUT_STORE } from "./designData1.js";
 import { CAT_WOMEN, CAT_BAGS, P_POLO, P_WATCH } from "./designData2.js";
-import { P_HOODIE, P_SUNGLASSES, P_WALLET, P_CAP, CAT_MOBILE } from "./designData3.js";
+import { P_HOODIE, P_SUNGLASSES, P_WALLET, P_CAP, CAT_MOBILE, CAT_WATCH_DARK, CAT_EYEWEAR_DARK } from "./designData3.js";
 
 // Design assets for Abdullah's final reference designs (2026-11-16 night):
 // the "MORE THAN STYLE. IT'S YOUR IDENTITY." homepage and the silver
@@ -8,7 +8,7 @@ import { P_HOODIE, P_SUNGLASSES, P_WALLET, P_CAP, CAT_MOBILE } from "./designDat
 // base64 data-URI modules (designData1-3.js) — the repo's push route is
 // text-only, same pattern as hero.js. The five product photos were also
 // uploaded to the matching catalogue products via the admin panel.
-export const DESIGN_HERO = HERO_STANDING;
+export const DESIGN_HERO = HERO_MAIN;
 // Hero slider (Abdullah's storefront reference, 2026-11-16 23:55): the
 // standing-model shot leads; the seated campaign frame is slide 3.
 export const DESIGN_HERO_SLIDES = [HERO_STANDING, HERO_STANDING2, HERO_MAIN];
@@ -17,8 +17,8 @@ export const DESIGN_ABOUT_STORE = ABOUT_STORE;
 export const CATEGORY_PHOTOS = {
   "Men's Fashion": P_POLO,
   "Women's Fashion": CAT_WOMEN,
-  Watches: P_WATCH,
-  Eyewear: P_SUNGLASSES,
+  Watches: CAT_WATCH_DARK,
+  Eyewear: CAT_EYEWEAR_DARK,
   "Bags & Accessories": CAT_BAGS,
   "Mobile Accessories": CAT_MOBILE,
 };

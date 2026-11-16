@@ -14,8 +14,8 @@ export default function CategoryGrid({ categories }) {
     <div>
       <div className="flex lg:grid lg:grid-cols-6 gap-3 sm:gap-4 overflow-x-auto lg:overflow-visible no-scrollbar pb-1">
         {categories.map((c) => {
-          const Icon = icons[c.icon] || icons.ShoppingBag;
           const photo = CATEGORY_PHOTOS[c.name];
+          const Icon = icons[c.icon] || icons.ShoppingBag;
           return (
             <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`}
               className="group relative rounded-xl overflow-hidden shrink-0 w-[210px] sm:w-[240px] lg:w-auto aspect-[4/5] bg-lux-deep ring-1 ring-white/10 hover:ring-white/30 transition">
