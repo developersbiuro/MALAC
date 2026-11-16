@@ -26,14 +26,14 @@ export default function OrderConfirmation() {
         <h1 className="text-xl font-bold mt-2">Thank you! Your order is confirmed.</h1>
         <p className="text-sm text-gray-500 mt-1">Order ID: <b className="text-gray-800">{order.orderId}</b></p>
         {isManualMethod(order.paymentMethod) && (
-          <p className="text-sm text-amber-600 mt-2">
+          <p className="text-sm text-neutral-600 mt-2">
             {order.paymentMethod} payment {order.paymentVerificationStatus === "verified" ? "verified ✓"
               : order.paymentVerificationStatus === "rejected" ? "was rejected — please contact support"
               : "is pending verification by the MALAC team"}
             {order.transactionId ? ` · Txn ${order.transactionId}` : ""}
           </p>
         )}
-        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full px-3 py-1 mt-3">
+        <span className="inline-flex items-center gap-1 bg-neutral-200 text-neutral-700 text-xs font-medium rounded-full px-3 py-1 mt-3">
           <Package size={13} /> Tracking: {order.status}
         </span>
         <div className="text-left text-sm mt-6 space-y-1.5">

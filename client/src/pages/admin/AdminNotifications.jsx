@@ -10,7 +10,7 @@ const ICONS = {
   order_placed: { Icon: ShoppingBag, cls: "bg-green-100 text-green-700" },
   order_cancelled: { Icon: XCircle, cls: "bg-red-100 text-red-600" },
   order_delivered: { Icon: PackageCheck, cls: "bg-emerald-100 text-emerald-700" },
-  return_requested: { Icon: RotateCcw, cls: "bg-orange-100 text-orange-700" },
+  return_requested: { Icon: RotateCcw, cls: "bg-neutral-200 text-neutral-700" },
   support_ticket: { Icon: LifeBuoy, cls: "bg-sky-100 text-sky-700" },
   chat_takeover: { Icon: MessagesSquare, cls: "bg-violet-100 text-violet-700" },
 };
@@ -150,7 +150,7 @@ export default function AdminNotifications() {
       </div>
       <div className="bg-white rounded-md border border-cream-line p-3.5 mt-3">
         <div className="flex items-center gap-2">
-          <span className="rounded-full p-2 bg-amber-100 text-amber-700"><Megaphone size={16} /></span>
+          <span className="rounded-full p-2 bg-neutral-200 text-neutral-700"><Megaphone size={16} /></span>
           <div>
             <p className="text-sm font-semibold">Customers ko notification bhejein</p>
             <p className="text-xs text-gray-500 mt-0.5">Flash sale ya offer ka elan — tamam customer apps par jayega. Naya product aur flash sale shuru hone par notification khud bhi chali jati hai.</p>
@@ -162,7 +162,7 @@ export default function AdminNotifications() {
               <button
                 key={t.key}
                 onClick={() => { setBcTitle(t.title); setBcBody(t.body); setBcMsg(t.ready ? "Template bhar gaya hai — check karke 'Sab customers ko bhejein' dabayein." : (t.note || "Ye template abhi live nahi.")); }}
-                className={`text-xs px-3 py-1.5 rounded-full border ${t.ready ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-gray-50 border-cream-line text-gray-400"}`}
+                className={`text-xs px-3 py-1.5 rounded-full border ${t.ready ? "bg-neutral-100 border-neutral-200 text-neutral-800" : "bg-gray-50 border-cream-line text-gray-400"}`}
                 title={t.ready ? "Composer me bharein" : (t.note || "")}
               >
                 {t.label}{t.ready ? "" : " · abhi live nahi"}
@@ -244,7 +244,7 @@ export default function AdminNotifications() {
                 <p className="text-xs text-gray-400 mt-0.5">
                   {new Date(n.createdAt).toLocaleString("en-PK")}
                   {n.orderId && <> · <Link to="/admin/orders" className="text-lux-burnt underline">View orders</Link></>}
-                  {!n.read && <span className="ml-2 font-semibold text-amber-700">New</span>}
+                  {!n.read && <span className="ml-2 font-semibold text-neutral-700">New</span>}
                 </p>
               </div>
             </article>

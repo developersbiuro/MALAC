@@ -59,10 +59,10 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-3 py-12 sm:py-14 grid grid-cols-2 md:grid-cols-5 gap-10 text-sm">
+      <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-3 gap-10 text-sm">
         <div className="col-span-2 md:col-span-1">
-          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-24 w-auto" />
-          <p className="text-neutral-500 mt-3 leading-relaxed">MALAC (MalacPK) — M.A Luxury Apparel Collection. Premium men&apos;s and women&apos;s fashion, watches, eyewear and bags &amp; accessories, delivered nationwide across Pakistan with Cash on Delivery, JazzCash / Easypaisa, or bank transfer (Meezan Bank, NayaPay, SadaPay, FirstPay — HBL Microfinance Bank).</p>
+          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-20 w-auto" />
+          <p className="text-neutral-500 mt-3 leading-relaxed">MALAC — M.A Luxury Apparel Collection. Premium men&apos;s and women&apos;s fashion, watches, eyewear, bags &amp; accessories and mobile accessories, delivered nationwide across Pakistan.</p>
           <p className="mt-3 space-y-1.5">
             <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-neutral-400 hover:text-white">
               <MessageCircle size={15} className="text-neutral-300" /> WhatsApp: +92 3236016684
@@ -71,40 +71,24 @@ export default function Footer() {
               <Mail size={15} className="text-neutral-300" /> info@malac.pp.ua
             </a>
           </p>
+          <p className="text-neutral-500 mt-3">Standard delivery {rs(fees.standard)} · <span className="text-neutral-200 font-medium">FREE over {rs(fees.freeThreshold)}</span> · Couriers: {COURIERS.join(", ")}</p>
         </div>
         <div>
           <p className="eyebrow !text-[10px] !text-neutral-300 mb-3">Shop by Category</p>
           {CATEGORIES.map((c) => (
             <Link key={c} to={`/category/${encodeURIComponent(c)}`} className="block text-neutral-400 hover:text-white py-0.5">{c}</Link>
           ))}
+          <Link to="/shop" className="block text-neutral-400 hover:text-white py-0.5">All Products</Link>
         </div>
         <div>
           <p className="eyebrow !text-[10px] !text-neutral-300 mb-3">Customer Care &amp; Tracking</p>
-          <Link to="/orders" className="block text-neutral-400 hover:text-white py-0.5">Track Your Order</Link>
+          <Link to="/track-order" className="block text-neutral-400 hover:text-white py-0.5">Track Your Order</Link>
           <Link to="/about" className="block text-neutral-400 hover:text-white py-0.5">About MALAC</Link>
           <Link to="/blog" className="block text-neutral-400 hover:text-white py-0.5">MALAC Blog</Link>
           <Link to="/faq" className="block text-neutral-400 hover:text-white py-0.5">FAQs</Link>
           <Link to="/terms" className="block text-neutral-400 hover:text-white py-0.5">Terms of Service</Link>
           <Link to="/policy" className="block text-neutral-400 hover:text-white py-0.5">Privacy Policy</Link>
-          <Link to="/shop" className="block text-neutral-400 hover:text-white py-0.5">All Products</Link>
           <p className="text-neutral-500 mt-3 leading-relaxed">Damaged or wrong item? Message us on WhatsApp within 7 days of delivery and we will make it right.</p>
-        </div>
-        <div>
-          <p className="eyebrow !text-[10px] !text-neutral-300 mb-3">Courier Partners</p>
-          <p className="text-neutral-500 leading-relaxed">Orders are dispatched nationwide through Pakistan&apos;s trusted courier networks:</p>
-          <p className="mt-3 flex flex-wrap gap-1.5">
-            {COURIERS.map((c) => (
-              <span key={c} className="bg-white/5 border border-white/10 rounded-full px-3 py-1 text-xs font-medium text-neutral-300">{c}</span>
-            ))}
-          </p>
-          <p className="text-neutral-500 mt-3">Standard delivery {rs(fees.standard)} · <span className="text-neutral-200 font-medium">FREE over {rs(fees.freeThreshold)}</span></p>
-        </div>
-        <div>
-          <p className="eyebrow !text-[10px] !text-neutral-300 mb-3">Payments</p>
-          <p className="text-neutral-400 py-0.5">Cash on Delivery (COD)</p>
-          <p className="text-neutral-400 py-0.5">JazzCash — Muhammad Abdullah · 0303 6253428</p>
-          <p className="text-neutral-400 py-0.5">Meezan Bank — Muhammad Abdullah · 04820113003065</p>
-          <p className="text-neutral-400 py-0.5">Easypaisa — Muhammad Abdullah · 0303 6253428</p>
         </div>
       </div>
       <div className="border-t border-white/10">

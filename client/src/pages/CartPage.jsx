@@ -86,7 +86,7 @@ export default function CartPage() {
   );
 
   const check = "w-[18px] h-[18px] shrink-0 cursor-pointer";
-  const checkStyle = { accentColor: "#f85606" };
+  const checkStyle = { accentColor: "#101014" };
 
   return (
     <main className="max-w-6xl mx-auto px-3 pt-4 pb-24 lg:pb-8 grid lg:grid-cols-[1fr_320px] gap-4 items-start">

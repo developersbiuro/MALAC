@@ -60,7 +60,7 @@ export default function ProductCard({ product }) {
         <div className="mt-auto pt-2">
           <p className="flex flex-wrap items-baseline gap-x-1.5">
             <span className="text-lux-ink font-extrabold text-base sm:text-lg tracking-tight whitespace-nowrap">{rs(priceOf(product))}</span>
-            {product.salePrice > 0 && <span className="text-xs text-gray-400 line-through whitespace-nowrap">{rs(product.basePrice)}</span>}
+            {product.salePrice > 0 && product.basePrice > product.price && <span className="text-xs text-gray-400 line-through whitespace-nowrap">{rs(product.basePrice)}</span>}
           </p>
           <button onClick={addToCart} disabled={out} className="btn-lux w-full mt-2 py-2 min-h-[40px] text-sm">
             {out ? "Out of Stock" : "Add to Cart"}

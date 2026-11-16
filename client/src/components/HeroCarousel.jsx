@@ -8,12 +8,13 @@ import { DESIGN_HERO } from "../assets/design.js";
 // "MORE THAN STYLE. IT'S YOUR IDENTITY." — his design's words, kept.
 export default function HeroCarousel() {
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-lux ring-1 ring-black/40 bg-lux-deep">
+    <div className="relative overflow-hidden bg-lux-deep">
       <img src={DESIGN_HERO} alt="MALAC — premium fashion, watches and accessories in black and silver"
         className="absolute inset-0 w-full h-full object-cover object-[70%_center]" />
       <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
-      <div className="relative flex flex-col justify-center px-5 sm:px-12 py-14 sm:py-20 lg:py-24 min-h-[380px] sm:min-h-[440px] lg:min-h-[500px] max-w-2xl">
+      <div className="relative max-w-7xl mx-auto w-full flex flex-col justify-center px-5 sm:px-8 py-14 sm:py-20 lg:py-24 min-h-[400px] sm:min-h-[480px] lg:min-h-[560px]">
+      <div className="max-w-2xl">
         <p className="eyebrow !text-neutral-300 flex items-center gap-3 fade-up">
           <span className="inline-block h-px w-10 bg-neutral-300" />Premium Lifestyle Store
         </p>
@@ -30,6 +31,7 @@ export default function HeroCarousel() {
         <p className="mt-10 hidden sm:flex items-center gap-2 text-[10px] tracking-[0.3em] text-neutral-400 uppercase fade-up" style={{ animationDelay: "280ms" }}>
           <Mouse size={16} className="animate-bounce" /> Scroll Down
         </p>
+      </div>
       </div>
       <div className="absolute inset-x-0 bottom-0 h-[3px] bg-silver-gradient" />
     </div>

@@ -231,7 +231,7 @@ function TourCard({ step, idx, total, last, centered, onClose, onBack, onNext, o
         <span className="text-[11px] font-medium text-gray-400">{idx + 1} / {total}</span>
         <div className="flex items-center gap-1.5" aria-hidden="true">
           {Array.from({ length: total }).map((_, i) => (
-            <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-5 bg-orange-500" : "w-1.5 bg-orange-200"}`} />
+            <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-5 bg-neutral-900" : "w-1.5 bg-neutral-300"}`} />
           ))}
         </div>
       </div>

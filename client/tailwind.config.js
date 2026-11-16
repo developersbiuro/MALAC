@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#f85606", dark: "#d84804", light: "#fff0e8" },
+        brand: { DEFAULT: "#101014", dark: "#000000", light: "#e8eaee" },
         // SILVER THEME (Abdullah's reference designs, 2026-11-16): the old
         // cream class names now carry the silver palette so every page
         // inherits it — page bg light silver #f1f1f3, panels #e9eaee /

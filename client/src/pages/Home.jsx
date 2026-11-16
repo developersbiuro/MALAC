@@ -98,19 +98,24 @@ export default function Home() {
   };
 
   return (
-    <main className="max-w-7xl mx-auto px-3 pt-4 sm:pt-6">
+    <main>
       <HeroCarousel />
 
-      {/* Invite — hero ke foran baad (Abdullah, 23:43) */}
-      <InviteBanner />
+      <div className="max-w-7xl mx-auto px-3">
+        {/* Invite — hero ke foran baad (Abdullah, 23:43) */}
+        <InviteBanner />
 
-      <FlashSale products={flash} />
+        <FlashSale products={flash} />
+      </div>
 
-      {/* Shop by Category */}
-      <section className="mt-10 sm:mt-12">
-        <SectionHeading>Shop by Category</SectionHeading>
-        <CategoryGrid categories={categories} />
+      {/* Shop by Category — reference design ki dark band: sirf photo cards ki row */}
+      <section className="bg-[#0b0b0d] mt-10 sm:mt-12 py-5 sm:py-7">
+        <div className="max-w-7xl mx-auto px-3">
+          <CategoryGrid categories={categories} />
+        </div>
       </section>
+
+      <div className="max-w-7xl mx-auto px-3">
 
       {/* Featured Collections — Shop by Category ke neeche (Abdullah) */}
       <section className="mt-10 sm:mt-12">
@@ -125,9 +130,11 @@ export default function Home() {
           ))}
         </div>
       </section>
+      </div>
 
-      {/* New Arrivals — Featured ke baad (Abdullah, 23:43): intro block left, product row right */}
-      <section className="mt-10 sm:mt-12">
+      {/* New Arrivals — halki grey band (reference design): intro block left, product row right */}
+      <section className="bg-[#f3f4f6] mt-10 sm:mt-12 py-8 sm:py-12">
+        <div className="max-w-7xl mx-auto px-3">
         <div className="flex flex-col lg:flex-row gap-5">
           <div className="shrink-0 lg:w-60 px-1 flex flex-col justify-center">
             <h2 className="font-display text-3xl sm:text-4xl font-bold leading-[1.05] tracking-wide text-lux-ink">NEW<br />ARRIVALS</h2>
@@ -145,10 +152,11 @@ export default function Home() {
             {newest.length === 0 && <p className="text-gray-400 text-sm py-8">Loading products...</p>}
           </div>
         </div>
+        </div>
       </section>
 
-      {/* About — his design: store photo, story, feature list */}
-      <section className="bg-lux-deep text-white rounded-3xl mt-10 sm:mt-12 overflow-hidden">
+      {/* About — full-bleed dark band (reference design): store photo, story, feature list */}
+      <section className="bg-lux-deep text-white overflow-hidden">
         <div className="grid lg:grid-cols-[1.1fr_1.2fr_0.8fr]">
           <div className="relative min-h-[220px] lg:min-h-full">
             <img src={DESIGN_ABOUT_STORE} alt="Inside a MALAC store" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
@@ -179,6 +187,7 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="max-w-7xl mx-auto px-3">
       {/* FAQ — answers mirror the Terms / Policy pages (see FAQS above) */}
       <section className="bg-[#101014] text-white border border-white/10 rounded-3xl shadow-sm mt-10 sm:mt-12 px-6 py-8 sm:px-10 mb-4">
         <p className="eyebrow !text-neutral-400">Good To Know</p>
@@ -204,6 +213,7 @@ export default function Home() {
           })}
         </div>
       </section>
+      </div>
     </main>
   );
 }

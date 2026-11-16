@@ -11,14 +11,14 @@ import { CATEGORY_PHOTOS } from "../assets/design.js";
 export default function CategoryGrid({ categories }) {
   if (!categories?.length) return null;
   return (
-    <section className="mt-5 sm:mt-6">
-      <div className="flex lg:grid lg:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto lg:overflow-visible no-scrollbar pb-1">
+    <div>
+      <div className="flex lg:grid lg:grid-cols-6 gap-3 sm:gap-4 overflow-x-auto lg:overflow-visible no-scrollbar pb-1">
         {categories.map((c) => {
           const Icon = icons[c.icon] || icons.ShoppingBag;
           const photo = CATEGORY_PHOTOS[c.name];
           return (
             <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`}
-              className="group relative rounded-2xl overflow-hidden shrink-0 w-[210px] sm:w-[240px] lg:w-auto aspect-[4/5] sm:aspect-[4/4.4] bg-lux-deep shadow-md hover:shadow-lux transition-shadow">
+              className="group relative rounded-xl overflow-hidden shrink-0 w-[210px] sm:w-[240px] lg:w-auto aspect-[4/5] bg-lux-deep ring-1 ring-white/10 hover:ring-white/30 transition">
               {photo ? (
                 <img src={photo} alt={c.name} loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -35,6 +35,6 @@ export default function CategoryGrid({ categories }) {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }

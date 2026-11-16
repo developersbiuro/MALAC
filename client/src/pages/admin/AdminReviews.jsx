@@ -66,7 +66,7 @@ export default function AdminReviews() {
   const statusBadge = (r) => {
     if (r.status === "approved") return <span className="text-[11px] font-semibold text-green-700 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">Approved</span>;
     if (r.status === "rejected") return <span className="text-[11px] font-semibold text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">Rejected</span>;
-    if (r.status === "pending") return <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Pending</span>;
+    if (r.status === "pending") return <span className="text-[11px] font-semibold text-neutral-700 bg-neutral-100 border border-neutral-200 rounded-full px-2 py-0.5">Pending</span>;
     return <span className="text-[11px] font-semibold text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5">Live (older)</span>;
   };
 
@@ -75,7 +75,7 @@ export default function AdminReviews() {
       <h1 className="text-xl font-bold">Review Moderation</h1>
       <p className="text-sm text-gray-500 mt-1">
         Customer reviews appear on the store only after approval — nothing goes public unchecked.
-        {pendingCount > 0 && <> <b className="text-amber-700">{pendingCount} waiting for approval.</b></>}
+        {pendingCount > 0 && <> <b className="text-neutral-700">{pendingCount} waiting for approval.</b></>}
       </p>
       {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
       <div className="flex gap-2 mt-4 flex-wrap">
@@ -136,7 +136,7 @@ export default function AdminReviews() {
       <h2 className="text-lg font-bold mt-10">Customer Questions (Q&amp;A)</h2>
       <p className="text-sm text-gray-500 mt-1">
         Questions customers asked on product pages. Answered ones show on the product page with your name.
-        {qaItems.some((x) => !x.q.answer) && <> <b className="text-amber-700">{qaItems.filter((x) => !x.q.answer).length} waiting for an answer.</b></>}
+        {qaItems.some((x) => !x.q.answer) && <> <b className="text-neutral-700">{qaItems.filter((x) => !x.q.answer).length} waiting for an answer.</b></>}
       </p>
       <div className="space-y-3 mt-4">
         {qaItems.map(({ product, q }) => (

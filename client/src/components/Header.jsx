@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, ChevronDown, Menu, ShieldCheck, PackageSearch } from "lucide-react";
+import { Search, ShoppingCart, Heart, User, ChevronDown, ShieldCheck, Truck } from "lucide-react";
 import api from "../api/client.js";
 import { LOGO_SILVER } from "../assets/logoSilver.js";
 import InstallAppButton from "./InstallAppButton.jsx";
@@ -11,6 +11,12 @@ import { useCart } from "../context/CartContext.jsx";
 import { useWishlist } from "../context/WishlistContext.jsx";
 import { rs, priceOf } from "../utils/format.js";
 
+// Header — Abdullah's final reference design (2026-11-16 night): slim
+// top bar (delivery promise · Track Order | Help | Your Account), then
+// one black row: MALAC lockup · Home / Shop ▾ / Collections ▾ /
+// Lifestyle ▾ / About / Contact · search pill + account/wishlist/cart.
+// Dropdowns carry the real routes: Shop = all products + categories,
+// Collections = the category pages, Lifestyle = Blog / About / FAQ.
 export default function Header() {
   const { fees, payments } = usePublicSettings();
   const appMode = useAppMode();
@@ -20,7 +26,7 @@ export default function Header() {
   const [categories, setCategories] = useState([]);
   const [q, setQ] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState("");
   const [accountOpen, setAccountOpen] = useState(false);
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -43,52 +49,79 @@ export default function Header() {
     navigate(q.trim() ? `/shop?search=${encodeURIComponent(q.trim())}` : "/shop");
   };
 
+  const navLink = "whitespace-nowrap text-[13px] font-medium tracking-wide text-neutral-300 hover:text-white transition-colors";
+  const dropItem = "block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-black";
+
+  const Dropdown = ({ id, label, to, children }) => (
+    <div className="relative" onMouseEnter={() => setOpenMenu(id)} onMouseLeave={() => setOpenMenu("")}>
+      <Link to={to} className={`${navLink} flex items-center gap-1 py-2 ${pathname === to ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>
+        {label} <ChevronDown size={13} className={`transition-transform ${openMenu === id ? "rotate-180" : ""}`} />
+      </Link>
+      {openMenu === id && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full bg-white shadow-lux rounded-xl border border-neutral-200 w-52 py-1.5 z-50">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <header className="sticky top-0 z-40 bg-[#0a0a0c] text-neutral-100 shadow-header">
-      <div className="bg-black text-neutral-400 text-[11px] uppercase tracking-[0.14em]">
-        <div className="max-w-7xl mx-auto px-3 py-1.5 flex flex-col items-center gap-0.5 text-center sm:flex-row sm:justify-between sm:text-left">
-          <span>{payments?.codEnabled !== false && <><span className="text-white font-semibold">Cash on Delivery (COD) Across Pakistan</span> <span className="text-white/40 mx-1 hidden sm:inline">|</span> </>}<span className="block sm:inline">Free Shipping on Orders Over {rs(fees.freeThreshold)}</span></span>
-          <span className="hidden sm:flex gap-3">
+      {/* Top bar — the reference design's slim strip */}
+      <div className="bg-black text-neutral-400 text-[11px] border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-3 py-1.5 flex items-center justify-between gap-3">
+          <span className="flex items-center gap-1.5 truncate">
+            <Truck size={13} className="shrink-0 text-neutral-300" />
+            <span className="truncate">Free Delivery All Over Pakistan
+              {payments?.codEnabled !== false && <span className="hidden sm:inline"> <span className="text-white/30 mx-1">|</span> Cash on Delivery Available</span>}
+              <span className="hidden md:inline"> <span className="text-white/30 mx-1">|</span> Free Shipping Over {rs(fees.freeThreshold)}</span>
+            </span>
+          </span>
+          <span className="flex items-center gap-3 shrink-0">
             <Link to="/track-order" className="hover:text-white">Track Order</Link>
+            <span className="text-white/20">|</span>
             <Link to="/faq" className="hover:text-white">Help</Link>
-            {isStaff && <Link to="/admin" className="flex items-center gap-1 hover:text-white"><ShieldCheck size={12} /> Admin</Link>}
+            <span className="text-white/20">|</span>
+            <Link to={user ? "/account" : "/login"} className="hover:text-white flex items-center gap-0.5">Your Account <ChevronDown size={11} /></Link>
+            {isStaff && <Link to="/admin" className="hidden sm:flex items-center gap-1 hover:text-white"><ShieldCheck size={12} /> Admin</Link>}
           </span>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-3 py-3 sm:py-3.5 flex flex-wrap items-center gap-2 sm:gap-3">
+
+      {/* Main row — lockup · nav · search + icons */}
+      <div className="max-w-7xl mx-auto px-3 py-3 flex items-center gap-3 sm:gap-5">
         <Link to="/" className="shrink-0" aria-label="MALAC — home">
           <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-11 sm:h-[52px] w-auto" />
         </Link>
 
-        {/* Category mega-menu (hover on desktop) */}
-        <div className="relative hidden lg:block" onMouseEnter={() => setMenuOpen(true)} onMouseLeave={() => setMenuOpen(false)}>
-          <button data-tour="categories" className="flex items-center gap-1 text-sm font-medium px-2 py-1 text-neutral-200">
-            <Menu size={18} /> Categories <ChevronDown size={14} />
-          </button>
-          {menuOpen && (
-            <div className="absolute left-0 top-full bg-white text-neutral-800 shadow-lux rounded-b-xl border border-neutral-200 border-t-0 w-[560px] grid grid-cols-3 gap-1 p-3 z-50">
-              {categories.map((c) => (
-                <div key={c._id}>
-                  <Link to={`/category/${encodeURIComponent(c.name)}`} className="font-medium text-sm hover:text-black">{c.name}</Link>
-                  <div className="mt-1 space-y-0.5">
-                    {c.subCategories?.map((s) => (
-                      <Link key={s._id} to={`/shop?category=${encodeURIComponent(c.name)}&sub=${encodeURIComponent(s.name)}`}
-                        className="block text-xs text-gray-500 hover:text-black">{s.name}</Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <nav className="hidden lg:flex items-center gap-6 mx-auto">
+          <Link to="/" className={`${navLink} py-2 ${pathname === "/" ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>Home</Link>
+          <Dropdown id="shop" label="Shop" to="/shop">
+            <Link to="/shop" className={dropItem} onClick={() => setOpenMenu("")}>All Products</Link>
+            {categories.map((c) => (
+              <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className={dropItem} onClick={() => setOpenMenu("")}>{c.name}</Link>
+            ))}
+          </Dropdown>
+          <Dropdown id="collections" label="Collections" to="/shop">
+            {categories.map((c) => (
+              <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className={dropItem} onClick={() => setOpenMenu("")}>{c.name}</Link>
+            ))}
+          </Dropdown>
+          <Dropdown id="lifestyle" label="Lifestyle" to="/blog">
+            <Link to="/blog" className={dropItem} onClick={() => setOpenMenu("")}>Blog</Link>
+            <Link to="/about" className={dropItem} onClick={() => setOpenMenu("")}>About MALAC</Link>
+            <Link to="/faq" className={dropItem} onClick={() => setOpenMenu("")}>FAQs</Link>
+          </Dropdown>
+          <Link to="/about" className={`${navLink} py-2 ${pathname === "/about" ? "text-white underline underline-offset-8 decoration-neutral-300" : ""}`}>About</Link>
+          <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className={`${navLink} py-2`}>Contact</a>
+        </nav>
 
-        {/* Predictive search — dominant full-width bar on mobile (own row),
-            inline flex-1 from sm up */}
-        <div className="relative flex-1 min-w-0 basis-full order-last mt-1 sm:basis-auto sm:order-none sm:mt-0" ref={searchRef} data-tour="search">
+        {/* Search pill — right side, like the reference */}
+        <div className="relative hidden md:block w-52 xl:w-64 shrink-0 ml-auto lg:ml-0" ref={searchRef} data-tour="search">
           <form onSubmit={submitSearch} className="flex bg-white/10 rounded-full overflow-hidden border border-white/15 focus-within:border-neutral-400 focus-within:bg-white/15 transition-all">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search in MALAC"
-              className="flex-1 min-w-0 bg-transparent px-4 py-2.5 text-sm outline-none text-white placeholder-neutral-400" />
-            <button className="bg-neutral-100 text-neutral-900 px-5 sm:px-6 shrink-0 flex items-center justify-center" aria-label="Search"><Search size={19} /></button>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..."
+              className="flex-1 min-w-0 bg-transparent pl-4 pr-1 py-2 text-[13px] outline-none text-white placeholder-neutral-400" />
+            <button className="text-neutral-200 px-3.5 shrink-0 flex items-center justify-center hover:text-white" aria-label="Search"><Search size={16} /></button>
           </form>
           {suggestions.length > 0 && (
             <div className="absolute left-0 right-0 top-full mt-1 bg-white text-neutral-800 shadow-lux rounded-xl border border-neutral-200 z-50 overflow-hidden max-h-[60vh] overflow-y-auto">
@@ -102,58 +135,50 @@ export default function Header() {
           )}
         </div>
 
-        <Link to="/track-order" data-tour="track" className="bg-white text-neutral-900 font-semibold rounded-full hidden md:inline-flex items-center gap-2 text-xs px-4 py-2 shrink-0">
-          <PackageSearch size={15} /> Track Order
-        </Link>
-        {!appMode && (
-          <div className="hidden md:block shrink-0">
-            <InstallAppButton />
+        <div className="flex items-center gap-0.5 sm:gap-1 ml-auto md:ml-0 shrink-0">
+          <div className="relative">
+            <button onClick={() => setAccountOpen((v) => !v)} data-tour="account" className="p-2 text-neutral-200 hover:text-white" aria-label="Your account">
+              <User size={21} />
+            </button>
+            {accountOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-white text-neutral-800 shadow-lux rounded-xl border border-neutral-200 w-44 py-1 z-50 text-sm" onMouseLeave={() => setAccountOpen(false)}>
+                {user ? <>
+                  <Link to="/account" className="block px-3 py-2 hover:bg-gray-50">My Account</Link>
+                  <Link to="/orders" className="block px-3 py-2 hover:bg-gray-50">My Orders</Link>
+                  <Link to="/account/settings" className="block px-3 py-2 hover:bg-gray-50">Profile Settings</Link>
+                  <Link to="/wishlist" className="block px-3 py-2 hover:bg-gray-50">Wishlist</Link>
+                  {isStaff && <Link to="/admin" className="block px-3 py-2 hover:bg-gray-50">Admin Suite</Link>}
+                  <button onClick={logout} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-red-500">Logout</button>
+                </> : <>
+                  <Link to="/login" className="block px-3 py-2 hover:bg-gray-50">Login</Link>
+                  <Link to="/signup" className="block px-3 py-2 hover:bg-gray-50">Sign Up</Link>
+                </>}
+              </div>
+            )}
           </div>
-        )}
-        <Link to="/wishlist" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Wishlist">
-          <Heart size={22} />
-          {user && wishlist.length > 0 && <span className="absolute -top-0.5 -right-0.5 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{wishlist.length}</span>}
-        </Link>
-        <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} data-tour="cart" className="relative p-2 sm:p-1.5 shrink-0" aria-label="Cart">
-          <ShoppingCart size={22} />
-          {user && count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{count}</span>}
-        </button>
-
-        <div className="relative">
-          <button onClick={() => setAccountOpen((v) => !v)} data-tour="account" className="flex items-center gap-1 text-sm p-2 sm:p-1.5 shrink-0">
-            <User size={22} /><span className="hidden md:inline">{user ? user.name.split(" ")[0] : "Login"}</span>
+          <Link to="/wishlist" className="relative p-2 text-neutral-200 hover:text-white" aria-label="Wishlist">
+            <Heart size={21} />
+            {user && wishlist.length > 0 && <span className="absolute top-0 right-0 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{wishlist.length}</span>}
+          </Link>
+          <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} data-tour="cart" className="relative p-2 text-neutral-200 hover:text-white" aria-label="Cart">
+            <ShoppingCart size={21} />
+            {user && count > 0 && <span className="absolute top-0 right-0 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{count}</span>}
           </button>
-          {accountOpen && (
-            <div className="absolute right-0 top-full mt-1 bg-white text-neutral-800 shadow-lux rounded-xl border border-neutral-200 w-44 py-1 z-50 text-sm" onMouseLeave={() => setAccountOpen(false)}>
-              {user ? <>
-                <Link to="/" className="block px-3 py-2 hover:bg-gray-50">Home</Link>
-                <Link to="/orders" className="block px-3 py-2 hover:bg-gray-50">My Orders</Link>
-                <Link to="/account/settings" className="block px-3 py-2 hover:bg-gray-50">Profile Settings</Link>
-                <Link to="/wishlist" className="block px-3 py-2 hover:bg-gray-50">Wishlist</Link>
-                {isStaff && <Link to="/admin" className="block px-3 py-2 hover:bg-gray-50">Admin Suite</Link>}
-                <button onClick={logout} className="w-full text-left px-3 py-2 hover:bg-gray-50 text-red-500">Logout</button>
-              </> : <>
-                <Link to="/" className="block px-3 py-2 hover:bg-gray-50">Home</Link>
-                <Link to="/login" className="block px-3 py-2 hover:bg-gray-50">Login</Link>
-                <Link to="/signup" className="block px-3 py-2 hover:bg-gray-50">Sign Up</Link>
-              </>}
-            </div>
-          )}
         </div>
       </div>
-      {/* Desktop category nav row (uppercase, malacpk-style) */}
-      <nav className="hidden lg:flex gap-6 max-w-7xl mx-auto px-3 pt-2.5 pb-3 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.14em] text-neutral-400 overflow-x-auto no-scrollbar">
-        <Link to="/" className={`whitespace-nowrap hover:text-white ${pathname === "/" ? "text-white" : ""}`}>Home</Link>
-        <Link to="/shop" className="whitespace-nowrap hover:text-white">Shop</Link>
-        {categories.map((c) => (
-          <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className="whitespace-nowrap hover:text-white">{c.name}</Link>
-        ))}
-        <Link to="/about" className={`whitespace-nowrap hover:text-white ${pathname === "/about" ? "text-white" : ""}`}>About</Link>
-        <Link to="/blog" className={`whitespace-nowrap hover:text-white ${pathname.startsWith("/blog") ? "text-white" : ""}`}>Blog</Link>
-        <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="whitespace-nowrap hover:text-white">Contact</a>
-      </nav>
+
+      {/* Mobile search row */}
+      <div className="md:hidden max-w-7xl mx-auto px-3 pb-2.5">
+        <form onSubmit={submitSearch} className="flex bg-white/10 rounded-full overflow-hidden border border-white/15">
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..."
+            className="flex-1 min-w-0 bg-transparent pl-4 pr-1 py-2 text-sm outline-none text-white placeholder-neutral-400" />
+          <button className="text-neutral-200 px-3.5 shrink-0 flex items-center justify-center" aria-label="Search"><Search size={16} /></button>
+        </form>
+      </div>
+
       {/* Mobile category strip */}
-      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400">
+      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400" data-tour="categories">
+        <Link to="/shop" className="whitespace-nowrap text-neutral-200">Shop All</Link>
         {categories.map((c) => (
           <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`} className="whitespace-nowrap">{c.name}</Link>
         ))}

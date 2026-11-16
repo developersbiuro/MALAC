@@ -148,7 +148,7 @@ export default function BlogPost() {
       <div className="mt-6 flex h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-[#0F172A] to-[#1E293B]">
         <div className="text-center">
           <p className="text-xl font-bold tracking-[0.3em] text-white">MALAC</p>
-          <p className="mx-auto mt-2 h-0.5 w-10 bg-amber-500" />
+          <p className="mx-auto mt-2 h-0.5 w-10 bg-neutral-1000" />
         </div>
       </div>
 
