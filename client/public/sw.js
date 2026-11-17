@@ -15,7 +15,7 @@
    - /api/ and /uploads/ are NEVER cached (orders, account and prices
      always come fresh from the network); non-GET requests are never
      touched. */
-const CACHE_NAME = "malac-cache-v3";
+const CACHE_NAME = "malac-cache-v4";
 const IMG_CACHE_NAME = "malac-images-v1";
 const IMG_CACHE_LIMIT = 200;
 const PRECACHE_URLS = ["/", "/manifest.webmanifest", "/icons/icon.svg"];
@@ -115,13 +115,24 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: stale-while-revalidate.
+  // Static assets: stale-while-revalidate. POISON GUARD (2026-11-17):
+  // during a deploy, a not-yet-uploaded chunk URL answers with the SPA
+  // fallback — an HTML page with status 200. Caching that HTML as if it
+  // were the JS file left one phone stuck on the raw unstyled page
+  // across refreshes. An HTML response is therefore NEVER cached for a
+  // non-navigation request, and a cached entry that turns out to be
+  // HTML is dropped and treated as a miss.
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
-      const cached = await cache.match(request);
+      let cached = await cache.match(request);
+      if (cached && (cached.headers.get("content-type") || "").includes("text/html")) {
+        await cache.delete(request).catch(() => {});
+        cached = undefined;
+      }
       const network = fetch(request)
         .then((response) => {
-          if (response && response.status === 200) {
+          const type = (response && response.headers.get("content-type")) || "";
+          if (response && response.status === 200 && !type.includes("text/html")) {
             cache.put(request, response.clone()).catch(() => {});
           }
           return response;
