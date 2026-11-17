@@ -12,6 +12,47 @@
 // adding their /blog/<slug> URL to server/src/routes/sitemapRoutes.js.
 export const BLOG_POSTS = [
   {
+    slug: "how-to-choose-a-watch-in-pakistan-malac",
+    title: "How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women",
+    excerpt:
+      "Buying a watch online in Pakistan? Start with the strap, then the dial, then decide analog or smart — here is the simple way to choose, with MALAC's men's, women's and couple watches from Rs 1,050 and Cash on Delivery across Pakistan.",
+    date: "2026-11-17",
+    displayDate: "17 November 2026",
+    readTime: "5 min read",
+    faqs: [
+      {
+        q: "What is the best watch for daily use in Pakistan?",
+        a: "A steel or leather-strap analog watch — steel if you want durability, leather if you want a formal look. Smart watches suit daily use too if you want fitness tracking.",
+      },
+      {
+        q: "Can I pay Cash on Delivery for a watch on MALAC?",
+        a: "Yes — COD is available across Pakistan, and delivery takes 2–5 working days.",
+      },
+      {
+        q: "What is the cheapest watch on MALAC?",
+        a: "The Digital Watch with a Gold Crystal Chain Strap for women at Rs 1,050, and the Black Carbon Fiber Men's Watch at Rs 1,300.",
+      },
+    ],
+    body: [
+      { t: "p", x: "A watch is the one accessory almost everyone wears every day, and it is also one of the hardest things to buy online. Photos all look good, prices run from one thousand rupees to twenty-five thousand, and the details that actually matter — the strap, the size of the dial, whether it suits daily wear or only formal occasions — are easy to miss. This guide keeps it simple, and every watch mentioned below is one you can order from **MALAC** today, with **Cash on Delivery** anywhere in Pakistan." },
+      { t: "h", x: "Start with the strap, not the dial" },
+      { t: "p", x: "The strap decides how a watch feels after a full day on your wrist. Genuine leather feels soft, looks formal, and goes best with shalwar kameez, office wear and weddings — that is why the [Men's Imported Genuine Leather Black Cartier Watch](/product/men-s-imported-genuine-leather-black-cartier-watch-mz3238200020wtndco) (**Rs 4,499**, was Rs 7,500) and the [Old Money Premium Unisex leather strap watch](/product/old-money-premium-unisex-cow-brown-leather-strap-watch-with-rectangle-dial-mz1364200163kat) (**Rs 2,999**, was Rs 5,500) are the two most classic picks in the store. A steel chain strap is the practical choice: it lasts longer, handles sweat and rough use, and suits both office and casual wear, like the [Diesel Stainless Steel Men's Watch](/product/diesel-stainless-steel-men-s-watch-analog-display-wat-men-dies1) (**Rs 5,050**, was Rs 6,300). Silicone straps belong to smart watches — light, washable, and made for the gym and daily wear." },
+      { t: "h", x: "Then look at the dial" },
+      { t: "p", x: "A bigger dial, around 42mm, suits most men and reads clearly at a glance — the [Men's Crystal Encrusted Analog Watch in gold stainless steel](/product/men-s-crystal-encrusted-analog-watch-42mm-gold-stainless-steel-wat-men-crys1) (**Rs 4,650**, was Rs 5,800) is a good example. Smaller, slimmer dials suit women better and sit lighter on the wrist. Square dials look sharp and modern; round dials are the safe classic. Crystal and diamond-stone detailing, like on the [Stainless Steel Diamond Stone Watch with Butterfly Lock](/product/stainless-steel-diamond-stone-watch-with-butterfly-lock-wat-men-dia1) (**Rs 2,000**, was Rs 2,500), adds shine without pushing the price up." },
+      { t: "h", x: "Analog or smart?" },
+      { t: "p", x: "Ask yourself what the watch is for. If you want something for formal occasions, gifts, and looking put-together, an analog watch is still the right answer — and at the top of the range sits the [MALAC Signature Watch](/product/malac-signature-watch-malac-watch-01) (**Rs 24,999**), a brushed stainless steel chronograph with a black dial, which is the store's own premium piece. If you want notifications, step counting and a watch you can wear to the gym, go smart: the [D9 Ultra Smart Watch Series 9](/product/d9-ultra-smart-watch-series-9-with-7-straps-wat-men-smart1) comes with 7 straps (**Rs 2,800**, was Rs 3,500) and the [T10 Ultra 2](/product/t10-ultra-2-smart-watch-orange-silicone-wat-men-smart2) (**Rs 2,650**, was Rs 3,300) covers the same ground in a sportier orange silicone." },
+      { t: "h", x: "Watches for men" },
+      { t: "p", x: "For men, the range on MALAC runs from Rs 1,300 to Rs 24,999. The budget end is genuinely useful: the [Black Carbon Fiber Men's Watch with Butterfly Clasp](/product/black-carbon-fiber-men-s-watch-with-butterfly-clasp-wat-men-carb1) (**Rs 1,300**, was Rs 1,650) and the [Men's Black PU Leather Watch with Clear Dial](/product/men-s-black-pu-leather-watch-with-clear-dial-wat-men-pu1) (**Rs 1,700**, was Rs 2,150) are solid daily wearers, and the [Men's Luxury Watch with a Gold Silver Chain Strap](/product/men-s-luxury-watch-gold-silver-chain-strap-wat-men-chain1) (**Rs 1,750**, was Rs 2,200) dresses up better than its price suggests. The full range is on the [Watches page](/category/Watches)." },
+      { t: "h", x: "Watches for women" },
+      { t: "p", x: "For women, the range is small right now — two styles — but both are chosen carefully. The [Digital Watch with a Gold Crystal Chain Strap](/product/digital-watch-gold-crystal-chain-strap-for-women-wat-wom-gold1) (**Rs 1,050**, was Rs 1,300) is the everyday pick, light and easy to match. The [Women's Rose Gold Crystal Watch with 3 Sub-Dials](/product/women-s-rose-gold-crystal-watch-with-3-sub-dials-wat-wom-rose1) (**Rs 1,750**, was Rs 2,200) is the dressier one, for evenings and occasions." },
+      { t: "h", x: "Couple watches" },
+      { t: "p", x: "Couple watches are worth a look if you are buying for two. The [Unisex Gold Brass Couple Watch Set with Chain Strap](/product/unisex-gold-brass-couple-watch-set-with-chain-strap-wat-cpl-gold1) (**Rs 2,700**, was Rs 3,400) and the [Golden Couple Watches with Diamond Stones](/product/golden-couple-watches-with-diamond-stones-wat-cpl-dia1) (**Rs 2,600**, was Rs 3,250) come as matching pairs, and they make a straightforward gift." },
+      { t: "h", x: "How to order" },
+      { t: "p", x: "Every watch above is in stock on MALAC. You can pay **Cash on Delivery**, delivery takes **2–5 working days**, and delivery is **free on orders over Rs 3,000**. If you are browsing the [Men's Fashion](/category/Men's%20Fashion) or [Women's Fashion](/category/Women's%20Fashion) page, tap the new **Men Watches** or **Women Watches** circle and you will see only that range — no scrolling through the whole store. And **WELCOME10** still takes 10% off your order." },
+      { t: "p", x: "A watch is a small purchase that you notice every single day, so it is worth the five minutes to pick the right one: leather for formal, steel for daily, smart for fitness, and a dial size that fits your wrist. Pick yours, and wear it well." },
+    ],
+  },
+  {
     slug: "winter-shopping-in-pakistan-malac",
     title: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It",
     excerpt:

@@ -374,7 +374,14 @@ const STATIC_PAGES = {
     description:
       "Guides and tips from MALAC: online shopping in Pakistan, Cash on Delivery explained, and how to shop safely and save.",
     heading: "MALAC Blog",
-    body: `<ul><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+    body: `<ul><li><a href="/blog/how-to-choose-a-watch-in-pakistan-malac">How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women</a></li><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+  },
+  "/blog/how-to-choose-a-watch-in-pakistan-malac": {
+    title: "How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women — MALAC Blog",
+    description:
+      "Buying a watch online in Pakistan? A simple guide to straps, dials, analog vs smart watches — plus men's, women's and couple watches on MALAC from Rs 1,050, with Cash on Delivery across Pakistan.",
+    heading: "How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women",
+    body: `<p>A watch is the one accessory almost everyone wears every day, and one of the hardest things to buy online. Start with the strap — leather for formal, steel for daily, silicone for smart watches — then the dial size, then decide analog or smart. MALAC's watch range runs from Rs 1,050 to the MALAC Signature Watch at Rs 24,999, all with Cash on Delivery and delivery in 2–5 working days (free over Rs 3,000). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Watches">Shop Watches at MALAC</a></p>`,
   },
   "/blog/winter-shopping-in-pakistan-malac": {
     title: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It — MALAC Blog",

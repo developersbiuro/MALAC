@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import * as icons from "lucide-react";
-import { ArrowRight } from "lucide-react";
+import { categoryIcon } from "../utils/categoryIcons.js";
+import { ArrowRight, ShoppingBag } from "lucide-react";
 import api from "../api/client.js";
 import { useSeo } from "../utils/seo.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
@@ -38,7 +38,7 @@ export default function Categories() {
     () => categories.find((c) => c._id === selected) || categories[0],
     [categories, selected]
   );
-  const CurrentIcon = current ? icons[current.icon] || icons.ShoppingBag : icons.ShoppingBag;
+  const CurrentIcon = current ? categoryIcon(current.icon) : ShoppingBag;
 
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
@@ -51,7 +51,7 @@ export default function Categories() {
           {/* Left rail — top-level categories */}
           <div className="w-[104px] sm:w-44 lg:w-52 shrink-0 bg-cream-soft border-r border-cream-line max-h-[calc(100dvh-215px)] overflow-y-auto no-scrollbar">
             {categories.map((c) => {
-              const Icon = icons[c.icon] || icons.ShoppingBag;
+              const Icon = categoryIcon(c.icon);
               const isActive = current && c._id === current._id;
               return (
                 <button key={c._id} onClick={() => setSelected(c._id)}

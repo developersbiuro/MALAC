@@ -10,6 +10,26 @@ import {
   DESIGN_IMG_SUNGLASSES,
   DESIGN_IMG_WALLET,
 } from "../assets/designImageAssets.js";
+import {
+  SITE_IMG_ABOUT_STORE,
+  SITE_IMG_HERO_MAIN,
+  SITE_IMG_CAT_BAGS,
+  SITE_IMG_CAT_WOMEN,
+  SITE_IMG_P_POLO,
+  SITE_IMG_P_WATCH,
+  SITE_IMG_CAT_EYEWEAR_DARK,
+  SITE_IMG_CAT_MOBILE,
+  SITE_IMG_CAT_WATCH_DARK,
+  SITE_IMG_P_CAP,
+  SITE_IMG_P_HOODIE,
+  SITE_IMG_P_SUNGLASSES,
+  SITE_IMG_P_WALLET,
+  SITE_IMG_HERO_SILK,
+  SITE_IMG_LOGO_FULL,
+  SITE_IMG_LOGO_MARK,
+  SITE_IMG_LOGO_SILVER,
+  SITE_IMG_MARK_LOGO_MARK,
+} from "../assets/siteImageAssets.js";
 
 // Binary assets (Android APKs, PWA icons) ship inside this repo as base64
 // text embedded in JS modules (server/src/assets/*Assets.js) — the
@@ -113,21 +133,39 @@ for (const [name, b64] of Object.entries(ICON_B64)) {
 // admin-uploaded /uploads/catalog/ copies went 404 (ephemeral Vercel
 // filesystem), so the products now point at these durable URLs.
 const DESIGN_IMAGES = {
-  "polo.jpg": decode(DESIGN_IMG_POLO),
-  "watch.jpg": decode(DESIGN_IMG_WATCH),
-  "hoodie.jpg": decode(DESIGN_IMG_HOODIE),
-  "sunglasses.jpg": decode(DESIGN_IMG_SUNGLASSES),
-  "wallet.jpg": decode(DESIGN_IMG_WALLET),
+  "polo.jpg": { buffer: decode(DESIGN_IMG_POLO), type: "image/jpeg" },
+  "watch.jpg": { buffer: decode(DESIGN_IMG_WATCH), type: "image/jpeg" },
+  "hoodie.jpg": { buffer: decode(DESIGN_IMG_HOODIE), type: "image/jpeg" },
+  "sunglasses.jpg": { buffer: decode(DESIGN_IMG_SUNGLASSES), type: "image/jpeg" },
+  "wallet.jpg": { buffer: decode(DESIGN_IMG_WALLET), type: "image/jpeg" },
+  "about-store.jpg": { buffer: decode(SITE_IMG_ABOUT_STORE), type: "image/jpeg" },
+  "hero-main.jpg": { buffer: decode(SITE_IMG_HERO_MAIN), type: "image/jpeg" },
+  "cat-bags.jpg": { buffer: decode(SITE_IMG_CAT_BAGS), type: "image/jpeg" },
+  "cat-women.jpg": { buffer: decode(SITE_IMG_CAT_WOMEN), type: "image/jpeg" },
+  "p-polo.jpg": { buffer: decode(SITE_IMG_P_POLO), type: "image/jpeg" },
+  "p-watch.jpg": { buffer: decode(SITE_IMG_P_WATCH), type: "image/jpeg" },
+  "cat-eyewear-dark.jpg": { buffer: decode(SITE_IMG_CAT_EYEWEAR_DARK), type: "image/jpeg" },
+  "cat-mobile.jpg": { buffer: decode(SITE_IMG_CAT_MOBILE), type: "image/jpeg" },
+  "cat-watch-dark.jpg": { buffer: decode(SITE_IMG_CAT_WATCH_DARK), type: "image/jpeg" },
+  "p-cap.jpg": { buffer: decode(SITE_IMG_P_CAP), type: "image/jpeg" },
+  "p-hoodie.jpg": { buffer: decode(SITE_IMG_P_HOODIE), type: "image/jpeg" },
+  "p-sunglasses.jpg": { buffer: decode(SITE_IMG_P_SUNGLASSES), type: "image/jpeg" },
+  "p-wallet.jpg": { buffer: decode(SITE_IMG_P_WALLET), type: "image/jpeg" },
+  "hero-silk.jpg": { buffer: decode(SITE_IMG_HERO_SILK), type: "image/jpeg" },
+  "logo-full.png": { buffer: decode(SITE_IMG_LOGO_FULL), type: "image/png" },
+  "logo-mark.png": { buffer: decode(SITE_IMG_LOGO_MARK), type: "image/png" },
+  "logo-silver.png": { buffer: decode(SITE_IMG_LOGO_SILVER), type: "image/png" },
+  "mark-logo-mark.png": { buffer: decode(SITE_IMG_MARK_LOGO_MARK), type: "image/png" },
 };
 router.get("/design-img/:file", (req, res) => {
-  const buffer = DESIGN_IMAGES[req.params.file];
-  if (!buffer) return res.status(404).json({ message: "Image not found." });
+  const entry = DESIGN_IMAGES[req.params.file];
+  if (!entry || !entry.buffer) return res.status(404).json({ message: "Image not found." });
   res.set({
-    "Content-Type": "image/jpeg",
-    "Content-Length": buffer.length,
+    "Content-Type": entry.type,
+    "Content-Length": entry.buffer.length,
     "Cache-Control": "public, max-age=31536000, immutable",
   });
-  res.send(buffer);
+  res.send(entry.buffer);
 });
 
 export default router;

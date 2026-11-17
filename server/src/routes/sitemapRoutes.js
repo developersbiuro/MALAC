@@ -55,6 +55,7 @@ router.get("/sitemap.xml", async (req, res) => {
     { loc: `${SITE_URL}/faq`, lastmod: today, changefreq: "weekly", priority: "0.5" },
     { loc: `${SITE_URL}/blog/online-shopping-in-pakistan-malac`, lastmod: "2026-11-14", changefreq: "monthly", priority: "0.6" },
     { loc: `${SITE_URL}/blog/cash-on-delivery-online-shopping-pakistan`, lastmod: "2026-11-14", changefreq: "monthly", priority: "0.6" },
+    { loc: `${SITE_URL}/blog/how-to-choose-a-watch-in-pakistan-malac`, lastmod: "2026-11-17", changefreq: "monthly", priority: "0.6" },
     { loc: `${SITE_URL}/blog/winter-shopping-in-pakistan-malac`, lastmod: "2026-11-15", changefreq: "monthly", priority: "0.6" },
     { loc: `${SITE_URL}/terms`, lastmod: today, changefreq: "monthly", priority: "0.3" },
     { loc: `${SITE_URL}/policy`, lastmod: today, changefreq: "monthly", priority: "0.3" },

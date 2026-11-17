@@ -8,6 +8,15 @@ import { WishlistProvider } from "./context/WishlistContext.jsx";
 import "./index.css";
 import { LOGO_MARK } from "./assets/logo.js";
 
+// Refresh must land at the TOP of the page (Abdullah, 2026-11-17: a
+// refresh used to drop him mid-page because the browser restored the
+// old scroll position while content was still loading). Manual
+// restoration + the scroll-to-top effect in App.jsx handle every
+// navigation from now on.
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
 // Favicon = the MALAC monogram (set from the bundled logo artwork).
 const favicon = document.createElement("link");
 favicon.rel = "icon";

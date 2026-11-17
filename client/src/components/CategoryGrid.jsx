@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import * as icons from "lucide-react";
+import { categoryIcon } from "../utils/categoryIcons.js";
 import { CATEGORY_PHOTOS } from "../assets/design.js";
 
 // Category photo cards — Abdullah's final reference design (2026-11-16
@@ -15,7 +15,7 @@ export default function CategoryGrid({ categories }) {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {categories.map((c) => {
           const photo = CATEGORY_PHOTOS[c.name];
-          const Icon = icons[c.icon] || icons.ShoppingBag;
+          const Icon = categoryIcon(c.icon);
           return (
             <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`}
               className="group relative rounded-xl overflow-hidden w-full aspect-[4/5] bg-lux-deep ring-1 ring-white/10 hover:ring-white/30 transition">

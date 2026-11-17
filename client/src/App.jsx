@@ -128,6 +128,15 @@ export default function App() {
       if (ref) sessionStorage.setItem("malac_ref", ref);
     } catch { /* ignore */ }
   }, [search]);
+  // Every navigation starts at the TOP of the new page (Abdullah,
+  // 2026-11-17: after a refresh the browser's own scroll restoration
+  // dropped him mid-page, because it restored the old position while
+  // the content was still loading). main.jsx sets
+  // history.scrollRestoration = "manual" so the browser never restores
+  // on its own; this effect is the single place that decides scroll.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   const isAdmin = pathname.startsWith("/admin");
   // Daraz-style (owner, 2026-11-11): the bottom nav disappears inside
   // the buying flow — product page, cart, checkout, order confirmation
