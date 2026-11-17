@@ -112,8 +112,35 @@ function injectRoot(html, content) {
   return html.replace('<div id="root"></div>', `<div id="root">${content}</div>`);
 }
 
+// The crawler content below is ALSO what a human on a very slow
+// connection sees for the first seconds, before the app bundle arrives
+// and React takes over #root (Abdullah, 2026-11-17: on ~5 KB/s mobile
+// data the raw unstyled text looked like a broken site). This small
+// inline style — scoped entirely to .pr-fallback, which React replaces
+// wholesale on boot — makes that first paint a clean branded page
+// instead. The content itself stays fully visible (no cloaking).
+const FALLBACK_STYLE = `<style>
+body{margin:0}
+.pr-fallback{background:#0b0b0d;color:#e8e8ea;min-height:100vh;padding:22px 16px 44px;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+.pr-fallback .pr-brand{font-family:Georgia,"Times New Roman",serif;font-size:22px;font-weight:700;letter-spacing:.38em;margin:0 0 2px;color:#fff}
+.pr-fallback .pr-note{color:#9a9aa0;font-size:13px;margin:0 0 20px}
+.pr-fallback h1{font-family:Georgia,"Times New Roman",serif;font-size:27px;line-height:1.2;margin:10px 0}
+.pr-fallback h2{font-size:20px;margin:22px 0 8px}
+.pr-fallback h3{font-size:16px;margin:6px 0 2px}
+.pr-fallback p{margin:4px 0;color:#c9c9ce}
+.pr-fallback a{color:#f0f0f2;text-decoration:none}
+.pr-fallback img{max-width:100%;height:auto;border-radius:10px;background:#1a1a1e}
+.pr-fallback article{margin:0 0 20px}
+.pr-fallback ul{padding-left:18px}
+.pr-fallback li{margin:4px 0}
+</style>`;
+function wrapFallback(content) {
+  return `${FALLBACK_STYLE}<div class="pr-fallback"><p class="pr-brand">MALAC</p><p class="pr-note">Loading the full store — one moment…</p>${content}</div>`;
+}
+
 function renderPage(res, page) {
-  const { title, description, canonical, image, content, jsonLd } = page;
+  const { title, description, canonical, image, jsonLd } = page;
+  const content = wrapFallback(page.content);
   res.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=60");
   getTemplate()
     .then((tpl) => {
@@ -135,7 +162,7 @@ function renderPage(res, page) {
       res.type("html").send(html);
     })
     .catch(() => {
-      res.type("html").send(fallbackShell(page));
+      res.type("html").send(fallbackShell({ ...page, content }));
     });
 }
 
@@ -168,7 +195,7 @@ router.get("/shop", async (req, res) => {
     .map((p) => {
       const price = priceOf(p);
       const img = p.images?.[0]
-        ? `<img src="${esc(p.images[0])}" alt="${esc(p.title)}" loading="lazy" />`
+        ? `<img referrerpolicy="no-referrer" src="${esc(p.images[0])}" alt="${esc(p.title)}" loading="lazy" />`
         : "";
       const was =
         p.salePrice > 0 && p.basePrice > p.salePrice
@@ -233,7 +260,7 @@ router.get("/category/:name", async (req, res) => {
     .map((p) => {
       const price = priceOf(p);
       const img = p.images?.[0]
-        ? `<img src="${esc(p.images[0])}" alt="${esc(p.title)}" loading="lazy" />`
+        ? `<img referrerpolicy="no-referrer" src="${esc(p.images[0])}" alt="${esc(p.title)}" loading="lazy" />`
         : "";
       const was =
         p.salePrice > 0 && p.basePrice > p.salePrice
@@ -294,7 +321,7 @@ router.get("/product/:slug", async (req, res) => {
   ).slice(0, 300);
   const img = product.images?.[0] || "";
   const gallery = (product.images || [])
-    .map((src) => `<img src="${esc(src)}" alt="${esc(product.title)}" loading="lazy" />`)
+    .map((src) => `<img referrerpolicy="no-referrer" src="${esc(src)}" alt="${esc(product.title)}" loading="lazy" />`)
     .join("");
   const was =
     product.salePrice > 0 && product.basePrice > product.salePrice
