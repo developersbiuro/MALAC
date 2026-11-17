@@ -14,7 +14,7 @@ export default function HeroCarousel() {
         src={DESIGN_HERO}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover object-[78%_center] lg:object-center"
+        className="absolute inset-0 w-full h-full object-cover object-[78%_62%] lg:object-center"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent lg:hidden" />
