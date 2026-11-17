@@ -95,7 +95,13 @@ export default function CategoryPage() {
     api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {});
   }, []);
 
-  useEffect(() => { setSub(""); setSort(""); }, [categoryName]);
+  useEffect(() => {
+    // ?sub= deep link (e.g. Men's Fashion → "Men Watches" chip lands here
+    // with ?sub=Men) — honour it as the starting subcategory filter.
+    const wanted = new URLSearchParams(window.location.search).get("sub") || "";
+    setSub(wanted);
+    setSort("");
+  }, [categoryName]);
 
   useEffect(() => {
     if (!categoryName) return;
@@ -162,6 +168,22 @@ export default function CategoryPage() {
                 </button>
               );
             })}
+            {/* Cross-category watch chip (Abdullah, 2026-11-17): Men's
+                Fashion gets a "Men Watches" chip and Women's Fashion a
+                "Women Watches" chip — both land on the Watches page with
+                that gender's filter already applied. */}
+            {(categoryName === "Men's Fashion" || categoryName === "Women's Fashion") && (() => {
+              const gender = categoryName === "Men's Fashion" ? "Men" : "Women";
+              return (
+                <Link to={`/category/Watches?sub=${gender}`}
+                  className="flex flex-col items-center gap-1.5 shrink-0 group">
+                  <span className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center bg-gradient-to-b from-neutral-600 via-neutral-900 to-black shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_4px_10px_rgba(0,0,0,0.35)] transition ring-1 ring-white/50 group-hover:ring-neutral-700">
+                    <Watch size={24} className="text-neutral-100" strokeWidth={1.6} />
+                  </span>
+                  <span className="text-[11px] font-semibold text-neutral-600">{gender} Watches</span>
+                </Link>
+              );
+            })()}
           </div>
         </section>
       )}
