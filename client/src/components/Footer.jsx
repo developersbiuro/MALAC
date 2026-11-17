@@ -1,97 +1,111 @@
-import { Link } from "react-router-dom";
-import { MessageCircle, Mail, Smartphone } from "lucide-react";
-import { LOGO_FULL } from "../assets/logo.js";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Truck, MessageCircle, Facebook, Instagram, Youtube, Mail, Smartphone } from "lucide-react";
+import { LOGO_SILVER } from "../assets/logoSilver.js";
+import { usePublicSettings } from "../utils/usePublicSettings.js";
 import InstallAppButton from "./InstallAppButton.jsx";
 import { rs } from "../utils/format.js";
-import { usePublicSettings } from "../utils/usePublicSettings.js";
 
-const COURIERS = ["TCS", "Leopards", "Trax"];
-const CITIES = ["Karachi", "Lahore", "Islamabad", "Peshawar", "Faisalabad"];
-// The store's category names (mirrors the seeded catalogue and the
-// sitemap's /shop?category=<name> URLs).
+// Footer — Abdullah's design 1 (2026-11-16/17): silver hairline, the
+// design strip (Stay Connected · Join Our Newsletter · "Wear Your
+// Identity. — MALAC —"), compact link columns and the copyright bar.
 const CATEGORIES = [
-  "Mobiles & Tablets",
-  "Electronics",
-  "Fashion",
-  "Kids",
-  "Home & Living",
-  "Beauty & Health",
-  "Groceries",
-  "Sports & Fitness",
-  "Toys & Baby",
+  "Men's Fashion",
+  "Women's Fashion",
+  "Watches",
+  "Eyewear",
+  "Bags & Accessories",
+  "Mobile Accessories",
+];
+
+const CITIES = ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Sialkot", "Gujranwala", "Hyderabad", "Bahawalpur"];
+
+const SOCIALS = [
+  { Icon: Facebook, href: "https://www.facebook.com/profile.php?id=61576352788122", label: "MALAC on Facebook" },
+  { Icon: Instagram, href: "https://www.instagram.com/macollectionsofficial", label: "MALAC on Instagram" },
+  { Icon: MessageCircle, href: "https://wa.me/923236016684", label: "MALAC on WhatsApp" },
+  { Icon: Youtube, href: "https://www.youtube.com", label: "MALAC on YouTube" },
 ];
 
 export default function Footer() {
   const { fees } = usePublicSettings();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const subscribe = (e) => {
+    e.preventDefault();
+    navigate(email.trim() ? `/signup?email=${encodeURIComponent(email.trim())}` : "/signup");
+  };
   return (
-    <footer className="bg-cream-soft mt-12 pb-24 md:pb-0">
-      <div className="h-[3px] bg-lux-gradient" />
-      <div className="max-w-7xl mx-auto px-3 py-10 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
-        <div className="col-span-2 md:col-span-1">
-          <img src={LOGO_FULL} alt="MALAC — M.A Luxury Apparel Collection" className="h-24 w-auto" />
-          <p className="text-gray-500 mt-3 leading-relaxed">MALAC (MalacPK) — M.A Luxury Apparel Collection. Online shopping in Pakistan for fashion, mobiles &amp; tablets, electronics, home &amp; living, beauty, groceries and more, delivered nationwide with Cash on Delivery, JazzCash / Easypaisa, or bank transfer (Meezan Bank, NayaPay, SadaPay, FirstPay — HBL Microfinance Bank).</p>
-          <p className="mt-3 space-y-1.5">
-            <a href="https://wa.me/923236016684" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
-              <MessageCircle size={15} className="text-[#059669]" /> WhatsApp: +92 3236016684
-            </a>
-            <a href="mailto:info@malac.pp.ua" className="flex items-center gap-1.5 text-gray-600 hover:text-lux-burnt">
-              <Mail size={15} className="text-[#059669]" /> info@malac.pp.ua
-            </a>
-          </p>
+    <footer className="bg-[#08080a] text-neutral-400 mt-14 sm:mt-16 pb-24 md:pb-0">
+      <div className="h-[3px] bg-silver-gradient" />
+      {/* Design strip — Stay Connected · Newsletter · Wear Your Identity */}
+      <div className="border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-3 py-7 grid gap-6 md:grid-cols-[1fr_1.2fr_1fr] md:items-center">
+          <div>
+            <h3 className="text-white text-[13px] font-bold tracking-[0.18em] uppercase">Stay Connected</h3>
+            <p className="text-xs text-neutral-500 mt-1">Follow us for latest updates and exclusive offers.</p>
+            <div className="flex gap-2 mt-3">
+              {SOCIALS.map(({ Icon, href, label }) => (
+                <a key={label} href={href} target="_blank" rel="noreferrer" aria-label={label}
+                  className="bg-white/5 border border-white/10 rounded-full p-2.5 text-neutral-300 hover:text-white hover:border-white/40 transition">
+                  <Icon size={16} />
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="md:border-x md:border-white/10 md:px-8">
+            <h3 className="text-white text-[13px] font-bold tracking-[0.18em] uppercase">Join Our Newsletter</h3>
+            <p className="text-xs text-neutral-500 mt-1">Get exclusive deals and style inspiration.</p>
+            <form onSubmit={subscribe} className="mt-3 flex max-w-md bg-white/5 border border-white/15 rounded-md overflow-hidden focus-within:border-neutral-400">
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email address"
+                className="flex-1 min-w-0 bg-transparent px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 outline-none" />
+              <button className="bg-neutral-100 text-neutral-900 text-sm font-semibold px-5 shrink-0">Subscribe</button>
+            </form>
+          </div>
+          <div className="md:text-right">
+            <p className="font-serif italic text-3xl sm:text-[34px] text-neutral-100 leading-tight">Wear Your Identity.</p>
+            <p className="text-[11px] tracking-[0.3em] text-neutral-500 mt-1.5">— MALAC —</p>
+          </div>
         </div>
+      </div>
+      <div className="max-w-7xl mx-auto px-3 pt-8 pb-5 grid grid-cols-2 md:grid-cols-3 gap-6 text-[13px]">
         <div>
-          <p className="eyebrow !text-[10px] mb-3">Shop by Category</p>
-          {CATEGORIES.map((c) => (
-            <Link key={c} to={`/shop?category=${encodeURIComponent(c)}`} className="block text-gray-600 hover:text-lux-burnt py-0.5">{c}</Link>
-          ))}
+          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-16 w-auto" />
+          <p className="mt-3 leading-relaxed text-neutral-500">Premium fashion, watches and accessories — designed for the modern you, delivered all over Pakistan.</p>
+          <p className="mt-3 flex items-start gap-1.5"><Truck size={14} className="mt-0.5 shrink-0 text-neutral-400" /> Standard delivery {rs(fees.standard)} — FREE on orders over {rs(fees.freeThreshold)}. TCS · Leopards · Trax · PostEx.</p>
+          <p className="mt-2 flex items-center gap-1.5"><Mail size={14} className="shrink-0 text-neutral-400" /> info@malac.pp.ua</p>
+          <p className="mt-1.5 flex items-center gap-1.5"><MessageCircle size={14} className="shrink-0 text-neutral-400" /> WhatsApp 0323 6016684</p>
         </div>
-        <div>
-          <p className="eyebrow !text-[10px] mb-3">Customer Care &amp; Tracking</p>
-          <Link to="/orders" className="block text-gray-600 hover:text-lux-burnt py-0.5">Track Your Order</Link>
-          <Link to="/about" className="block text-gray-600 hover:text-lux-burnt py-0.5">About MALAC</Link>
-          <Link to="/blog" className="block text-gray-600 hover:text-lux-burnt py-0.5">MALAC Blog</Link>
-          <Link to="/faq" className="block text-gray-600 hover:text-lux-burnt py-0.5">FAQs</Link>
-          <Link to="/terms" className="block text-gray-600 hover:text-lux-burnt py-0.5">Terms of Service</Link>
-          <Link to="/policy" className="block text-gray-600 hover:text-lux-burnt py-0.5">Privacy Policy</Link>
-          <Link to="/shop" className="block text-gray-600 hover:text-lux-burnt py-0.5">All Products</Link>
-          <p className="text-gray-500 mt-3 leading-relaxed">Damaged or wrong item? Message us on WhatsApp within 7 days of delivery and we will make it right.</p>
-        </div>
-        <div>
-          <p className="eyebrow !text-[10px] mb-3">Courier Partners</p>
-          <p className="text-gray-500 leading-relaxed">Orders are dispatched nationwide through Pakistan&apos;s trusted courier networks:</p>
-          <p className="mt-3 flex flex-wrap gap-1.5">
-            {COURIERS.map((c) => (
-              <span key={c} className="bg-white border border-cream-line rounded-full px-3 py-1 text-xs font-medium text-gray-600">{c}</span>
+        <nav>
+          <h3 className="font-display text-white text-base font-bold mb-2.5 tracking-wide">SHOP BY CATEGORY</h3>
+          <ul className="space-y-1.5">
+            {CATEGORIES.map((c) => (
+              <li key={c}><Link to={`/category/${encodeURIComponent(c)}`} className="hover:text-white">{c}</Link></li>
             ))}
-          </p>
-          <p className="text-gray-500 mt-3">Standard delivery {rs(fees.standard)} · <span className="text-[#059669] font-medium">FREE over {rs(fees.freeThreshold)}</span></p>
-        </div>
-        <div>
-          <p className="eyebrow !text-[10px] mb-3">Payments</p>
-          <p className="text-gray-600 py-0.5">Cash on Delivery (COD)</p>
-          <p className="text-gray-600 py-0.5">JazzCash — Muhammad Abdullah · 0303 6253428</p>
-          <p className="text-gray-600 py-0.5">Meezan Bank — Muhammad Abdullah · 04820113003065</p>
-          <p className="text-gray-600 py-0.5">Easypaisa — Muhammad Abdullah · 0303 6253428</p>
-        </div>
+            <li><Link to="/shop" className="hover:text-white">All Products</Link></li>
+          </ul>
+        </nav>
+        <nav>
+          <h3 className="font-display text-white text-base font-bold mb-2.5 tracking-wide">CUSTOMER CARE</h3>
+          <ul className="space-y-1.5">
+            <li><Link to="/track-order" className="hover:text-white">Track Your Order</Link></li>
+            <li><Link to="/about" className="hover:text-white">About MALAC</Link></li>
+            <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
+            <li><Link to="/faq" className="hover:text-white">FAQs</Link></li>
+            <li><Link to="/terms" className="hover:text-white">Terms of Service</Link></li>
+            <li><Link to="/policy" className="hover:text-white">Privacy &amp; Refund Policy</Link></li>
+          </ul>
+        </nav>
       </div>
-      <div className="border-t border-cream-line">
-        <div className="max-w-7xl mx-auto px-3 py-3.5 flex flex-col md:flex-row items-center justify-between gap-1.5 text-xs text-gray-400 text-center">
+      <div className="border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-3 py-3 flex flex-col sm:flex-row justify-between gap-1 text-xs text-neutral-500">
           <span>© {new Date().getFullYear()} MALAC (M.A Luxury Apparel Collection). All Rights Reserved.</span>
-          <span>
-            <Link to="/terms" className="hover:text-lux-burnt">Terms of Service</Link>
-            <span className="mx-1.5">·</span>
-            <Link to="/policy" className="hover:text-lux-burnt">Privacy Policy</Link>
-          </span>
-          <span>{CITIES.join(" · ")}</span>
+          <span className="hidden xl:inline">Delivering to: {CITIES.join(" · ")} &amp; all over Pakistan</span>
         </div>
       </div>
-      {/* Get the app — PWA install strip (last block of the footer) */}
-      <div className="border-t border-cream-line">
-        <div className="max-w-7xl mx-auto px-3 py-5 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-4 text-center">
-          <p className="flex items-center gap-2 text-sm text-gray-600">
-            <Smartphone size={17} className="text-lux-burnt shrink-0" />
-            Get the MALAC app — install it on your phone for faster shopping.
-          </p>
+      <div className="border-t border-white/10 bg-black">
+        <div className="max-w-7xl mx-auto px-3 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="flex items-center gap-2 text-sm text-neutral-300"><Smartphone size={16} className="text-neutral-400" /> Get the MALAC app — faster shopping, order tracking &amp; app-only deals.</p>
           <InstallAppButton />
         </div>
       </div>

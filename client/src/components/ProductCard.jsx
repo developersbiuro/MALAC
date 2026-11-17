@@ -6,7 +6,7 @@ import { useWishlist } from "../context/WishlistContext.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { rs, discountPct, priceOf } from "../utils/format.js";
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, badge }) {
   const { toggle, has } = useWishlist();
   const { add } = useCart();
   const navigate = useNavigate();
@@ -24,13 +24,14 @@ export default function ProductCard({ product }) {
   return (
     <div className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-cream-line shadow-[0_1px_3px_rgba(15,23,42,0.06)] hover:shadow-lux hover:-translate-y-0.5 transition fade-up">
       <div className="p-1.5 pb-0 sm:p-2 sm:pb-0">
-        <div className="relative rounded-xl overflow-hidden aspect-square">
+        <div className="relative rounded-xl overflow-hidden aspect-square bg-cream-soft">
           <Link to={`/product/${product.slug}`}>
-            <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.category ? `${product.title} — ${product.category}` : product.title} loading="lazy"
+            <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.category ? `${product.title} — ${product.category}` : product.title} loading="lazy" referrerPolicy="no-referrer"
               onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
               className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
           </Link>
-          {pct > 0 && <span className="absolute top-1.5 left-1.5 bg-lux-gradient text-white text-[11px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">-{pct}%</span>}
+          {badge && <span className="absolute top-1.5 left-1.5 bg-neutral-900 text-white text-[11px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">{badge}</span>}
+          {pct > 0 && <span className={`absolute left-1.5 bg-lux-gradient text-white text-[11px] font-bold px-1.5 py-0.5 rounded-md shadow-sm ${badge ? "top-8" : "top-1.5"}`}>-{pct}%</span>}
           <button aria-label="Toggle wishlist"
             onClick={toggleWish}
             className="absolute top-2 right-2 bg-white rounded-full p-2 sm:p-1.5 shadow-md">
@@ -43,7 +44,7 @@ export default function ProductCard({ product }) {
           {product.category}{product.subCategory ? ` · ${product.subCategory}` : ""}
         </p>
         <Link to={`/product/${product.slug}`}
-          className="font-serif font-semibold text-[15px] sm:text-[18px] leading-snug line-clamp-2 min-h-[2.55em] mt-0.5 hover:text-lux-burnt">
+          className="font-serif font-semibold text-[15px] sm:text-[18px] leading-snug line-clamp-2 min-h-[2.55em] mt-0.5 text-lux-ink hover:text-lux-burnt">
           {product.title}
         </Link>
         {(product.ratingCount || 0) > 0 && (
@@ -59,8 +60,8 @@ export default function ProductCard({ product }) {
             : <p className="text-[11px] font-medium text-[#059669] mt-1">In Stock{product.codAvailable ? " · COD" : ""}</p>}
         <div className="mt-auto pt-2">
           <p className="flex flex-wrap items-baseline gap-x-1.5">
-            <span className="text-lux-amber font-extrabold text-base sm:text-lg tracking-tight whitespace-nowrap">{rs(priceOf(product))}</span>
-            {product.salePrice > 0 && <span className="text-xs text-gray-400 line-through whitespace-nowrap">{rs(product.basePrice)}</span>}
+            <span className="text-lux-ink font-extrabold text-base sm:text-lg tracking-tight whitespace-nowrap">{rs(priceOf(product))}</span>
+            {product.salePrice > 0 && product.basePrice > product.price && <span className="text-xs text-gray-400 line-through whitespace-nowrap">{rs(product.basePrice)}</span>}
           </p>
           <button onClick={addToCart} disabled={out} className="btn-lux w-full mt-2 py-2 min-h-[40px] text-sm">
             {out ? "Out of Stock" : "Add to Cart"}

@@ -66,8 +66,8 @@ export default function AdminLayout({ children }) {
     }
   };
   return (
-    <div className="min-h-screen flex bg-[#f4f6f8]">
-      <aside className="w-14 sm:w-56 bg-[#0f1b29] text-white shrink-0 flex flex-col sticky top-0 h-screen">
+    <div className="min-h-screen flex bg-[#f1f1f3]">
+      <aside className="w-14 sm:w-56 bg-[#0a0a0c] text-white shrink-0 flex flex-col sticky top-0 h-screen">
         <div className="p-3 sm:p-4 border-b border-white/10">
           <div className="hidden sm:flex items-center gap-2">
             <span className="bg-white rounded-md px-1.5 py-1 shrink-0"><img src={LOGO_MARK} alt="MALAC" className="h-8 w-auto" /></span>

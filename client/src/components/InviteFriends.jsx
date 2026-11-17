@@ -41,7 +41,7 @@ export default function InviteFriends() {
   return (
     <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-4 p-4">
       <div className="flex items-center gap-2">
-        <span className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center">
+        <span className="w-9 h-9 rounded-full bg-lux-gradient text-white flex items-center justify-center">
           <UserPlus size={18} />
         </span>
         <div>
@@ -76,8 +76,8 @@ export default function InviteFriends() {
           {data.coupons.map((c) => {
             const st = couponState(c);
             return (
-              <div key={c.code} className="flex items-center gap-2.5 bg-cream-soft border border-dashed border-orange-300 rounded-xl px-3 py-2.5">
-                <TicketPercent size={18} className="text-orange-500 shrink-0" />
+              <div key={c.code} className="flex items-center gap-2.5 bg-cream-soft border border-dashed border-neutral-300 rounded-xl px-3 py-2.5">
+                <TicketPercent size={18} className="text-neutral-700 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold tracking-wide text-lux-ink">{c.code}</p>
                   <p className="text-[11px] text-gray-500">Rs. {c.value} OFF · min order Rs. {c.minSpend} · valid till {new Date(c.expiresAt).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}</p>

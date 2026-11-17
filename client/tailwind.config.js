@@ -4,13 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: "#f85606", dark: "#d84804", light: "#fff0e8" },
-        // Exact warm-ivory family mined from malacpk's stylesheet:
-        // page bg #fdfbf7, ivory sections #faf6ee / #f8f5ee, deep cream #f3efe6.
-        cream: { DEFAULT: "#fdfbf7", soft: "#faf6ee", alt: "#f8f5ee", deep: "#f3efe6", line: "#f0e7d8" },
-        // malacpk ink + amber/gold scale: #0f172a / #05070b ink,
-        // #b45309 burnt orange, #d97706 amber, #f59e0b gold, #e5a93c / #fcd34d highlights.
-        lux: { ink: "#0f172a", deep: "#05070b", burnt: "#b45309", amber: "#d97706", gold: "#f59e0b", soft: "#e5a93c", pale: "#fcd34d" },
+        brand: { DEFAULT: "#101014", dark: "#000000", light: "#e8eaee" },
+        // SILVER THEME (Abdullah's reference designs, 2026-11-16): the old
+        // cream class names now carry the silver palette so every page
+        // inherits it — page bg light silver #f1f1f3, panels #e9eaee /
+        // #f6f6f8, hairlines #d7d8de.
+        cream: { DEFAULT: "#f1f1f3", soft: "#e9eaee", alt: "#f6f6f8", deep: "#dedfe4", line: "#d7d8de" },
+        // lux scale remapped from gold to graphite/silver: ink #101014,
+        // deep #060607 (near-black), burnt #3f444b (dark graphite accent),
+        // amber #6d7278, gold #c3c9d1 (light silver), soft #a7adb6,
+        // pale #e8eaee.
+        lux: { ink: "#101014", deep: "#060607", burnt: "#3f444b", amber: "#6d7278", gold: "#c3c9d1", soft: "#a7adb6", pale: "#e8eaee" },
       },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "system-ui", "sans-serif"],
@@ -18,10 +22,9 @@ export default {
         serif: ["Cormorant Garamond", "Georgia", "serif"],
       },
       boxShadow: {
-        // Premium soft shadows for the cream-luxury polish pass
-        // (owner, 2026-11-15: "isko or acha kr do" on the live theme).
-        lux: "0 16px 40px -16px rgba(15,23,42,0.22)",
-        header: "0 1px 0 0 #f0e7d8, 0 12px 32px -20px rgba(15,23,42,0.35)",
+        // Cool silver-theme shadows (were warm cream-luxury).
+        lux: "0 16px 40px -16px rgba(10,10,14,0.28)",
+        header: "0 1px 0 0 rgba(255,255,255,0.08), 0 12px 32px -20px rgba(10,10,14,0.55)",
       },
     },
   },
