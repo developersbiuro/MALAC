@@ -35,6 +35,19 @@ img, video { max-width: 100%; }
 @keyframes heroProgress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .hero-progress { transform-origin: left; animation: heroProgress 5s linear both; }
 
+/* Hero SCROLL DOWN cue (Abdullah asked for the animation back, like the
+   first build): the mouse wheel dot drops and fades on a loop, a light
+   pulse travels down the line under it, and the whole cue bobs gently. */
+@keyframes scrollWheel { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(11px); } }
+.animate-scroll-wheel { animation: scrollWheel 1.8s ease-in-out infinite; }
+@keyframes scrollLinePulse { 0% { transform: scaleY(0); transform-origin: top; } 45% { transform: scaleY(1); transform-origin: top; } 55% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+.animate-scroll-line { animation: scrollLinePulse 1.8s ease-in-out infinite; }
+@keyframes scrollBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+.animate-scroll-bob { animation: scrollBob 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll-wheel, .animate-scroll-line, .animate-scroll-bob { animation: none; }
+}
+
 /* Printing (admin order detail, My Orders, order confirmation): every
    printable block carries .print-area plus a mode class
    (.print-label-block for the shipping label, .print-invoice-block for

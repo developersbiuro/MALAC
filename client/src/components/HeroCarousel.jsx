@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Mouse } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { DESIGN_HERO } from "../assets/design.js";
 
 // Design-1 hero (Abdullah, 2026-11-17): the background photo is the clean
@@ -18,7 +18,7 @@ export default function HeroCarousel() {
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent lg:hidden" />
-      <div className="relative max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-[60px] min-h-[480px] sm:min-h-[540px] lg:min-h-[600px] flex flex-col justify-end pb-24 pt-[186px] sm:justify-center sm:pt-[138px] sm:pb-16 lg:pt-[120px]">
+      <div className="relative max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-[60px] min-h-[480px] sm:min-h-[540px] lg:min-h-[600px] flex flex-col justify-end pb-28 pt-[186px] sm:justify-center sm:pt-[138px] sm:pb-16 lg:pt-[120px]">
         <div className="max-w-[840px]">
           <p className="text-[13px] font-semibold tracking-[0.46em] text-[#A3A3A3] uppercase fade-up">
             Premium Lifestyle Store
@@ -46,13 +46,20 @@ export default function HeroCarousel() {
             </Link>
           </div>
         </div>
-        <div className="absolute bottom-6 left-5 sm:left-8 lg:left-[60px] hidden sm:flex items-start gap-2.5">
+        <button
+          type="button"
+          aria-label="Scroll down"
+          onClick={() => window.scrollBy({ top: window.innerHeight - 140, behavior: "smooth" })}
+          className="absolute bottom-6 left-5 sm:left-8 lg:left-[60px] flex items-start gap-2.5 animate-scroll-bob cursor-pointer"
+        >
           <span className="flex flex-col items-center gap-1.5">
-            <Mouse size={16} className="text-[#999]" />
-            <span className="w-px h-9 bg-white/35" />
+            <span className="block w-[18px] h-[28px] rounded-full border-[1.5px] border-[#999] relative">
+              <span className="absolute left-1/2 -translate-x-1/2 top-[5px] w-[3px] h-[6px] rounded-full bg-[#D6D6D6] animate-scroll-wheel" />
+            </span>
+            <span className="w-px h-9 bg-white/35 animate-scroll-line" />
           </span>
-          <span className="text-[11px] font-semibold tracking-[0.14em] text-[#999] uppercase pt-0.5">Scroll Down</span>
-        </div>
+          <span className="text-[11px] font-semibold tracking-[0.14em] text-[#999] uppercase pt-1.5">Scroll Down</span>
+        </button>
       </div>
     </section>
   );
