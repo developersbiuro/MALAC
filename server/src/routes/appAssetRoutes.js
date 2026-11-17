@@ -3,6 +3,13 @@ import { protect, isStaff } from "../middleware/auth.js";
 import { CUSTOMER_APK_B64, ADMIN_APK_B64 } from "../assets/apkAssets.js";
 import { ICON_B64 } from "../assets/iconAssets.js";
 import { OG_IMAGE_B64 } from "../assets/ogImageAssets.js";
+import {
+  DESIGN_IMG_POLO,
+  DESIGN_IMG_WATCH,
+  DESIGN_IMG_HOODIE,
+  DESIGN_IMG_SUNGLASSES,
+  DESIGN_IMG_WALLET,
+} from "../assets/designImageAssets.js";
 
 // Binary assets (Android APKs, PWA icons) ship inside this repo as base64
 // text embedded in JS modules (server/src/assets/*Assets.js) — the
@@ -101,5 +108,26 @@ for (const [name, b64] of Object.entries(ICON_B64)) {
     res.send(buffer);
   });
 }
+
+// The 5 design products' photos — PUBLIC, immutable. Their original
+// admin-uploaded /uploads/catalog/ copies went 404 (ephemeral Vercel
+// filesystem), so the products now point at these durable URLs.
+const DESIGN_IMAGES = {
+  "polo.jpg": decode(DESIGN_IMG_POLO),
+  "watch.jpg": decode(DESIGN_IMG_WATCH),
+  "hoodie.jpg": decode(DESIGN_IMG_HOODIE),
+  "sunglasses.jpg": decode(DESIGN_IMG_SUNGLASSES),
+  "wallet.jpg": decode(DESIGN_IMG_WALLET),
+};
+router.get("/design-img/:file", (req, res) => {
+  const buffer = DESIGN_IMAGES[req.params.file];
+  if (!buffer) return res.status(404).json({ message: "Image not found." });
+  res.set({
+    "Content-Type": "image/jpeg",
+    "Content-Length": buffer.length,
+    "Cache-Control": "public, max-age=31536000, immutable",
+  });
+  res.send(buffer);
+});
 
 export default router;

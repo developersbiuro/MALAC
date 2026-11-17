@@ -105,6 +105,12 @@
       }
     },
     {
+      "source": "/design-img/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/shop",
       "destination": {
         "service": "server"
