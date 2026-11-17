@@ -24,7 +24,7 @@ function DarkStars({ value = 0 }) {
   return (
     <span className="inline-flex items-center gap-0.5" aria-label={`${value} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <Star key={i} size={11}
+        <Star key={i} size={12}
           className={i <= Math.round(value) ? "fill-[#E8E8EA] text-[#E8E8EA]" : "text-neutral-600"} />
       ))}
     </span>
@@ -45,14 +45,15 @@ function FlashCard({ product }) {
   };
   return (
     <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#26262B] to-[#0E0E10] ring-1 ring-white/10">
-      <div className="relative aspect-[4/3] bg-[#ECECEE]">
+      <div className="relative aspect-square bg-[#ECECEE]">
         <Link to={`/product/${product.slug}`}>
           <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.title} loading="lazy" referrerPolicy="no-referrer"
             onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
             className="h-full w-full object-cover" />
         </Link>
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-b from-transparent to-[#101013]" />
         {pct > 0 && (
-          <span className="absolute top-2 left-2 bg-white text-neutral-900 text-[11px] font-bold px-2 py-0.5 rounded-full shadow">-{pct}%</span>
+          <span className="absolute top-2 left-2 bg-white text-neutral-900 text-[11px] font-bold px-2.5 py-1 rounded-full shadow">-{pct}%</span>
         )}
       </div>
       <div className="flex flex-col flex-1 p-3">
@@ -60,14 +61,14 @@ function FlashCard({ product }) {
           <DarkStars value={product.ratingAvg || 0} />
           {(product.ratingCount || 0) > 0 && <span className="text-[10px] text-neutral-500">({product.ratingCount})</span>}
         </span>
-        <Link to={`/product/${product.slug}`} className="mt-1.5 text-[13px] font-semibold leading-snug text-white line-clamp-2 min-h-[2.6em]">
+        <Link to={`/product/${product.slug}`} className="mt-1.5 text-sm font-semibold leading-snug text-white line-clamp-2 min-h-[2.6em]">
           {product.title}
         </Link>
-        <p className="mt-1.5 text-[15px] font-extrabold text-[#E9B44C]">{rs(priceOf(product))}</p>
-        {pct > 0 && <p className="-mt-0.5 text-[11px] text-neutral-500"><s>{rs(product.basePrice)}</s></p>}
+        <p className="mt-2 text-[17px] font-extrabold text-[#E9B44C]">{rs(priceOf(product))}</p>
+        {pct > 0 && <p className="text-xs text-neutral-500"><s>{rs(product.basePrice)}</s></p>}
         <div className="mt-auto pt-3">
           <button onClick={addToCart} disabled={out}
-            className={`w-full flex items-center justify-center gap-1.5 rounded-full py-2 text-xs font-bold transition ${out ? "bg-neutral-600 text-neutral-300" : "bg-gradient-to-b from-[#F4F4F5] to-[#C6C6CC] text-[#121214] hover:brightness-110"}`}>
+            className={`w-full flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-bold transition ${out ? "bg-neutral-600 text-neutral-300" : "bg-gradient-to-b from-[#F4F4F5] to-[#C6C6CC] text-[#121214] hover:brightness-110"}`}>
             <ShoppingCart size={13} /> {out ? "Out of Stock" : "Add to Cart"}
           </button>
         </div>
@@ -95,8 +96,8 @@ export default function FlashSale({ products }) {
         </div>
         <span className="flex items-center gap-1.5">
           {units.map(([v, u]) => (
-            <span key={u} className="bg-white/[0.07] border border-white/15 text-white rounded-full px-3 py-1 font-mono text-[13px] font-bold">
-              {v}<span className="text-[10px] font-semibold text-neutral-400 ml-0.5">{u}</span>
+            <span key={u} className="bg-white/[0.07] border border-white/15 text-white rounded-full px-4 py-1.5 font-mono text-sm font-bold">
+              {v}<span className="text-[11px] font-semibold text-neutral-400 ml-0.5">{u}</span>
             </span>
           ))}
         </span>
