@@ -1,27 +1,24 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BadgeCheck, Truck, ShieldCheck, MapPin, PackageSearch, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ChevronDown, Gem, ShieldCheck, Truck, Headphones } from "lucide-react";
 import api from "../api/client.js";
 import HeroCarousel from "../components/HeroCarousel.jsx";
+import InviteBanner from "../components/InviteBanner.jsx";
 import FlashSale from "../components/FlashSale.jsx";
 import CategoryGrid from "../components/CategoryGrid.jsx";
 import ProductCard from "../components/ProductCard.jsx";
-import InviteBanner from "../components/InviteBanner.jsx";
-
+import { DESIGN_ABOUT_STORE, FEATURED_TILES } from "../assets/design.js";
 import { useSeo } from "../utils/seo.js";
 import { usePublicSettings } from "../utils/usePublicSettings.js";
 
-const buildTrust = (fees, codOn = true) => [
-  ...(codOn ? [{ Icon: BadgeCheck, label: "Cash on Delivery Available" }] : []),
-  { Icon: Truck, label: `Free Shipping Over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}` },
-  { Icon: ShieldCheck, label: "Secure Ordering" },
-  { Icon: MapPin, label: "Nationwide Delivery" },
-];
+// Homepage layout — Abdullah's final reference designs (2026-11-16 night),
+// section order per his word (23:43): Hero → Invite → Flash Sale →
+// Shop by Category → Featured Collections → New Arrivals → About → FAQ.
+// Texts mirror his designs; delivery figures still come from the live
+// store Settings.
 
 // FAQ answers mirror the store's real rules in Terms of Service /
 // Privacy Policy — keep the visible text and the FAQPage JSON-LD in sync.
-// Delivery figures come from the live store Settings (Admin → Settings)
-// via usePublicSettings, like everywhere else on the storefront.
 const buildFaqs = (fees) => [
   {
     q: "How do I place an order on MALAC?",
@@ -49,13 +46,33 @@ const buildFaqs = (fees) => [
   },
 ];
 
+const ABOUT_FEATURES = [
+  { Icon: Gem, label: "Premium Quality" },
+  { Icon: ShieldCheck, label: "Authentic Products" },
+  { Icon: Truck, label: "Reliable Delivery" },
+  { Icon: Headphones, label: "Dedicated Support" },
+];
+
+// Category cards ki tarteeb — Abdullah ke design ki: Men, Women,
+// Watches, Eyewear, Bags, Mobile.
+const CAT_ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
+
+function SectionHeading({ children }) {
+  return (
+    <div className="flex items-center gap-4 px-1">
+      <span className="h-px flex-1 bg-neutral-400/60" />
+      <h2 className="font-display text-lg sm:text-xl font-bold tracking-[0.22em] text-lux-ink text-center uppercase">{children}</h2>
+      <span className="h-px flex-1 bg-neutral-400/60" />
+    </div>
+  );
+}
+
 export default function Home() {
-  const { fees, payments } = usePublicSettings();
-  const TRUST = buildTrust(fees, payments?.codEnabled !== false);
+  const { fees } = usePublicSettings();
   const FAQS = buildFaqs(fees);
   useSeo({
     title: "MALAC — Online Shopping in Pakistan | M.A Luxury Apparel Collection",
-    description: `Online shopping in Pakistan at MALAC — mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
+    description: `MALAC — M.A Luxury Apparel Collection. Premium men's and women's fashion, watches, eyewear and bags & accessories online in Pakistan, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "FAQPage",
@@ -66,126 +83,147 @@ export default function Home() {
       })),
     },
   });
-  const navigate = useNavigate();
-  const [trackId, setTrackId] = useState("");
   const [openFaq, setOpenFaq] = useState(0);
   const [categories, setCategories] = useState([]);
   const [flash, setFlash] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [tab, setTab] = useState("All");
-  const [page, setPage] = useState(1);
-  const [pages, setPages] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [newest, setNewest] = useState([]);
+  const [pool, setPool] = useState([]);
 
   useEffect(() => {
     api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {});
-    api.get("/products", { params: { flashSale: "true", limit: 12 } }).then((r) => setFlash(r.data.products)).catch(() => {});
+    // Flash Sale (Abdullah, 2026-11-17): MIX categories — pehle har
+    // category ka aik product (store ki category order me), phir baqi.
+    api.get("/products", { params: { flashSale: "true", limit: 12 } }).then((r) => {
+      const ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
+      const groups = new Map();
+      for (const p of r.data.products) {
+        if (!groups.has(p.category)) groups.set(p.category, []);
+        groups.get(p.category).push(p);
+      }
+      const cats = [...ORDER.filter((c) => groups.has(c)), ...[...groups.keys()].filter((c) => !ORDER.includes(c))];
+      const mixed = [];
+      for (let round = 0; ; round++) {
+        let added = false;
+        for (const c of cats) {
+          const g = groups.get(c);
+          if (g[round]) { mixed.push(g[round]); added = true; }
+        }
+        if (!added) break;
+      }
+      setFlash(mixed);
+    }).catch(() => {});
+    api.get("/products", { params: { sort: "newest", limit: 10 } }).then((r) => setNewest(r.data.products)).catch(() => {});
+    api.get("/products", { params: { limit: 100 } }).then((r) => setPool(r.data.products)).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    const params = { limit: 20, page };
-    if (tab !== "All") params.category = tab;
-    api.get("/products", { params })
-      .then((r) => {
-        setProducts((prev) => page === 1 ? r.data.products : [...prev, ...r.data.products]);
-        setPages(r.data.pages);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [tab, page]);
+  const tileLink = (tile) => {
+    const hit = pool.find((p) => tile.match.test(p.title));
+    return hit ? `/product/${hit.slug}` : tile.fallback;
+  };
 
-  const tabs = ["All", ...categories.map((c) => c.name)];
+  // New Arrivals (Abdullah's spec): the 5 MALAC design products first —
+  // with "New" badges — then the newest of the rest.
+  const DESIGN_SKUS = ["MALAC-POLO-01", "MALAC-WATCH-01", "MALAC-HOOD-01", "MALAC-SUN-01", "MALAC-WALLET-01"];
+  const arrivals = [
+    ...DESIGN_SKUS.map((sku) => pool.find((p) => p.sku === sku)).filter(Boolean),
+    ...newest.filter((p) => !DESIGN_SKUS.includes(p.sku)),
+  ].slice(0, 10);
+
   return (
-    <main className="max-w-7xl mx-auto px-3 pt-3">
+    <main>
       <HeroCarousel />
-      <CategoryGrid categories={categories} />
-      <div className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-4 py-3 flex flex-wrap justify-center gap-x-7 gap-y-2">
-        {TRUST.map(({ Icon, label }) => (
-          <span key={label} className="flex items-center gap-1.5 text-xs sm:text-[13px] font-medium text-gray-700">
-            <Icon size={16} className="text-[#059669]" /> {label}
-          </span>
-        ))}
+
+      <div className="max-w-7xl mx-auto px-3">
+        {/* Invite — hero ke foran baad (Abdullah, 23:43) */}
+        <InviteBanner />
+
+        <FlashSale products={flash} />
       </div>
-      {/* Track Your Order band — tracking itself is a signed-in function;
-          submitting sends guests to login first, then back to tracking. */}
-      <section className="bg-lux-ink text-white rounded-2xl mt-3 px-4 py-4 sm:px-6 flex flex-col lg:flex-row lg:items-center gap-3">
-        <div className="shrink-0">
-          <p className="eyebrow !text-lux-pale">Order Tracking</p>
-          <h2 className="font-serif text-2xl font-semibold leading-tight">Track Your Order</h2>
-          <p className="text-xs text-white/60">Order ID ya phone number — login ke baad jo bhi likhein, order mil jayega.</p>
+
+      {/* Shop by Category — design 1 ki dark band: sirf photo cards ki row */}
+      <section className="bg-[#0b0b0d] mt-10 sm:mt-12 py-5 sm:py-7">
+        <div className="max-w-7xl mx-auto px-3">
+          <CategoryGrid categories={[...categories].sort((a, b) => CAT_ORDER.indexOf(a.name) - CAT_ORDER.indexOf(b.name))} />
         </div>
-        <form
-          className="flex flex-col sm:flex-row gap-2 flex-1"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const v = trackId.trim();
-            const q = /^mlc/i.test(v) ? new URLSearchParams({ orderId: v }) : new URLSearchParams({ phone: v });
-            navigate(`/track-order?${q.toString()}`);
-          }}
-        >
-          <input value={trackId} onChange={(e) => setTrackId(e.target.value)} required placeholder="Order ID (MLC-...) ya phone number"
-            className="flex-1 rounded-full px-4 py-2.5 text-sm text-lux-ink bg-white outline-none" />
-          <button className="btn-lux px-6 py-2.5 text-sm shrink-0"><PackageSearch size={16} /> Track Order</button>
-        </form>
       </section>
-      <InviteBanner />
-      <FlashSale products={flash} />
-      <section className="mt-6">
-        <p className="eyebrow">Curated Picks</p>
-        <h2 className="font-serif text-3xl font-semibold leading-none mt-1 mb-2">Just For You</h2>
-        <div className="lux-divider mb-3" />
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-          {tabs.map((t) => (
-            <button key={t} onClick={() => { setTab(t); setPage(1); }}
-              className={`whitespace-nowrap text-sm px-4 py-1.5 rounded-full border ${tab === t ? "bg-lux-gradient text-white border-transparent font-semibold" : "bg-white border-cream-line"}`}>{t}</button>
+
+      <div className="max-w-7xl mx-auto px-3">
+
+      {/* Featured Collections — Shop by Category ke neeche (Abdullah) */}
+      <section className="mt-10 sm:mt-12">
+        <SectionHeading>Featured Collections</SectionHeading>
+        <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mt-5">
+          {FEATURED_TILES.map((tile) => (
+            <Link key={tile.label} to={tileLink(tile)}
+              className="group relative rounded-xl overflow-hidden bg-[#e8eaee] aspect-square shadow-sm hover:shadow-lux transition-shadow">
+              <img src={tile.img} alt={tile.label} loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+            </Link>
           ))}
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          {products.map((p) => <ProductCard key={p._id} product={p} />)}
-        </div>
-        {loading && <p className="text-center text-gray-400 py-4">Loading products...</p>}
-        {!loading && products.length === 0 && <p className="text-center text-gray-400 py-8">No products found.</p>}
-        {page < pages && (
-          <div className="text-center py-5">
-            <button onClick={() => setPage((p) => p + 1)} className="bg-white border px-8 py-2 rounded text-sm hover:border-lux-amber hover:text-lux-burnt">Load More</button>
+      </section>
+      </div>
+
+      {/* New Arrivals — halki grey band (reference design): intro block left, product row right */}
+      <section className="bg-[#EAEAEA] mt-10 sm:mt-12 py-8 sm:py-12">
+        <div className="max-w-7xl mx-auto px-3">
+        <div className="flex flex-col lg:flex-row gap-5">
+          <div className="shrink-0 lg:w-60 px-1 flex flex-col justify-center">
+            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-[1.05] tracking-wide text-lux-ink">NEW<br />ARRIVALS</h2>
+            <p className="text-sm text-gray-500 mt-3 leading-relaxed">Be the first to own the latest from MALAC.</p>
+            <Link to="/shop" className="mt-4 w-max inline-flex items-center gap-2 bg-lux-ink text-white text-xs font-semibold uppercase tracking-[0.1em] rounded-md px-5 py-3 hover:bg-black transition-colors">
+              Shop New Arrivals <span aria-hidden>→</span>
+            </Link>
           </div>
-        )}
-      </section>
-
-      {/* About MALAC — SEO content */}
-      <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-6 px-5 py-6 sm:px-8">
-        <p className="eyebrow">About MALAC</p>
-        <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Luxury Apparel &amp; Ladies Fashion Online in Pakistan</h2>
-        <div className="lux-divider mt-3" />
-        <div className="text-sm sm:text-[15px] text-gray-600 leading-relaxed space-y-3 mt-3 max-w-3xl">
-          <p>
-            MALAC — M.A Luxury Apparel Collection is an online fashion store in Pakistan for shoppers who want
-            considered, well-made clothing without leaving home. Our Fashion collection brings ladies fashion and
-            menswear together in one place — embroidered 3-piece lawn suits, premium cotton kurta shalwar and
-            everyday footwear — alongside the wider MALAC catalogue of Mobiles &amp; Tablets, Electronics,
-            Home &amp; Living, Beauty &amp; Health, Groceries, Sports &amp; Fitness and Toys &amp; Baby.
-          </p>
-          <p>
-            Looking for ladies fashion online in Pakistan? Start with our women&apos;s lawn suits — printed lawn
-            shirts with embroidered necklines, chiffon dupattas and dyed cambric trousers — and complete the look
-            with skincare and personal care from Beauty &amp; Health. Every product page shows the full price in
-            Pakistani Rupees, any discount, and live stock, so you know exactly what you are ordering before you
-            check out.
-          </p>
-          <p>
-            Ordering is straightforward: pay with Cash on Delivery, or by JazzCash / Easypaisa / bank (Meezan, NayaPay, SadaPay, FirstPay) transfer with a
-            payment screenshot our team verifies before dispatch. Standard delivery is Rs. {fees.standard} on most orders and
-            free on orders over Rs. {fees.freeThreshold.toLocaleString("en-PK")}, and we deliver nationwide through courier partners including TCS,
-            Leopards and Trax. Once your order is placed, you can follow it any time from the Track Your Order page.
-          </p>
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar pb-1 flex-1 min-w-0">
+            {arrivals.map((p) => (
+              <div key={p._id} className="w-[200px] sm:w-[224px] shrink-0">
+                <ProductCard product={p} badge={DESIGN_SKUS.includes(p.sku) ? "New" : undefined} />
+              </div>
+            ))}
+            {arrivals.length === 0 && <p className="text-gray-400 text-sm py-8">Loading products...</p>}
+          </div>
+        </div>
         </div>
       </section>
 
+      {/* About — full-bleed dark band (reference design): store photo, story, feature list */}
+      <section className="bg-lux-deep text-white overflow-hidden">
+        <div className="grid lg:grid-cols-[1.1fr_1.2fr_0.8fr]">
+          <div className="relative min-h-[220px] lg:min-h-full">
+            <img src={DESIGN_ABOUT_STORE} alt="Inside a MALAC store" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30" />
+          </div>
+          <div className="px-6 py-8 sm:px-10 flex flex-col justify-center">
+            <p className="eyebrow !text-neutral-400 flex items-center gap-3">
+              About MALAC <span className="inline-block h-px w-10 bg-neutral-500" />
+            </p>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold leading-tight mt-2">
+              More Than a Brand,<br />It&apos;s a Lifestyle.
+            </h2>
+            <p className="text-sm sm:text-[15px] text-neutral-400 leading-relaxed mt-3 max-w-md">
+              MALAC is a premium lifestyle brand, offering high-quality fashion, watches and accessories
+              for those who value elegance and individuality.
+            </p>
+            <Link to="/about" className="mt-5 w-max inline-flex items-center gap-2 border border-white/70 text-white text-xs font-semibold uppercase tracking-[0.1em] rounded-md px-5 py-3 hover:bg-white hover:text-neutral-900 transition-colors">
+              Know More <span aria-hidden>→</span>
+            </Link>
+          </div>
+          <div className="px-6 py-8 sm:px-10 lg:border-l border-white/10 flex flex-col justify-center gap-5">
+            {ABOUT_FEATURES.map(({ Icon, label }) => (
+              <p key={label} className="flex items-center gap-3.5 text-sm font-medium text-neutral-200">
+                <Icon size={24} className="text-neutral-300 shrink-0" strokeWidth={1.5} /> {label}
+              </p>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-3">
       {/* FAQ — answers mirror the Terms / Policy pages (see FAQS above) */}
-      <section className="bg-white border border-cream-line rounded-2xl shadow-sm mt-3 px-5 py-6 sm:px-8 mb-2">
-        <p className="eyebrow">Good To Know</p>
-        <h2 className="font-serif text-3xl font-semibold leading-tight mt-1">Frequently Asked Questions</h2>
+      <section className="bg-white text-lux-ink border border-cream-line rounded-3xl shadow-sm mt-10 sm:mt-12 px-6 py-8 sm:px-10 mb-4">
+        <p className="eyebrow !text-gray-400">Good To Know</p>
+        <h2 className="font-display text-2xl sm:text-3xl font-bold leading-tight mt-1 tracking-wide">Frequently Asked Questions</h2>
         <div className="lux-divider mt-3" />
         <div className="mt-4 divide-y divide-cream-line">
           {FAQS.map((f, i) => {
@@ -194,12 +232,12 @@ export default function Home() {
               <div key={f.q}>
                 <button type="button" onClick={() => setOpenFaq(open ? -1 : i)} aria-expanded={open}
                   className="w-full flex items-center justify-between gap-3 py-3.5 text-left">
-                  <h3 className="font-serif text-lg font-semibold leading-snug">{f.q}</h3>
-                  <ChevronDown size={18} className={`shrink-0 text-lux-burnt transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
+                  <h3 className="font-serif text-lg font-semibold leading-snug text-lux-ink">{f.q}</h3>
+                  <ChevronDown size={18} className={`shrink-0 text-gray-400 transition-transform duration-300 ${open ? "rotate-180" : ""}`} />
                 </button>
                 <div className={`grid transition-all duration-300 ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}>
                   <div className="overflow-hidden">
-                    <p className="text-sm sm:text-[15px] text-gray-600 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
+                    <p className="text-sm sm:text-[15px] text-gray-500 leading-relaxed pb-4 max-w-3xl">{f.a}</p>
                   </div>
                 </div>
               </div>
@@ -207,6 +245,7 @@ export default function Home() {
           })}
         </div>
       </section>
+      </div>
     </main>
   );
 }

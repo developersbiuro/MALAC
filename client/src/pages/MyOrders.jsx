@@ -13,10 +13,10 @@ const TABS = ["All", "Pending", "Processing", "Shipped", "Out for Delivery", "De
 // Badges are keyed by the customer-facing label; Confirmed/Packed show
 // as "Processing" (the server stores Confirmed/Packed — see customerStatus).
 const badge = {
-  Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
+  Pending: "bg-neutral-200 text-neutral-700", Processing: "bg-sky-100 text-sky-700",
   Shipped: "bg-violet-100 text-violet-700", "Out for Delivery": "bg-cyan-100 text-cyan-700",
   Delivered: "bg-green-100 text-green-700",
-  Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
+  Cancelled: "bg-red-100 text-red-600", Returned: "bg-neutral-200 text-neutral-700",
 };
 const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s === "OutForDelivery" ? "Out for Delivery" : s);
 const CUSTOMER_CANCEL_REASONS = [
@@ -152,7 +152,7 @@ export default function MyOrders() {
               <p className="text-xs text-red-500 mt-1">Cancelled — {o.cancelReason}{o.cancelledBy ? ` (by ${o.cancelledBy})` : ""}</p>
             )}
             {o.returnRequestedAt && (
-              <p className="text-xs text-orange-600 mt-1">Return requested — {o.returnReason} · our team will contact you</p>
+              <p className="text-xs text-neutral-600 mt-1">Return requested — {o.returnReason} · our team will contact you</p>
             )}
             <div className="mt-2 space-y-1">
               {o.items.map((i) => (
@@ -193,7 +193,7 @@ export default function MyOrders() {
               </button>
             )}
             {o.status === "Delivered" && !o.returnRequestedAt && returningId !== o.orderId && (
-              <button onClick={() => openReturn(o.orderId)} className="mt-2 ml-2 border border-orange-300 text-orange-600 rounded px-4 py-2 sm:py-1.5 text-xs">
+              <button onClick={() => openReturn(o.orderId)} className="mt-2 ml-2 border border-neutral-300 text-neutral-600 rounded px-4 py-2 sm:py-1.5 text-xs">
                 Request Return
               </button>
             )}
@@ -201,7 +201,7 @@ export default function MyOrders() {
               const done = reviewedByOrder[o.orderId] || new Set();
               const pendingReview = (o.items || []).some((i) => !done.has(String(i.product)));
               return pendingReview ? (
-                <Link to={`/orders/${o.orderId}`} className="mt-2 ml-2 inline-flex items-center gap-1 border border-amber-400 text-amber-700 bg-amber-50 rounded px-4 py-2 sm:py-1.5 text-xs font-medium">
+                <Link to={`/orders/${o.orderId}`} className="mt-2 ml-2 inline-flex items-center gap-1 border border-neutral-400 text-neutral-700 bg-neutral-100 rounded px-4 py-2 sm:py-1.5 text-xs font-medium">
                   <Star size={13} /> Review dein
                 </Link>
               ) : (
@@ -209,14 +209,14 @@ export default function MyOrders() {
               );
             })()}
             {returningId === o.orderId && (
-              <div className="mt-3 border border-orange-200 bg-orange-50 rounded-lg p-3 fade-up">
-                <p className="font-semibold text-orange-700">Request a return</p>
+              <div className="mt-3 border border-neutral-200 bg-neutral-100 rounded-lg p-3 fade-up">
+                <p className="font-semibold text-neutral-700">Request a return</p>
                 <p className="text-xs text-gray-500 mt-1">Returns are accepted within 7 days of delivery for damaged, defective or incorrect items. Items must be unused and in their original packaging.</p>
                 <div className="mt-2 space-y-1.5">
                   {RETURN_REASONS.map((r) => (
                     <label key={r} className="flex items-center gap-2 cursor-pointer">
                       <input type="radio" name={`return-${o.orderId}`} value={r} checked={returnReason === r}
-                        onChange={() => setReturnReason(r)} className="accent-orange-500" />
+                        onChange={() => setReturnReason(r)} className="accent-neutral-900" />
                       <span>{r}</span>
                     </label>
                   ))}
@@ -225,7 +225,7 @@ export default function MyOrders() {
                   placeholder="Anything else? (optional)" className="mt-2 w-full border rounded px-3 py-2 bg-white" />
                 <div className="flex gap-2 mt-3">
                   <button onClick={confirmReturn} disabled={!returnReason || returnBusy}
-                    className="bg-orange-500 text-white rounded px-4 py-2 sm:py-1.5 text-xs disabled:opacity-50">
+                    className="bg-neutral-1000 text-white rounded px-4 py-2 sm:py-1.5 text-xs disabled:opacity-50">
                     {returnBusy ? "Sending…" : "Send return request"}
                   </button>
                   <button onClick={() => setReturningId(null)} className="border rounded px-4 py-2 sm:py-1.5 text-xs bg-white">

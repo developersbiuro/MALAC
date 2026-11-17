@@ -228,7 +228,7 @@ export default function AdminRoles() {
               return (
                 <Fragment key={u._id}>
                   <tr className="border-b last:border-0 align-top">
-                    <td className="p-3 font-medium">{u.name}{u.accountStatus === "pending_setup" ? <span className="text-[11px] text-amber-600"> · pending setup</span> : ""}</td>
+                    <td className="p-3 font-medium">{u.name}{u.accountStatus === "pending_setup" ? <span className="text-[11px] text-neutral-600"> · pending setup</span> : ""}</td>
                     <td className="py-3">{u.email}</td>
                     <td className="py-3">
                       {u.phone}

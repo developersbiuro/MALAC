@@ -46,7 +46,7 @@ export default function Blog() {
                   <p className="text-2xl font-bold tracking-[0.3em] text-white">
                     MALAC
                   </p>
-                  <p className="mx-auto mt-2 h-0.5 w-10 bg-amber-500" />
+                  <p className="mx-auto mt-2 h-0.5 w-10 bg-neutral-1000" />
                   <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-neutral-300">
                     M.A Luxury Apparel Collection
                   </p>

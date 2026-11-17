@@ -12,10 +12,10 @@ import { isManualMethod } from "../utils/payments.js";
 // returns a limited view of the matching order(s).
 const FLOW = ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered"];
 const badge = {
-  Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
+  Pending: "bg-neutral-200 text-neutral-700", Processing: "bg-sky-100 text-sky-700",
   Shipped: "bg-violet-100 text-violet-700", "Out for Delivery": "bg-cyan-100 text-cyan-700",
   Delivered: "bg-green-100 text-green-700",
-  Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
+  Cancelled: "bg-red-100 text-red-600", Returned: "bg-neutral-200 text-neutral-700",
 };
 const inputCls = "w-full border border-cream-line rounded-full px-4 py-2.5 text-sm bg-white outline-none focus:border-lux-amber";
 // Customers see "Processing" for the stored Confirmed/Packed statuses
@@ -185,7 +185,7 @@ export default function TrackOrder() {
               This order was cancelled.{order.cancelReason ? ` Reason: ${order.cancelReason}` : ""}
             </p>
           ) : order.status === "Returned" ? (
-            <p className="mt-5 text-sm text-orange-600 font-medium">This order was returned to us (delivery could not be completed).</p>
+            <p className="mt-5 text-sm text-neutral-600 font-medium">This order was returned to us (delivery could not be completed).</p>
           ) : (
             <ol className="mt-6 grid grid-cols-4 gap-1">
               {FLOW.map((s, i) => {

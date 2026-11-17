@@ -19,15 +19,15 @@ const ADMIN_CANCEL_REASONS = [
   "Customer unreachable", "Duplicate order", "Suspected fake order", "Other",
 ];
 const statusBadge = {
-  Pending: "bg-amber-100 text-amber-700", Confirmed: "bg-sky-100 text-sky-700",
+  Pending: "bg-neutral-200 text-neutral-700", Confirmed: "bg-sky-100 text-sky-700",
   Packed: "bg-indigo-100 text-indigo-700", Shipped: "bg-violet-100 text-violet-700",
   OutForDelivery: "bg-cyan-100 text-cyan-700",
   Delivered: "bg-green-100 text-green-700", Cancelled: "bg-red-100 text-red-600",
-  Returned: "bg-orange-100 text-orange-700",
+  Returned: "bg-neutral-200 text-neutral-700",
 };
 
 const verifyBadge = {
-  pending_verification: "bg-amber-100 text-amber-700",
+  pending_verification: "bg-neutral-200 text-neutral-700",
   verified: "bg-green-100 text-green-700",
   rejected: "bg-red-100 text-red-600",
   not_applicable: "bg-gray-100 text-gray-500",
@@ -192,7 +192,7 @@ export default function AdminOrders() {
                 </p>
               )}
               {selected.returnRequestedAt && (
-                <p className="bg-orange-50 border border-orange-200 text-orange-700 rounded p-3">
+                <p className="bg-neutral-100 border border-neutral-200 text-neutral-700 rounded p-3">
                   <b>Return requested by the customer</b>
                   {selected.returnReason ? ` — ${selected.returnReason}` : ""}
                   <span className="block text-xs mt-0.5">{new Date(selected.returnRequestedAt).toLocaleString("en-PK")}</span>

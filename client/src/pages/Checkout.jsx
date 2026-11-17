@@ -553,7 +553,7 @@ export default function Checkout() {
               <div className="border rounded p-3 ml-0 sm:ml-8 space-y-3 bg-gray-50">
                 {!wallets ? <p className="text-gray-500">Loading payment accounts...</p>
                 : !walletInfo?.configured ? (
-                  <p className="text-amber-600">
+                  <p className="text-neutral-600">
                     The store has not configured its {paymentMethod} account yet, so this method is
                     unavailable right now. {codOff ? "Please choose another payment method." : "Please choose COD."}
                   </p>

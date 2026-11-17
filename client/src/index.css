@@ -6,7 +6,7 @@
    sideways on phones, and remove tap delay / grey flash so taps feel
    instant on touch devices. */
 html, body { overflow-x: clip; }
-body { @apply bg-[#fdfbf7] text-[#0f172a] antialiased; }
+body { @apply bg-[#f1f1f3] text-[#101014] antialiased; }
 a, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 img, video { max-width: 100%; }
 
@@ -35,6 +35,19 @@ img, video { max-width: 100%; }
 @keyframes heroProgress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 .hero-progress { transform-origin: left; animation: heroProgress 5s linear both; }
 
+/* Hero SCROLL DOWN cue (Abdullah asked for the animation back, like the
+   first build): the mouse wheel dot drops and fades on a loop, a light
+   pulse travels down the line under it, and the whole cue bobs gently. */
+@keyframes scrollWheel { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(11px); } }
+.animate-scroll-wheel { animation: scrollWheel 1.8s ease-in-out infinite; }
+@keyframes scrollLinePulse { 0% { transform: scaleY(0); transform-origin: top; } 45% { transform: scaleY(1); transform-origin: top; } 55% { transform: scaleY(1); transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+.animate-scroll-line { animation: scrollLinePulse 1.8s ease-in-out infinite; }
+@keyframes scrollBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+.animate-scroll-bob { animation: scrollBob 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroll-wheel, .animate-scroll-line, .animate-scroll-bob { animation: none; }
+}
+
 /* Printing (admin order detail, My Orders, order confirmation): every
    printable block carries .print-area plus a mode class
    (.print-label-block for the shipping label, .print-invoice-block for
@@ -58,35 +71,35 @@ img, video { max-width: 100%; }
 }
 
 @layer components {
-  /* malacpk luxury skin primitives: burnt-orange -> amber -> gold
-     gradient pill CTAs (#b45309 -> #d97706 -> #f59e0b) and #b45309
-     uppercase eyebrow labels. The 3-stop gradient + warm shadow are
-     the 2026-11-15 polish pass on the cream-luxury theme. */
-  .bg-lux-gradient { background-image: linear-gradient(100deg, #b45309, #d97706 48%, #f59e0b); }
+  /* Silver-theme skin primitives: dark brushed-metal gradient CTAs
+     (near-black -> graphite -> steel) and graphite uppercase eyebrow
+     labels. Replaced the gold gradient of the cream theme on 2026-11-16
+     for Abdullah's black/silver reference design. */
+  .bg-lux-gradient { background-image: linear-gradient(100deg, #131418, #33373e 48%, #5c626b); }
+  .bg-silver-gradient { background-image: linear-gradient(100deg, #8f959e, #d6dae0 48%, #a7adb6); }
   .btn-lux {
-    @apply inline-flex items-center justify-center gap-2 rounded-full text-white font-semibold transition hover:brightness-105 active:brightness-95 disabled:opacity-50;
-    background-image: linear-gradient(100deg, #b45309, #d97706 48%, #f59e0b);
-    box-shadow: 0 10px 24px -10px rgba(180, 83, 9, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    @apply inline-flex items-center justify-center gap-2 rounded-full text-white font-semibold transition hover:brightness-125 active:brightness-95 disabled:opacity-50;
+    background-image: linear-gradient(100deg, #131418, #33373e 48%, #5c626b);
+    box-shadow: 0 10px 24px -10px rgba(10, 10, 14, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22);
     letter-spacing: 0.03em;
   }
-  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.22em] text-[#b45309]; }
-  /* Short gold rule placed under serif section titles — the classic
-     luxury-store heading treatment (polish pass 2, 2026-11-15). */
+  .eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.22em] text-[#4a4f57]; }
+  /* Short silver rule placed under display section titles. */
   .lux-divider {
     width: 64px; height: 3px; border-radius: 9999px;
-    background-image: linear-gradient(100deg, #b45309, #d97706 48%, #f59e0b);
-    box-shadow: 0 2px 8px -2px rgba(180, 83, 9, 0.5);
+    background-image: linear-gradient(100deg, #79818b, #d6dae0 48%, #9aa1ab);
+    box-shadow: 0 2px 8px -2px rgba(10, 10, 14, 0.35);
   }
 }
 
-/* Polish pass details: warm text selection + a slim cream/amber
-   scrollbar so even the chrome feels branded. */
-::selection { background: #fcd34d; color: #0f172a; }
+/* Silver-theme chrome: cool text selection + a slim graphite/silver
+   scrollbar. */
+::selection { background: #c3c9d1; color: #101014; }
 html { scroll-behavior: smooth; }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #faf6ee; }
-::-webkit-scrollbar-thumb { background: #e5a93c; border-radius: 8px; border: 2px solid #faf6ee; }
-::-webkit-scrollbar-thumb:hover { background: #d97706; }
+::-webkit-scrollbar-track { background: #ececef; }
+::-webkit-scrollbar-thumb { background: #9aa1ab; border-radius: 8px; border: 2px solid #ececef; }
+::-webkit-scrollbar-thumb:hover { background: #6d7278; }
 
 @layer base {
   /* Press feedback (Abdullah, 2026-11-11: "button press ka pta nahi

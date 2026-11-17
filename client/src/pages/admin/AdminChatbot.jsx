@@ -126,7 +126,7 @@ export default function AdminChatbot() {
 
   const badge = (s) => {
     const map = {
-      Pending: "text-amber-700 bg-amber-50 border-amber-200",
+      Pending: "text-neutral-700 bg-neutral-100 border-neutral-200",
       "Under Review": "text-sky-700 bg-sky-50 border-sky-200",
       Approved: "text-green-700 bg-green-50 border-green-200",
       Resolved: "text-green-700 bg-green-50 border-green-200",

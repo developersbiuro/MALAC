@@ -13,10 +13,10 @@ import OrderInvoice from "../components/OrderInvoice.jsx";
 // address, items, payment summary and the order's own actions. Nothing
 // else lives on this page.
 const badge = {
-  Pending: "bg-amber-100 text-amber-700", Processing: "bg-sky-100 text-sky-700",
+  Pending: "bg-neutral-200 text-neutral-700", Processing: "bg-sky-100 text-sky-700",
   Shipped: "bg-violet-100 text-violet-700", "Out for Delivery": "bg-cyan-100 text-cyan-700",
   Delivered: "bg-green-100 text-green-700",
-  Cancelled: "bg-red-100 text-red-600", Returned: "bg-orange-100 text-orange-700",
+  Cancelled: "bg-red-100 text-red-600", Returned: "bg-neutral-200 text-neutral-700",
 };
 const customerStatus = (s) => (s === "Confirmed" || s === "Packed" ? "Processing" : s === "OutForDelivery" ? "Out for Delivery" : s);
 const CUSTOMER_CANCEL_REASONS = [
@@ -201,9 +201,9 @@ export default function OrderDetail() {
         {o.status === "Cancelled" && (
           <p className="text-red-500 mt-2">This order was cancelled{o.cancelReason ? ` — ${o.cancelReason}` : ""}{o.cancelledBy ? ` (by ${o.cancelledBy})` : ""}.</p>
         )}
-        {o.status === "Returned" && <p className="text-orange-600 mt-2">This order was returned.</p>}
+        {o.status === "Returned" && <p className="text-neutral-600 mt-2">This order was returned.</p>}
         {o.returnRequestedAt && o.status !== "Returned" && (
-          <p className="text-orange-600 mt-2">Return requested — {o.returnReason} · our team will contact you.</p>
+          <p className="text-neutral-600 mt-2">Return requested — {o.returnReason} · our team will contact you.</p>
         )}
         {stage >= 0 && (
           <ol className="flex mt-4">
@@ -260,12 +260,12 @@ export default function OrderDetail() {
                     {rev ? (
                       <p className="text-xs text-green-600">★ {rev.rating}/5 — Review diya gaya{rev.status === "pending" ? " (approval ka intezaar hai)" : ""}</p>
                     ) : reviewFor === i._id ? (
-                      <div className="border border-amber-200 bg-amber-50/60 rounded-lg p-3 fade-up">
-                        <p className="text-xs font-semibold text-amber-800">Apna review dein</p>
+                      <div className="border border-neutral-200 bg-neutral-100 rounded-lg p-3 fade-up">
+                        <p className="text-xs font-semibold text-neutral-800">Apna review dein</p>
                         <div className="flex gap-1 mt-2">
                           {[1, 2, 3, 4, 5].map((n) => (
                             <button key={n} type="button" onClick={() => setRvRating(n)} aria-label={`${n} star`}>
-                              <Star size={22} className={n <= rvRating ? "fill-amber-400 text-amber-400" : "text-gray-300"} />
+                              <Star size={22} className={n <= rvRating ? "fill-neutral-800 text-neutral-800" : "text-gray-300"} />
                             </button>
                           ))}
                         </div>
@@ -275,7 +275,7 @@ export default function OrderDetail() {
                         <div className="flex flex-wrap items-center gap-2 mt-2">
                           {rvPhotos.map((src, idx) => <img key={idx} src={src} alt="" className="w-12 h-12 rounded object-cover" />)}
                           {rvPhotos.length < 3 && (
-                            <label className="border border-dashed border-amber-300 text-amber-700 rounded px-3 py-2 text-xs cursor-pointer bg-white">
+                            <label className="border border-dashed border-neutral-300 text-neutral-700 rounded px-3 py-2 text-xs cursor-pointer bg-white">
                               + Photo add karein (max 3)
                               <input type="file" accept="image/*" multiple hidden onChange={pickRvPhotos} />
                             </label>
@@ -288,7 +288,7 @@ export default function OrderDetail() {
                         </div>
                       </div>
                     ) : (
-                      <button onClick={() => { setReviewFor(i._id); setRvMsg(""); }} className="inline-flex items-center gap-1 border border-amber-300 text-amber-700 bg-amber-50 rounded px-3 py-1.5 text-xs font-medium">
+                      <button onClick={() => { setReviewFor(i._id); setRvMsg(""); }} className="inline-flex items-center gap-1 border border-neutral-300 text-neutral-700 bg-neutral-100 rounded px-3 py-1.5 text-xs font-medium">
                         <Star size={13} /> Review dein
                       </button>
                     )}
@@ -333,7 +333,7 @@ export default function OrderDetail() {
           <button onClick={() => setShowCancel(true)} className="border border-red-300 bg-white text-red-500 rounded px-4 py-2 text-xs">Cancel Order</button>
         )}
         {o.status === "Delivered" && !o.returnRequestedAt && !showReturn && (
-          <button onClick={() => setShowReturn(true)} className="border border-orange-300 bg-white text-orange-600 rounded px-4 py-2 text-xs">Request Return</button>
+          <button onClick={() => setShowReturn(true)} className="border border-neutral-300 bg-white text-neutral-600 rounded px-4 py-2 text-xs">Request Return</button>
         )}
       </div>
 
@@ -359,20 +359,20 @@ export default function OrderDetail() {
       )}
 
       {showReturn && (
-        <div className="mt-3 border border-orange-200 bg-orange-50 rounded-lg p-3 text-sm fade-up">
-          <p className="font-semibold text-orange-700">Request a return</p>
+        <div className="mt-3 border border-neutral-200 bg-neutral-100 rounded-lg p-3 text-sm fade-up">
+          <p className="font-semibold text-neutral-700">Request a return</p>
           <p className="text-xs text-gray-500 mt-1">Returns are accepted within 7 days of delivery for damaged, defective or incorrect items. Items must be unused and in their original packaging.</p>
           <div className="mt-2 space-y-1.5">
             {RETURN_REASONS.map((r) => (
               <label key={r} className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="return-reason" value={r} checked={returnReason === r} onChange={() => setReturnReason(r)} className="accent-orange-500" />
+                <input type="radio" name="return-reason" value={r} checked={returnReason === r} onChange={() => setReturnReason(r)} className="accent-neutral-900" />
                 <span>{r}</span>
               </label>
             ))}
           </div>
           <input value={returnNote} onChange={(e) => setReturnNote(e.target.value)} placeholder="Anything else? (optional)" className="mt-2 w-full border rounded px-3 py-2 bg-white" />
           <div className="flex gap-2 mt-3">
-            <button onClick={confirmReturn} disabled={!returnReason || returnBusy} className="bg-orange-500 text-white rounded px-4 py-2 text-xs disabled:opacity-50">
+            <button onClick={confirmReturn} disabled={!returnReason || returnBusy} className="bg-neutral-1000 text-white rounded px-4 py-2 text-xs disabled:opacity-50">
               {returnBusy ? "Sending…" : "Send return request"}
             </button>
             <button onClick={() => setShowReturn(false)} className="border rounded px-4 py-2 text-xs bg-white">Back</button>

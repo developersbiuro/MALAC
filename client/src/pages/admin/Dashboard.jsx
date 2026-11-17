@@ -3,7 +3,7 @@ import { Banknote, ShoppingBag, AlertTriangle, Package } from "lucide-react";
 import api from "../../api/client.js";
 import { rs } from "../../utils/format.js";
 
-function BarChart({ data, valueKey, labelKey, color = "#f85606" }) {
+function BarChart({ data, valueKey, labelKey, color = "#101014" }) {
   const max = Math.max(...data.map((d) => d[valueKey]), 1);
   return (
     <div className="flex items-end gap-2 h-36 mt-3">
