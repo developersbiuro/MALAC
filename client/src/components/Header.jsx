@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, ShoppingCart, Heart, User, ChevronDown, ShieldCheck, Truck } from "lucide-react";
+import { Search, ShoppingBag, Heart, User, ChevronDown, ShieldCheck, Truck } from "lucide-react";
 import api from "../api/client.js";
 import { LOGO_MARK } from "../assets/logoMark.js";
 import InstallAppButton from "./InstallAppButton.jsx";
@@ -50,6 +50,9 @@ export default function Header() {
 
   const catTo = (name) => `/category/${encodeURIComponent(name)}`;
   const byName = (name) => categories.find((c) => c.name === name);
+  // Abdullah's settled category order — har jagah yehi sequence.
+  const CAT_ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
+  const orderedCats = [...categories].sort((a, b) => CAT_ORDER.indexOf(a.name) - CAT_ORDER.indexOf(b.name));
   const navLink = "whitespace-nowrap text-sm font-medium tracking-wide text-[#E0E0E0] hover:text-white transition-colors";
   const dropItem = "block px-4 py-2 text-sm text-neutral-600 hover:bg-neutral-50 hover:text-black";
 
@@ -67,21 +70,21 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-40 bg-[rgba(12,12,12,0.85)] backdrop-blur-md text-neutral-100 shadow-header">
+    <header className="sticky top-0 z-40 bg-[#0C0C0C] text-neutral-100 shadow-header">
       {/* Top bar — the reference design's slim strip */}
-      <div className="bg-[#060606] text-[#BDBDBD] text-[12px] border-b border-[#1F1F1F]">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] h-9 flex items-center justify-between gap-3">
-          <span className="flex items-center gap-1.5 truncate">
+      <div className="bg-[#060606] text-[#BDBDBD] text-[11px] sm:text-[12px] border-b border-[#1F1F1F]">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] h-9 flex items-center justify-between gap-2 sm:gap-3">
+          <span className="flex items-center gap-1.5 min-w-0">
             <Truck size={13} className="shrink-0 text-neutral-300" />
             <span className="truncate">Free Delivery All Over Pakistan
               {payments?.codEnabled !== false && <span className="hidden sm:inline"> <span className="text-white/30 mx-1">|</span> Cash on Delivery Available</span>}
             </span>
           </span>
-          <span className="flex items-center gap-3 shrink-0">
+          <span className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link to="/track-order" className="hover:text-white">Track Order</Link>
             <span className="text-white/20">|</span>
-            <Link to="/faq" className="hover:text-white">Help</Link>
-            <span className="text-white/20">|</span>
+            <Link to="/faq" className="hover:text-white hidden min-[420px]:inline">Help</Link>
+            <span className="text-white/20 hidden min-[420px]:inline">|</span>
             <Link to={user ? "/account" : "/login"} className="hover:text-white flex items-center gap-0.5">Your Account <ChevronDown size={11} /></Link>
             {isStaff && <Link to="/admin" className="hidden sm:flex items-center gap-1 hover:text-white"><ShieldCheck size={12} /> Admin</Link>}
           </span>
@@ -102,7 +105,7 @@ export default function Header() {
           <Link to="/" className={`${navLink} py-2 ${pathname === "/" ? "text-white underline underline-offset-8 decoration-white decoration-2" : ""}`}>Home</Link>
           <Dropdown id="shop" label="Shop" to="/shop">
             <Link to="/shop" className={dropItem} onClick={() => setOpenMenu("")}>All Products</Link>
-            {categories.map((c) => (
+            {orderedCats.map((c) => (
               <Link key={c._id} to={catTo(c.name)} className={dropItem} onClick={() => setOpenMenu("")}>{c.name}</Link>
             ))}
             <Link to="/blog" className={dropItem} onClick={() => setOpenMenu("")}>Blog</Link>
@@ -163,29 +166,29 @@ export default function Header() {
           </div>
           <Link to="/wishlist" className="relative p-2 text-neutral-200 hover:text-white" aria-label="Wishlist">
             <Heart size={20} />
-            {user && wishlist.length > 0 && <span className="absolute top-0 right-0 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{wishlist.length}</span>}
+            <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-0.5 bg-white text-neutral-900 text-[10px] font-bold rounded-full flex items-center justify-center ring-1 ring-black/40">{user ? wishlist.length : 0}</span>
           </Link>
           <button onClick={() => (user ? navigate("/cart") : navigate(`/login?redirect=${encodeURIComponent("/cart")}`))} data-tour="cart" className="relative p-2 text-neutral-200 hover:text-white" aria-label="Cart">
-            <ShoppingCart size={20} />
-            {user && count > 0 && <span className="absolute top-0 right-0 bg-neutral-100 text-neutral-900 text-[10px] font-bold rounded-full px-1">{count}</span>}
+            <ShoppingBag size={20} />
+            <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-0.5 bg-white text-neutral-900 text-[10px] font-bold rounded-full flex items-center justify-center ring-1 ring-black/40">{user ? count : 0}</span>
           </button>
         </div>
       </div>
 
       {/* Mobile search row */}
       <div className="md:hidden max-w-7xl mx-auto px-3 pb-2.5">
-        <form onSubmit={submitSearch} className="flex bg-white/10 rounded-full overflow-hidden border border-white/15">
+        <form onSubmit={submitSearch} className="flex bg-[#161616] rounded-full overflow-hidden border border-[#333] focus-within:border-neutral-400 transition-all">
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search products..."
-            className="flex-1 min-w-0 bg-transparent pl-4 pr-1 py-2 text-sm outline-none text-white placeholder-neutral-400" />
+            className="flex-1 min-w-0 bg-transparent pl-4 pr-1 h-[38px] text-sm outline-none text-white placeholder-neutral-400" />
           <button className="text-neutral-200 px-3.5 shrink-0 flex items-center justify-center" aria-label="Search"><Search size={16} /></button>
         </form>
       </div>
 
       {/* Mobile category strip */}
-      <nav className="lg:hidden flex gap-3 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-white/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400" data-tour="categories">
-        <Link to="/shop" className="whitespace-nowrap text-neutral-200">Shop All</Link>
-        {categories.map((c) => (
-          <Link key={c._id} to={catTo(c.name)} className="whitespace-nowrap">{c.name}</Link>
+      <nav className="lg:hidden flex gap-4 overflow-x-auto no-scrollbar px-3 pt-2 pb-2.5 border-t border-[#1F1F1F] text-[11px] font-semibold uppercase tracking-[0.12em] text-neutral-400" data-tour="categories">
+        <Link to="/shop" className="whitespace-nowrap text-white">Shop All</Link>
+        {orderedCats.map((c) => (
+          <Link key={c._id} to={catTo(c.name)} className="whitespace-nowrap hover:text-white">{c.name}</Link>
         ))}
         <Link to="/blog" className="whitespace-nowrap">Blog</Link>
         {!appMode && <InstallAppButton variant="link" className="text-neutral-200" />}
