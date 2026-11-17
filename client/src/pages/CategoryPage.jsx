@@ -125,15 +125,15 @@ export default function CategoryPage() {
       <section className="relative overflow-hidden bg-lux-deep text-white rounded-3xl px-5 py-8 sm:px-10 sm:py-12">
         <img src={HERO_SILK} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover opacity-45" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
-        <img src={LOGO_MARK} alt="" aria-hidden className="absolute right-6 sm:right-12 top-1/2 -translate-y-1/2 h-32 sm:h-44 w-auto opacity-90 pointer-events-none" />
-        <div className="relative max-w-2xl">
+        <img src={LOGO_MARK} alt="" aria-hidden className="absolute right-4 sm:right-12 top-1/2 -translate-y-1/2 h-24 sm:h-44 w-auto opacity-50 sm:opacity-90 pointer-events-none" />
+        <div className="relative max-w-[62%] sm:max-w-2xl">
           <p className="flex items-center gap-3 text-[11px] sm:text-xs font-semibold tracking-[0.34em] text-neutral-300 uppercase">
             <span className="inline-block h-px w-8 bg-neutral-400" /> Premium Collection <span className="inline-block h-px w-8 bg-neutral-400" />
           </p>
           <h1 className="font-display text-4xl sm:text-6xl font-bold tracking-wide mt-3 uppercase">{categoryName}</h1>
           <p className="font-display text-base sm:text-xl text-neutral-300 italic mt-2">Step into Luxury – Redefine Your Style</p>
           <a href="#cat-products"
-            className="mt-6 inline-flex items-center gap-2 bg-gradient-to-b from-neutral-100 to-neutral-300 text-neutral-900 text-xs font-bold tracking-[0.12em] uppercase px-7 py-3.5 rounded-full shadow hover:from-white hover:to-neutral-200 transition">
+            className="mt-6 inline-flex items-center gap-2 whitespace-nowrap bg-gradient-to-b from-neutral-100 to-neutral-300 text-neutral-900 text-xs font-bold tracking-[0.12em] uppercase px-7 py-3.5 rounded-full shadow hover:from-white hover:to-neutral-200 transition">
             Explore Collection <span aria-hidden>→</span>
           </a>
           <p className="flex gap-1.5 mt-6" aria-hidden>

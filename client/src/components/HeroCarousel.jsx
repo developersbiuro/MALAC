@@ -38,7 +38,7 @@ export default function HeroCarousel() {
             Premium Lifestyle Store
           </p>
           <h1
-            className="font-sans text-[32px] sm:text-6xl lg:text-[52px] font-extrabold leading-[1.1] tracking-tight text-white mt-4 fade-up"
+            className="font-sans text-[32px] sm:text-5xl lg:text-[52px] font-extrabold leading-[1.1] tracking-tight text-white mt-4 fade-up"
             style={{ animationDelay: "70ms" }}
           >
             MORE THAN STYLE.
@@ -64,7 +64,7 @@ export default function HeroCarousel() {
           type="button"
           aria-label="Scroll down"
           onClick={() => window.scrollBy({ top: window.innerHeight - 140, behavior: "smooth" })}
-          className="relative mt-10 sm:mt-0 sm:absolute sm:bottom-6 sm:left-8 lg:left-[60px] flex items-start gap-2.5 animate-scroll-bob cursor-pointer"
+          className="relative mt-10 flex items-start gap-2.5 animate-scroll-bob cursor-pointer sm:hidden lg:flex lg:absolute lg:mt-0 lg:bottom-6 lg:left-[60px]"
         >
           <span className="flex flex-col items-center gap-1.5">
             <span className="block w-[18px] h-[28px] rounded-full border-[1.5px] border-[#999] relative">
