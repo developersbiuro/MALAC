@@ -143,7 +143,7 @@ function renderPage(res, page) {
 router.get("/shop", async (req, res) => {
   const title = "Shop All Products — MALAC | Online Shopping in Pakistan";
   const description =
-    "Shop online in Pakistan at MALAC — mobiles & tablets, electronics, fashion, kids, home & living, beauty & health, groceries, sports and toys & baby, with Cash on Delivery and free shipping on orders over Rs. 3,000.";
+    "Shop online in Pakistan at MALAC — men's fashion, women's fashion, watches, eyewear, bags & accessories and mobile accessories, with Cash on Delivery and free shipping on orders over Rs. 3,000.";
   let categories = [];
   let products = [];
   if (await tryDb()) {
@@ -161,7 +161,7 @@ router.get("/shop", async (req, res) => {
   const catLinks = categories
     .map(
       (c) =>
-        `<li><a href="/shop?category=${encodeURIComponent(c.name)}">${esc(c.name)}</a></li>`
+        `<li><a href="/category/${encodeURIComponent(c.name)}">${esc(c.name)}</a></li>`
     )
     .join("");
   const cards = products
@@ -179,7 +179,7 @@ router.get("/shop", async (req, res) => {
     .join("\n");
   const content = `<main>
 <h1>Shop All Products at MALAC</h1>
-<p>MALAC — M.A Luxury Apparel Collection — is an online shopping store in Pakistan. Shop mobiles &amp; tablets, electronics, fashion, kids, home &amp; living, beauty &amp; health, groceries, sports &amp; fitness and toys &amp; baby, with Cash on Delivery, JazzCash, Easypaisa and bank transfer, and free standard shipping on orders over Rs. 3,000 (standard delivery Rs. 249, 2–5 working days, nationwide).</p>
+<p>MALAC — M.A Luxury Apparel Collection — is an online shopping store in Pakistan. Shop men's fashion, women's fashion, watches, eyewear, bags &amp; accessories and mobile accessories, with Cash on Delivery, JazzCash, Easypaisa and bank transfer, and free standard shipping on orders over Rs. 3,000 (standard delivery Rs. 249, 2–5 working days, nationwide).</p>
 <nav aria-label="Categories"><h2>Categories</h2><ul>${catLinks}</ul></nav>
 <section><h2>Products</h2>
 ${cards}
@@ -199,6 +199,65 @@ ${cards}
     content,
     jsonLd,
   });
+});
+
+// ---- /category/:name -------------------------------------------------------
+// Silver theme (2026-11-17): every category has its own page in the SPA,
+// so crawlers get a matching server-rendered page here too. Unknown
+// category names go to /shop instead of a soft-404 shell.
+router.get("/category/:name", async (req, res) => {
+  let category = null;
+  let products = [];
+  if (await tryDb()) {
+    try {
+      category = await Category.findOne({ name: req.params.name }).select("name").lean();
+      if (category) {
+        products = await Product.find({
+          category: category.name,
+          status: { $in: ["Active", "Out of Stock"] },
+        })
+          .select("title slug category basePrice salePrice images ratingAvg ratingCount")
+          .sort({ createdAt: -1 })
+          .limit(60)
+          .lean();
+      }
+    } catch {
+      /* fall through — redirect below */
+    }
+  }
+  if (!category) return res.redirect(302, "/shop");
+  const url = `${SITE_URL}/category/${encodeURIComponent(category.name)}`;
+  const title = `${category.name} — Buy Online in Pakistan | MALAC`;
+  const description = `Shop ${category.name} online in Pakistan at MALAC — Cash on Delivery and nationwide delivery in 2–5 working days (standard Rs. 249, free on orders over Rs. 3,000).`;
+  const cards = products
+    .map((p) => {
+      const price = priceOf(p);
+      const img = p.images?.[0]
+        ? `<img src="${esc(p.images[0])}" alt="${esc(p.title)}" loading="lazy" />`
+        : "";
+      const was =
+        p.salePrice > 0 && p.basePrice > p.salePrice
+          ? ` <s>${rs(p.basePrice)}</s>`
+          : "";
+      return `<article><a href="/product/${esc(p.slug)}">${img}<h3>${esc(p.title)}</h3></a><p>${esc(p.category)}</p><p><strong>${rs(price)}</strong>${was}</p></article>`;
+    })
+    .join("\n");
+  const content = `<main>
+<nav><a href="/shop">Shop</a> &rsaquo; ${esc(category.name)}</nav>
+<h1>${esc(category.name)}</h1>
+<p>Shop ${esc(category.name)} at MALAC — M.A Luxury Apparel Collection — with Cash on Delivery and nationwide delivery in 2–5 working days (standard delivery Rs. 249, free on orders over Rs. 3,000).</p>
+<section><h2>Products</h2>
+${cards}
+</section>
+</main>`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: title,
+    description,
+    url,
+  };
+  renderPage(res, { title, description, canonical: url, content, jsonLd });
 });
 
 // ---- /product/:slug -------------------------------------------------------
@@ -246,7 +305,7 @@ router.get("/product/:slug", async (req, res) => {
       ? `<p>Rated ${Number(product.ratingAvg).toFixed(1)} / 5 by ${product.ratingCount} customer(s).</p>`
       : "";
   const content = `<main>
-<nav><a href="/shop">Shop</a> &rsaquo; <a href="/shop?category=${encodeURIComponent(product.category)}">${esc(product.category)}</a></nav>
+<nav><a href="/shop">Shop</a> &rsaquo; <a href="/category/${encodeURIComponent(product.category)}">${esc(product.category)}</a></nav>
 <h1>${esc(product.title)}</h1>
 ${gallery}
 <p><strong>${rs(price)}</strong>${was} — ${esc(product.unitQty || 1)} ${esc(product.unit || "Pc")}</p>
@@ -301,7 +360,7 @@ const STATIC_PAGES = {
     description:
       "MALAC is M.A Luxury Apparel Collection, an online shopping store based in Faisalabad, Pakistan — fashion, mobiles, electronics, beauty, home & living and more with Cash on Delivery nationwide.",
     heading: "About MALAC",
-    body: `<p>MALAC — short for M.A Luxury Apparel Collection (M.A are the initials of the founder, Muhammad Abdullah) — is an online shopping store in Pakistan, based in Faisalabad, Punjab. The catalogue covers fashion for men, women and kids alongside mobiles &amp; tablets, electronics, home &amp; living, beauty &amp; health, groceries, sports &amp; fitness and toys &amp; baby.</p><p>Customers pay by Cash on Delivery, JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay or FirstPay — HBL Microfinance Bank. Standard delivery is Rs. 249 and free on orders over Rs. 3,000; express delivery is Rs. 399. Orders are delivered nationwide in 2–5 working days through courier partners including TCS, Leopards, Trax and PostEx.</p><p>Support: WhatsApp +92 323 6016684 · Email info@malac.pp.ua</p>`,
+    body: `<p>MALAC — short for M.A Luxury Apparel Collection (M.A are the initials of the founder, Muhammad Abdullah) — is an online shopping store in Pakistan, based in Faisalabad, Punjab. The catalogue covers men's fashion, women's fashion, watches, eyewear, bags &amp; accessories and mobile accessories.</p><p>Customers pay by Cash on Delivery, JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay or FirstPay — HBL Microfinance Bank. Standard delivery is Rs. 249 and free on orders over Rs. 3,000; express delivery is Rs. 399. Orders are delivered nationwide in 2–5 working days through courier partners including TCS, Leopards, Trax and PostEx.</p><p>Support: WhatsApp +92 323 6016684 · Email info@malac.pp.ua</p>`,
   },
   "/faq": {
     title: "FAQs — MALAC | Online Shopping in Pakistan",

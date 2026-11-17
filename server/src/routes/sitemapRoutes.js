@@ -62,14 +62,14 @@ router.get("/sitemap.xml", async (req, res) => {
 
   if (await tryDb()) {
     try {
-      // NOTE: the shop filters by category NAME (productController's
-      // filter.category, and every in-site link uses ?category=<name>),
-      // so category URLs here use the URL-encoded name — a slug would
-      // land on an empty listing.
+      // Category pages live at /category/<name> in the silver theme
+      // (the shop also filters by category NAME), so sitemap category
+      // URLs use the URL-encoded name — a slug would land on an empty
+      // listing.
       const categories = await Category.find().select("name").lean();
       for (const c of categories) {
         entries.push({
-          loc: `${SITE_URL}/shop?category=${encodeURIComponent(c.name)}`,
+          loc: `${SITE_URL}/category/${encodeURIComponent(c.name)}`,
           lastmod: today,
           changefreq: "weekly",
           priority: "0.7",

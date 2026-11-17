@@ -117,6 +117,12 @@
       }
     },
     {
+      "source": "/category/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/product/(.*)",
       "destination": {
         "service": "server"
