@@ -142,6 +142,13 @@ function renderPage(res, page) {
   const { title, description, canonical, image, jsonLd } = page;
   const content = wrapFallback(page.content);
   res.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=60");
+  // These routes serve full HTML documents that must load the app's own
+  // JS/CSS/images — the global API security header (default-src 'none',
+  // meant for JSON/XML) blocks ALL of that, leaving visitors stuck on
+  // the raw fallback forever (Abdullah + fresh-browser repro,
+  // 2026-11-17). Page responses carry the same policy as the static
+  // homepage instead.
+  res.set("Content-Security-Policy", "frame-ancestors 'none'");
   getTemplate()
     .then((tpl) => {
       let html = tpl;
