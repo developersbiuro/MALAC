@@ -135,7 +135,14 @@ body{margin:0}
 .pr-fallback li{margin:4px 0}
 </style>`;
 function wrapFallback(content) {
-  return `${FALLBACK_STYLE}<div class="pr-fallback"><p class="pr-brand">MALAC</p><p class="pr-note">Loading the full store — one moment…</p>${content}</div>`;
+  // The version marker matters beyond tidiness: browsers that cached a
+  // pre-CSP-fix copy of these pages keep revalidating against the old
+  // ETag and getting 304s (the body was identical, only the CSP header
+  // changed), which strands them on the blocked raw page indefinitely
+  // (Abdullah's phone, 2026-11-17). Any body change mints a fresh ETag
+  // and forces a full 200 with the fixed headers — bump this marker
+  // whenever a header-only fix must reach cached clients.
+  return `<!-- malac-page v2 -->\n${FALLBACK_STYLE}<div class="pr-fallback"><p class="pr-brand">MALAC</p><p class="pr-note">Loading the full store — one moment…</p>${content}</div>`;
 }
 
 function renderPage(res, page) {
