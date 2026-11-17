@@ -14,11 +14,11 @@ export default function HeroCarousel() {
         src={DESIGN_HERO}
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 w-full h-full object-cover object-[70%_center] lg:object-center"
+        className="absolute inset-0 w-full h-full object-cover object-[78%_center] lg:object-center"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent lg:hidden" />
-      <div className="relative max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-[60px] min-h-[480px] sm:min-h-[540px] lg:min-h-[600px] flex flex-col justify-center py-16">
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent lg:hidden" />
+      <div className="relative max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-[60px] min-h-[480px] sm:min-h-[540px] lg:min-h-[600px] flex flex-col justify-end pb-24 pt-16 sm:justify-center sm:py-16">
         <div className="max-w-[840px]">
           <p className="text-[13px] font-semibold tracking-[0.46em] text-[#A3A3A3] uppercase fade-up">
             Premium Lifestyle Store
@@ -46,7 +46,7 @@ export default function HeroCarousel() {
             </Link>
           </div>
         </div>
-        <div className="absolute bottom-6 left-5 sm:left-8 lg:left-[60px] flex items-start gap-2.5">
+        <div className="absolute bottom-6 left-5 sm:left-8 lg:left-[60px] hidden sm:flex items-start gap-2.5">
           <span className="flex flex-col items-center gap-1.5">
             <Mouse size={16} className="text-[#999]" />
             <span className="w-px h-9 bg-white/35" />
