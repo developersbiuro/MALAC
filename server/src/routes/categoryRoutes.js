@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { protect, isStaff, requirePermission } from "../middleware/auth.js";
+import { anonCache } from "../utils/anonCache.js";
 import * as categories from "../controllers/categoryController.js";
 
 const router = Router();
@@ -11,7 +12,7 @@ const publicCache = (seconds) => (req, res, next) => {
   }
   next();
 };
-router.get("/", publicCache(300), categories.listCategories);
+router.get("/", publicCache(300), anonCache(120_000), categories.listCategories);
 // Category management is gated by the "categories" permission.
 router.post("/", protect, isStaff, requirePermission("categories"), categories.createCategory);
 router.put("/:id", protect, isStaff, requirePermission("categories"), categories.updateCategory);

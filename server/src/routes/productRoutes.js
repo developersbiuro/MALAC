@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { protect, isStaff, requirePermission } from "../middleware/auth.js";
+import { anonCache } from "../utils/anonCache.js";
 import * as products from "../controllers/productController.js";
 
 const router = Router();
@@ -18,9 +19,9 @@ const publicCache = (seconds) => (req, res, next) => {
   }
   next();
 };
-router.get("/", publicCache(120), products.listProducts);
+router.get("/", publicCache(120), anonCache(60_000), products.listProducts);
 router.get("/suggest", products.suggest);
-router.get("/:slug", publicCache(60), products.getProduct);
+router.get("/:slug", publicCache(60), anonCache(30_000), products.getProduct);
 // Product management is gated by the "products" permission (Super Admin
 // has it always; a Vice-Admin only when the Super Admin granted it).
 router.post("/", protect, isStaff, requirePermission("products"), products.createProduct);
