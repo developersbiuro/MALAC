@@ -91,7 +91,27 @@ export default function Home() {
 
   useEffect(() => {
     api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {});
-    api.get("/products", { params: { flashSale: "true", limit: 12 } }).then((r) => setFlash(r.data.products)).catch(() => {});
+    // Flash Sale (Abdullah, 2026-11-17): MIX categories — pehle har
+    // category ka aik product (store ki category order me), phir baqi.
+    api.get("/products", { params: { flashSale: "true", limit: 12 } }).then((r) => {
+      const ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
+      const groups = new Map();
+      for (const p of r.data.products) {
+        if (!groups.has(p.category)) groups.set(p.category, []);
+        groups.get(p.category).push(p);
+      }
+      const cats = [...ORDER.filter((c) => groups.has(c)), ...[...groups.keys()].filter((c) => !ORDER.includes(c))];
+      const mixed = [];
+      for (let round = 0; ; round++) {
+        let added = false;
+        for (const c of cats) {
+          const g = groups.get(c);
+          if (g[round]) { mixed.push(g[round]); added = true; }
+        }
+        if (!added) break;
+      }
+      setFlash(mixed);
+    }).catch(() => {});
     api.get("/products", { params: { sort: "newest", limit: 10 } }).then((r) => setNewest(r.data.products)).catch(() => {});
     api.get("/products", { params: { limit: 100 } }).then((r) => setPool(r.data.products)).catch(() => {});
   }, []);
