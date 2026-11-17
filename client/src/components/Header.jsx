@@ -50,6 +50,10 @@ export default function Header() {
 
   const catTo = (name) => `/category/${encodeURIComponent(name)}`;
   const byName = (name) => categories.find((c) => c.name === name);
+  // Home par header hero photo ke UPAR transparent beth'ta hai — bilkul
+  // Abdullah ki reference pic ki tarah (navbar ke neeche tak hero ki
+  // background jati hai). Baqi pages par solid black, taake text parha jaye.
+  const overlay = pathname === "/";
   // Abdullah's settled category order — har jagah yehi sequence.
   const CAT_ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
   const orderedCats = [...categories].sort((a, b) => CAT_ORDER.indexOf(a.name) - CAT_ORDER.indexOf(b.name));
@@ -70,9 +74,11 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0C0C0C] text-neutral-100 shadow-header">
+    <header className={overlay
+      ? "absolute inset-x-0 top-0 z-40 bg-gradient-to-b from-black/70 via-black/40 to-transparent text-neutral-100"
+      : "sticky top-0 z-40 bg-[#0C0C0C] text-neutral-100 shadow-header"}>
       {/* Top bar — the reference design's slim strip */}
-      <div className="bg-[#060606] text-[#BDBDBD] text-[11px] sm:text-[12px] border-b border-[#1F1F1F]">
+      <div className={`${overlay ? "bg-transparent border-white/10" : "bg-[#060606] border-[#1F1F1F]"} text-[#BDBDBD] text-[11px] sm:text-[12px] border-b`}>
         <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] h-9 flex items-center justify-between gap-2 sm:gap-3">
           <span className="flex items-center gap-1.5 min-w-0">
             <Truck size={13} className="shrink-0 text-neutral-300" />
@@ -92,7 +98,7 @@ export default function Header() {
       </div>
 
       {/* Main row — lockup · nav · search · icons */}
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] py-3 lg:py-0 lg:h-[84px] flex items-center gap-3 sm:gap-5 border-b border-[#1A1A1A]">
+      <div className={`max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] py-3 lg:py-0 lg:h-[84px] flex items-center gap-3 sm:gap-5 border-b ${overlay ? "border-white/10" : "border-[#1A1A1A]"}`}>
         <Link to="/" className="shrink-0 flex items-center gap-2.5" aria-label="MALAC — home">
           <img src={LOGO_MARK} alt="" className="h-10 sm:h-[42px] w-auto" />
           <span className="leading-none">

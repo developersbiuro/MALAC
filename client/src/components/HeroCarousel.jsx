@@ -18,7 +18,7 @@ export default function HeroCarousel() {
       />
       <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent lg:hidden" />
-      <div className="relative max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-[60px] min-h-[480px] sm:min-h-[540px] lg:min-h-[600px] flex flex-col justify-end pb-24 pt-16 sm:justify-center sm:py-16">
+      <div className="relative max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-[60px] min-h-[480px] sm:min-h-[540px] lg:min-h-[600px] flex flex-col justify-end pb-24 pt-[186px] sm:justify-center sm:pt-[138px] sm:pb-16 lg:pt-[120px]">
         <div className="max-w-[840px]">
           <p className="text-[13px] font-semibold tracking-[0.46em] text-[#A3A3A3] uppercase fade-up">
             Premium Lifestyle Store
