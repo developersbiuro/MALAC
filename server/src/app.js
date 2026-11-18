@@ -66,6 +66,9 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: "2mb" }));
+// Google sign-in (redirect mode) posts its ID token as a classic form
+// submission, so form bodies must parse too — same 2 MB cap.
+app.use(express.urlencoded({ extended: false, limit: "2mb" }));
 
 // Global API backstop (Abdullah's hardening ask, 2026-11-14): a generous
 // per-IP ceiling over the whole API so scraping / flooding runs into a

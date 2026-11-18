@@ -149,7 +149,7 @@ export default function Signup() {
         )}
 
         <div className="flex items-center gap-3 my-4"><span className="flex-1 border-t" /><span className="text-xs text-gray-400">OR</span><span className="flex-1 border-t" /></div>
-        <GoogleButton onDone={(data) => { saveSession(data); markGuidePending(); navigate(redirect, { replace: true }); }} />
+        <GoogleButton onDone={(data) => { saveSession(data); markGuidePending(); navigate(redirect, { replace: true }); }} nextPath={redirect} guidePending />
         <p className="text-sm text-center mt-4">Already have an account? <Link to="/login" className="text-brand font-medium">Log in</Link></p>
       </div>
     </main>

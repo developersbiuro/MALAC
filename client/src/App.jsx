@@ -32,6 +32,7 @@ const ProfileSettings = lazy(() => import("./pages/ProfileSettings.jsx"));
 const AccountHub = lazy(() => import("./pages/AccountHub.jsx"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage.jsx"));
 const Login = lazy(() => import("./pages/Login.jsx"));
+const AuthComplete = lazy(() => import("./pages/AuthComplete.jsx"));
 const Signup = lazy(() => import("./pages/Signup.jsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.jsx"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword.jsx"));
@@ -175,6 +176,7 @@ export default function App() {
         <Route path="/account/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/wishlist" element={<ProtectedRoute><WishlistPage /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
+        <Route path="/auth/complete" element={<AuthComplete />} />
         <Route path="/signup" element={<Signup />} />
         {/* Customer forgot password: request a reset link by email */}
         <Route path="/forgot-password" element={<ForgotPassword />} />

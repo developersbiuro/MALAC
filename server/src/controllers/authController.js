@@ -489,14 +489,18 @@ export const resetCustomerPassword = asyncHandler(async (req, res) => {
 // email matches a staff account is refused here — staff must use the Admin
 // Login (OTP or password). Only a verified Google ID token is accepted —
 // an unverified typed profile can never claim the owner's email.
-export const googleLogin = asyncHandler(async (req, res) => {
-  const profile = await verifyGoogleCredential(req.body);
+// Shared Google sign-in core: find-or-create the customer for a verified
+// Google profile. Returns { user, token }; throws a STAFF_GOOGLE error
+// when the identity belongs to a staff account.
+async function completeGoogleSignIn(profile, ref) {
   let user = await User.findOne({ $or: [{ googleId: profile.googleId }, { email: profile.email }] });
   if (user && isStaffUser(user)) {
-    return res.status(403).json({ message: "Staff accounts cannot sign in with Google. Please use the Admin Login." });
+    const err = new Error("Staff accounts cannot sign in with Google. Please use the Admin Login.");
+    err.code = "STAFF_GOOGLE";
+    throw err;
   }
   if (!user) {
-    const referrer = await resolveReferrer(req.body?.ref);
+    const referrer = await resolveReferrer(ref);
     user = await User.create({
       name: profile.name, email: profile.email,
       phone: `google-${profile.googleId}`.slice(0, 30),
@@ -509,7 +513,50 @@ export const googleLogin = asyncHandler(async (req, res) => {
   } else if (!user.googleId) {
     user.googleId = profile.googleId; user.emailVerified = true; await user.save();
   }
-  res.json({ user: publicUser(user), token: generateToken(user) });
+  return { user, token: generateToken(user) };
+}
+
+export const googleLogin = asyncHandler(async (req, res) => {
+  const profile = await verifyGoogleCredential(req.body);
+  try {
+    const { user, token } = await completeGoogleSignIn(profile, req.body?.ref);
+    res.json({ user: publicUser(user), token });
+  } catch (err) {
+    if (err.code === "STAFF_GOOGLE") return res.status(403).json({ message: err.message });
+    throw err;
+  }
+});
+
+// -- Login with Google, REDIRECT mode (GIS ux_mode: "redirect") --
+// Google POSTs the ID token here as a form submission after a full-page
+// trip to Google — no popup window is involved, so browsers/extensions
+// that block popups cannot break sign-in (Abdullah's Chrome blocked the
+// GIS popup on malac.pp.ua only, 2026-11-18). On success we 302 back to
+// the client with the session in a URL fragment (fragments never reach
+// servers or logs); /auth/complete on the client saves it. Failures go
+// back to /login with a readable googleError message.
+export const googleRedirect = asyncHandler(async (req, res) => {
+  const base = env.clientUrl.replace(/\/$/, "");
+  const fail = (msg) => res.redirect(302, `${base}/login?googleError=${encodeURIComponent(msg)}`);
+  // GIS double-submit CSRF check: when Google set the g_csrf_token
+  // cookie, the POSTed token must match it.
+  const cookieToken = (req.headers.cookie || "").split(";").map((c) => c.trim())
+    .find((c) => c.startsWith("g_csrf_token="))?.split("=").slice(1).join("=") || "";
+  const bodyToken = String(req.body?.g_csrf_token || "");
+  if (cookieToken && bodyToken && cookieToken !== bodyToken) {
+    return fail("Google sign-in could not be verified. Please try again.");
+  }
+  try {
+    const profile = await verifyGoogleCredential({ credential: req.body?.credential });
+    const ref = (req.headers.cookie || "").split(";").map((c) => c.trim())
+      .find((c) => c.startsWith("malac_ref="))?.split("=").slice(1).join("=") || "";
+    const { user, token } = await completeGoogleSignIn(profile, decodeURIComponent(ref));
+    const u = encodeURIComponent(JSON.stringify(publicUser(user)));
+    return res.redirect(302, `${base}/auth/complete#t=${encodeURIComponent(token)}&u=${u}`);
+  } catch (err) {
+    if (err.code === "STAFF_GOOGLE") return fail(err.message);
+    return fail("Google sign-in failed. Please try again.");
+  }
 });
 
 export const me = asyncHandler(async (req, res) => {

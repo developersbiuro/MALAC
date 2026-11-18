@@ -13,32 +13,40 @@ import { useSeo } from "../utils/seo.js";
 //  3) Continue with Google.
 // Supports ?redirect=/checkout so shoppers return to checkout after login.
 // (Staff do NOT sign in here — they use the Admin Login at /admin.)
-export function GoogleButton({ onDone }) {
+export function GoogleButton({ onDone, nextPath = "/", guidePending = false }) {
   const [error, setError] = useState("");
   const buttonRef = useRef(null);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
   // Real mode (VITE_GOOGLE_CLIENT_ID configured): render the official
-  // Google Identity Services button. Google calls back with an ID token
-  // (credential), which the server verifies — no fabricated profile.
+  // Google Identity Services button in REDIRECT mode — clicking it takes
+  // the whole page to Google and back (no popup window). Popup mode
+  // broke for users whose browsers/extensions block popups (Abdullah's
+  // Chrome blocked the GIS popup on this site only, 2026-11-18).
+  // Google POSTs the verified ID token to /api/auth/google/redirect,
+  // which creates the session and returns via /auth/complete.
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || !buttonRef.current) return;
+    // Where to land after the round trip + the referral code ride along
+    // in storage/cookie because the callback happens on the server.
+    try {
+      sessionStorage.setItem("malac_google_next", nextPath || "/");
+      if (guidePending) sessionStorage.setItem("malac_google_guide", "1");
+      const ref = sessionStorage.getItem("malac_ref");
+      if (ref) document.cookie = `malac_ref=${encodeURIComponent(ref)}; Path=/; Max-Age=600; SameSite=Lax`;
+    } catch { /* storage unavailable — sign-in still works, defaults apply */ }
+    // A failed redirect sign-in returns to /login?googleError=…
+    const googleError = new URLSearchParams(window.location.search).get("googleError");
+    if (googleError) setError(googleError);
     let cancelled = false;
     loadGoogleIdentity()
       .then((google) => {
         if (cancelled || !buttonRef.current) return;
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
-          callback: async (response) => {
-            setError("");
-            try {
-              const r = await api.post("/auth/google", { credential: response.credential, ref: (() => { try { return sessionStorage.getItem("malac_ref") || ""; } catch { return ""; } })() });
-              onDoneRef.current(r.data);
-            } catch (err) {
-              setError(err.response?.data?.message || "Google sign-in failed");
-            }
-          },
+          ux_mode: "redirect",
+          login_uri: `${window.location.origin}/api/auth/google/redirect`,
         });
         google.accounts.id.renderButton(buttonRef.current, {
           theme: "outline", size: "large", text: "continue_with",
@@ -192,7 +200,7 @@ export default function Login() {
           </form>
         ))}
         <div className="flex items-center gap-3 my-4"><span className="flex-1 border-t" /><span className="text-xs text-gray-400">OR</span><span className="flex-1 border-t" /></div>
-        <GoogleButton onDone={finish} />
+        <GoogleButton onDone={finish} nextPath={redirect} />
         <p className="text-sm text-center mt-4">New to MALAC? <Link to={`/signup${redirect !== "/" ? `?redirect=${encodeURIComponent(redirect)}` : ""}`} className="text-brand font-medium">Sign up</Link></p>
       </div>
     </main>

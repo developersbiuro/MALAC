@@ -51,6 +51,7 @@ router.post("/password-reset/complete", ...resetComplete, auth.completePasswordR
 router.post("/password/forgot", ...resetRequest, auth.forgotCustomerPassword);
 router.post("/password/reset", ...resetComplete, auth.resetCustomerPassword);
 router.post("/google", rateLimit({ windowMs: 15 * MIN, max: 60, key: ipKey }), auth.googleLogin);
+router.post("/google/redirect", rateLimit({ windowMs: 15 * MIN, max: 60, key: ipKey }), auth.googleRedirect);
 router.get("/me", protect, auth.me);
 router.get("/referral", protect, auth.referralInfo);
 router.put("/me", protect, auth.updateProfile);
