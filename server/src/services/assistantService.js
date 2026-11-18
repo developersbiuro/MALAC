@@ -77,7 +77,7 @@ async function catalogueSnapshot() {
   const products = await Product.find({ status: { $in: ["Active", "Out of Stock"] } })
     .select("title slug category subCategory description images basePrice salePrice stock status variants tags flashSale ratingAvg ratingCount")
     .sort({ sold: -1 })
-    .limit(60)
+    .limit(120)
     .lean();
   const lines = products.map((p) => {
     const price = p.salePrice > 0 ? p.salePrice : p.basePrice;

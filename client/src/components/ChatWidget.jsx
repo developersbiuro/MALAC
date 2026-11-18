@@ -14,12 +14,14 @@ import { hasSession, loginPath } from "../utils/authGate.js";
 //     the Daraz-style own-orders picker, structured browse ("2000 ke
 //     andar shoes dikhao" → real filtered DB query), compare/similar,
 //     cart view, support-ticket intake, cancellation guidance.
-//  2. FAQ rules for the store's fixed policies.
-//  3. The AI layer (POST /assistant/chat, Gemini free tier) for
-//     everything else — grounded in the full live catalogue, the real
-//     store Settings, owner FAQs and the customer's cart (priced
-//     server-side). Any AI failure silently falls back to product
-//     search + rules, so the chat always works.
+//  2. The AI layer (POST /assistant/chat, Gemini free tier) for
+//     everything else — including policy/FAQ questions (payment,
+//     delivery, returns…), which it answers naturally, grounded in
+//     the full live catalogue, the real store Settings, owner FAQs
+//     and the customer's cart (priced server-side).
+//  3. FAQ rules for the store's fixed policies — ONLY as the
+//     fallback when the AI is unavailable, so a Gemini outage still
+//     yields the exact policy answers instead of a dead end.
 //
 // Persistence: every turn is stored server-side (ChatConversation)
 // keyed by a random local session id; signed-in customers' chats
@@ -514,21 +516,17 @@ export default function ChatWidget() {
       startTicket();
       return;
     }
-    // --- Delivery fees: quoted from the LIVE store Settings ---
-    if (FAQS[5].keys.some((k) => lower.includes(k))) {
-      push(botSay(`Rs. ${fees.free.toLocaleString("en-PK")} ya us se zyada ke order par delivery bilkul FREE hai. Us se kam par standard delivery Rs. ${fees.std} hai.`));
+    // --- Contact a human: instant, with the WhatsApp button (the AI
+    // cannot render tappable links, and this intent wants a human) ---
+    if (FAQS[0].keys.some((k) => lower.includes(k))) {
+      push(botSay(FAQS[0].text, FAQS[0].link ? { link: FAQS[0].link } : {}));
       return;
     }
-    if (FAQS[4].keys.some((k) => lower.includes(k))) {
-      push(botSay(`Delivery pure Pakistan me 2–5 working days me ho jati hai (Express 1–2 din). Standard delivery Rs. ${fees.std} aur Express Rs. ${fees.exp} hai — aur Rs. ${fees.free.toLocaleString("en-PK")} se zyada ke orders par delivery bilkul FREE hai.`));
-      return;
-    }
-    for (const faq of FAQS) {
-      if (faq.keys.some((k) => lower.includes(k))) {
-        push(botSay(faq.text, faq.link ? { link: faq.link } : {}));
-        return;
-      }
-    }
+    // NOTE: informational FAQ questions (payment, delivery, returns
+    // policy, login help…) are NOT intercepted here any more — they go
+    // to the AI layer below, which answers naturally from the same
+    // grounded facts. The fixed FAQ texts survive as the post-AI
+    // fallback (see after the AI block).
 
     // --- Compare / similar (deterministic, DB-true) ---
     if (/\b(compare|muqabla|difference|farq|vs|versus|similar|jaisa|jaisi|alternative|mutabadil)\b/i.test(text)) {
@@ -579,6 +577,25 @@ export default function ChatWidget() {
       setBusy(false);
     }
     if (aiAnswered) return;
+
+    // --- FAQ rules: fallback ONLY (AI unavailable). Delivery fees are
+    // quoted from the LIVE store Settings; the rest use the fixed
+    // policy texts, so an AI outage never leaves a policy question
+    // unanswered. ---
+    if (FAQS[5].keys.some((k) => lower.includes(k))) {
+      push(botSay(`Rs. ${fees.free.toLocaleString("en-PK")} ya us se zyada ke order par delivery bilkul FREE hai. Us se kam par standard delivery Rs. ${fees.std} hai.`));
+      return;
+    }
+    if (FAQS[4].keys.some((k) => lower.includes(k))) {
+      push(botSay(`Delivery pure Pakistan me 2–5 working days me ho jati hai (Express 1–2 din). Standard delivery Rs. ${fees.std} aur Express Rs. ${fees.exp} hai — aur Rs. ${fees.free.toLocaleString("en-PK")} se zyada ke orders par delivery bilkul FREE hai.`));
+      return;
+    }
+    for (const faq of FAQS) {
+      if (faq.keys.some((k) => lower.includes(k))) {
+        push(botSay(faq.text, faq.link ? { link: faq.link } : {}));
+        return;
+      }
+    }
 
     // --- Product search (classic fallback) ---
     if (["dhundh", "dhundo", "product", "chahiye", "dikhao", "show"].some((k) => lower.includes(k)) || text.split(/\s+/).length <= 4) {
