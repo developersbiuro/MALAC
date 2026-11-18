@@ -536,7 +536,14 @@ export const googleLogin = asyncHandler(async (req, res) => {
 // servers or logs); /auth/complete on the client saves it. Failures go
 // back to /login with a readable googleError message.
 export const googleRedirect = asyncHandler(async (req, res) => {
-  const base = env.clientUrl.replace(/\/$/, "");
+  // Return to the SAME origin the sign-in started on (CLIENT_URL still
+  // points at malac1.vercel.app while customers use malac.pp.ua — the
+  // session fragment must land on the origin they started from).
+  const fwdHost = String(req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0].trim();
+  const knownHosts = ["www.malac.pp.ua", "malac.pp.ua", "malac1.vercel.app", "localhost:5173"];
+  const base = knownHosts.includes(fwdHost)
+    ? `${fwdHost.startsWith("localhost") ? "http" : "https"}://${fwdHost}`
+    : env.clientUrl.replace(/\/$/, "");
   const fail = (msg) => res.redirect(302, `${base}/login?googleError=${encodeURIComponent(msg)}`);
   // GIS double-submit CSRF check: when Google set the g_csrf_token
   // cookie, the POSTed token must match it.
