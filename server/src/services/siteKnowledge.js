@@ -86,6 +86,18 @@ HOW TO DO EVERYTHING ON THE WEBSITE (when a customer asks how or where to do som
 - App download karna: Homepage par download wala button hai (Android app). iPhone par browser me hi website khol kar "Add to Home Screen" kar lein.
 - Policies parhna: Page ke neeche (footer) me Terms, Policy (Privacy), FAQ aur About ke links hain; Blog bhi footer aur header se khulta hai.
 
+COMMON PROBLEMS & THEIR SOLUTIONS (troubleshooting — har aam masle ka hal):
+- OTP nahi aa raha: Email OTP ke liye inbox ke sath Spam/Junk folder bhi check karein, 1–2 minute intezar karke "resend" kar sakte hain. WhatsApp OTP ke liye ye pakka karein ke number wahi hai jo account par hai aur WhatsApp us par active hai. Phir bhi na aye to WhatsApp support (+92 323 6016684) par rabta karein.
+- Login nahi ho raha: Pehle ye check karein ke email ya phone number bilkul sahi likha hai aur password me koi ghalti nahi. Password bhool gaye hain to Login page par "Forgot password" se email link ke zariye naya password bana lein. Google se account banaya tha to "Continue with Google" hi use karein.
+- Order place nahi ho raha: Order ke liye login lazmi hai; checkout par email address dena bhi lazmi hai; delivery address save/chuna hua hona chahiye; aur advance payment wale tareeqe par screenshot upload karna lazmi hai. Ye teen cheezein puri hon to order place ho jata hai.
+- Coupon kaam nahi kar raha: Code bilkul sahi likhein (masalan WELCOME10). WELCOME10 sirf naye customer ke pehle order par hai; MALAC500 ke liye order Rs. 5,000 ya zyada ka hona chahiye; ek order par sirf ek coupon lagta hai; expired code nahi chalta.
+- Free delivery nahi lagi: Free delivery sirf Standard delivery par hai aur sirf Rs. 3,000 ya zyada ke order par. Express par free nahi — express select karne par us ki fee lagegi.
+- Order late lag raha hai: Standard delivery 2–5 working days leti hai (kabhi sheher/courier ki wajah se thora zyada). Pehle Track Order se mojooda status dekhein; waqt guzar jaye aur parcel na mile to yahin support ticket bana dein ya WhatsApp par rabta karein — team courier se pata kar ke batati hai.
+- Ghalat size/product select ho gaya: Order ship hone se pehle (Pending/Processing) My Orders se cancel karke sahi order dobara kar dein. Ship ho chuka hai to support se rabta karein.
+- Payment bhej di lekin order confirm nahi hua: Advance payment team khud verify karti hai — thora waqt lag sakta hai. Screenshot aur transaction details checkout par sahi upload hue hon to fikar na karein; team payment match na kar paye to khud rabta karti hai, aur unverified paid order kabhi dispatch nahi hota.
+- Page ya app slow/load nahi ho raha: Page refresh karke dobara try karein; app use kar rahe hain to app band karke dobara kholein. Masla barqarar rahe to WhatsApp par screenshot ke sath bata dein.
+- App install nahi ho raha (Android): Website se download ke baad phone browser ko "install unknown apps" ki ijazat mang sakta hai — settings me us browser ko allow kar dein, phir install ho jayega.
+
 BLOG (guides published on the store's blog at /blog — point customers to the matching guide when their question matches):
 - "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust" (/blog/online-shopping-in-pakistan-malac) — how MALAC works and why it can be trusted.
 - "Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands" (/blog/cash-on-delivery-online-shopping-pakistan) — how COD works and when advance payment makes sense.

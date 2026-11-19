@@ -591,10 +591,22 @@ export default function ChatWidget() {
         // taps it (or agrees next message — see pendingReturnRef).
         const isReturnQ = FAQS[2].keys.some((k) => lower.includes(k));
         if (isReturnQ) pendingReturnRef.current = true;
+        // For account-side tasks the bot cannot do itself, attach the
+        // exact page button so the customer lands in the right section
+        // in one tap (the AI guides step by step in its answer).
+        let actionLink = null;
+        if (!isReturnQ) {
+          if (["address", "setting", "profile", "password", "email change", "phone change"].some((k) => lower.includes(k))) actionLink = { to: "/account/settings", label: "Profile Settings kholein" };
+          else if (lower.includes("cancel")) actionLink = { to: "/orders", label: "My Orders kholein" };
+          else if (["coupon", "voucher", "promo", "discount code"].some((k) => lower.includes(k))) actionLink = { to: "/cart", label: "Cart kholein" };
+          else if (["invite", "refer", "dost ko"].some((k) => lower.includes(k))) actionLink = { to: "/account", label: "My Account kholein" };
+          else if (["mere order", "my order", "orders dekh", "ticket dekh", "mere ticket"].some((k) => lower.includes(k))) actionLink = { to: "/orders", label: "My Orders kholein" };
+        }
         // Server already persisted this turn in /assistant/chat.
         push(botSay(r.data.reply, {
           noLog: true,
           ...(isReturnQ ? { startReturn: true } : {}),
+          ...(actionLink ? { link: actionLink } : {}),
           ...(r.data.products?.length ? { products: r.data.products } : {}),
           ...(r.data.compare ? { compare: r.data.compare } : {}),
         }));
