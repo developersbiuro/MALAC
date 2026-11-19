@@ -243,6 +243,7 @@ export default function ChatWidget() {
   // ("konsa?") re-shows them instantly instead of hitting the AI layer.
   const awaitingRef = useRef(null); // null | "track-choice" | "track-input" | "ticket"
   const choicesRef = useRef(null);
+  const pendingReturnRef = useRef(false);
   const ticketRef = useRef(null); // { type?, orderId?, step }
 
   const goTo = (to) => { setOpen(false); navigate(to); };
@@ -472,6 +473,26 @@ export default function ChatWidget() {
       startTicket();
       return;
     }
+    // --- Explicit "do it for me" command → start the intake now. A
+    // plain return/refund QUESTION ("return kese krte hai", "return
+    // karna hai") is not a command: it goes to the AI below, which
+    // first explains the full step-by-step guide and offers the start
+    // button under its answer (owner feedback 2026-11-19). ---
+    if (/\b(return|refund|exchange|ticket)\b/i.test(text) && /\b(kar do|kr do|kardo|kar dein|kar de|kr dein|shuru kar|start kar|bhej do|laga do|banao|likh do)\b/i.test(text)) {
+      startTicket();
+      return;
+    }
+    // A short agreement right after a return guide ("han kar do") also
+    // starts the intake; any other message clears the pending offer.
+    if (pendingReturnRef.current) {
+      const t = text.trim();
+      if (t.length <= 24 && /^(han|haan|ji|ok|yes|theek|bilkul)?[\s,]*(kar do|kr do|kardo|kar dein|shuru karo|shuru kar do)?[.!]*$/i.test(t) && t.length > 0) {
+        pendingReturnRef.current = false;
+        startTicket();
+        return;
+      }
+      pendingReturnRef.current = false;
+    }
 
     // --- Order tracking: order ID ya phone number ---
     const idMatch = text.match(/MLC[-\s]?[A-Z0-9][A-Z0-9-]{3,}/i);
@@ -511,11 +532,12 @@ export default function ChatWidget() {
       startTracking();
       return;
     }
-    if (FAQS[2].keys.some((k) => lower.includes(k)) && /\b(return|refund|exchange|wapis|kharab|damage|ghalat|wrong)\b/i.test(text) && /\b(karna|chahiye|hai|karna hai|process)\b/i.test(text)) {
-      // A return/complaint ACTION (not just policy info) → intake flow.
-      startTicket();
-      return;
-    }
+    // NOTE: return/refund/exchange messages are NOT intercepted here
+    // any more — informational or action, they go to the AI layer
+    // below, which explains the step-by-step guide first and offers
+    // the "start request" button under its answer. The intake starts
+    // only from that button, an explicit "kar do" command, or the
+    // ticket keywords above.
     // --- Contact a human: instant, with the WhatsApp button (the AI
     // cannot render tappable links, and this intent wants a human) ---
     if (FAQS[0].keys.some((k) => lower.includes(k))) {
@@ -564,9 +586,15 @@ export default function ChatWidget() {
         push(botSay("Aap ki conversation ab hamare support member ke paas hai — wo yahin jawab dein ge."));
       } else if (r.data?.reply) {
         aiAnswered = true;
+        // Return-family answers carry the "start request" button: the
+        // guide comes first, the intake starts only if the customer
+        // taps it (or agrees next message — see pendingReturnRef).
+        const isReturnQ = FAQS[2].keys.some((k) => lower.includes(k));
+        if (isReturnQ) pendingReturnRef.current = true;
         // Server already persisted this turn in /assistant/chat.
         push(botSay(r.data.reply, {
           noLog: true,
+          ...(isReturnQ ? { startReturn: true } : {}),
           ...(r.data.products?.length ? { products: r.data.products } : {}),
           ...(r.data.compare ? { compare: r.data.compare } : {}),
         }));
@@ -592,7 +620,11 @@ export default function ChatWidget() {
     }
     for (const faq of FAQS) {
       if (faq.keys.some((k) => lower.includes(k))) {
-        push(botSay(faq.text, faq.link ? { link: faq.link } : {}));
+        if (faq === FAQS[2]) pendingReturnRef.current = true;
+        push(botSay(faq.text, {
+          ...(faq.link ? { link: faq.link } : {}),
+          ...(faq === FAQS[2] ? { startReturn: true } : {}),
+        }));
         return;
       }
     }
@@ -775,6 +807,17 @@ export default function ChatWidget() {
                           {t.label}
                         </button>
                       ))}
+                    </span>
+                  )}
+                  {m.startReturn && (
+                    <span className="block mt-2">
+                      <button
+                        type="button"
+                        onClick={() => startTicket()}
+                        className="block w-full text-center bg-lux-gradient text-white text-[12px] font-semibold rounded-full px-3 py-2"
+                      >
+                        Return / refund request yahin shuru karein
+                      </button>
                     </span>
                   )}
                   {m.cartView && (

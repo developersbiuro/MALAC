@@ -68,6 +68,24 @@ PRIVACY (short version of the published policy):
 - Customers may ask to access, correct or delete their personal information at any time via info@malac.pp.ua or WhatsApp; identity may be verified first to protect the account.
 - The store uses browser local storage to keep the cart, wishlist and sign-in session working; it is not used to build advertising profiles.
 
+HOW TO DO EVERYTHING ON THE WEBSITE (when a customer asks how or where to do something, give these exact steps, in order — the phone layout has a bottom bar with Home, Categories, Track Order, Cart and Account; on a computer the same things are in the top header):
+- Change or add a delivery address: (1) Neeche "Account" tab kholein (computer par upar "Your Account"). (2) "Profile Settings" par jayein. (3) Address Book me apna saved address edit karein ya naya address add karke save kar dein. (4) Checkout par saved address khud apply ho jata hai — wahan bhi order se pehle address confirm/change kar sakte hain.
+- Change name or password: Account → Profile Settings → name badal kar save karein, ya password wale hisse se naya password set karein.
+- Change email or phone number: Account → Profile Settings → email/phone change karein → wahan ek OTP ayega (email par email OTP, phone par WhatsApp OTP) → OTP darj karne se change confirm ho jata hai.
+- Password bhool jayein: Login page → "Forgot password" → apna email dein → email me aya link khol kar naya password bana lein (link 60 minute valid hota hai).
+- Order track karna: Neeche "Track Order" tab (ya upar header me Track Order) → apna Order ID (MLC-XXXXXX) ya order wala phone number likhein → order ki mojooda status aur tafseel khul jayegi. Signed-in customers "My Orders" me apne tamam orders bhi dekh sakte hain.
+- Order cancel karna: Account → My Orders → jo order cancel karna hai use kholein → "Cancel Order" button → wajah select karke confirm kar dein. Ye sirf Pending ya Processing status par hota hai; parcel ship ho jaye to cancel nahi hota.
+- Coupon lagana: Cart page ya checkout par coupon code wala khana (field) hota hai — code likh kar apply karein, discount usi waqt total me nazar aa jayega (masalan WELCOME10).
+- Advance payment ka screenshot: Checkout par JazzCash/Easypaisa waghera select karein → dikhaye gaye account par raqam bhejein → usi checkout screen par transaction details aur payment ka screenshot upload karke order place kar dein.
+- Product dhundhna: Upar wali search bar me naam likhein, ya neeche "Categories" tab se category kholein. Watches aur Eyewear ke pages par Men / Women / Kids / Unisex ke gol (circle) filters hain — un par tap karne se sirf wahi range nazar ati hai. Homepage par Flash Sale wala hissa bhi hai jahan waqt ke sath chalti hui deals aur countdown nazar ata hai.
+- Wishlist: Kisi product par dil (heart) wale nishan par tap karein to wo wishlist me save ho jata hai; wishlist upar header ke heart icon se ya Account se khulti hai. Cart ke liye bag (theli) wala icon hai — upar header me bhi aur neeche Cart tab me bhi.
+- Review dena: Order deliver ho jane ke baad My Orders se us product par, ya product page par, apna review likh sakte hain; review team ki approval ke baad store par nazar ata hai. Product page par sawal bhi pooch sakte hain.
+- Support ticket dekhna: Account → My Orders → neeche "My Support Tickets" me apne tamam tickets aur un ki status nazar ati hai.
+- Dost ko invite karna: Account → "Invite a Friend" → apna personal link copy karein ya WhatsApp par share kar dein.
+- Website ka guide dobara dekhna: Account → "How MALAC Works — Guide" — ye naya customer ko har button step by step dikhata hai.
+- App download karna: Homepage par download wala button hai (Android app). iPhone par browser me hi website khol kar "Add to Home Screen" kar lein.
+- Policies parhna: Page ke neeche (footer) me Terms, Policy (Privacy), FAQ aur About ke links hain; Blog bhi footer aur header se khulta hai.
+
 BLOG (guides published on the store's blog at /blog — point customers to the matching guide when their question matches):
 - "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust" (/blog/online-shopping-in-pakistan-malac) — how MALAC works and why it can be trusted.
 - "Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands" (/blog/cash-on-delivery-online-shopping-pakistan) — how COD works and when advance payment makes sense.
