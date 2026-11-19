@@ -61,7 +61,7 @@ const FAQS = [
   },
   {
     keys: ["return", "refund", "exchange", "wapis", "wapsi", "tabdeel", "kharab", "damage", "ghalat product", "wrong item"],
-    text: "Return/exchange sirf 7 din ke andar, damaged/defective ya ghalat item par hota hai. Agar aap ka yahi masla hai to 'ticket' likh dein — main aap ki request admin tak pohncha dunga, faisla admin karega. Mukammal policy Policy page par hai.",
+    text: "Return ka tareeqa ye hai: (1) Delivery ke 7 din ke andar order number ke sath rabta karein — yahin 'ticket' likh dein, ya WhatsApp 0323 6016684 / email info@malac.pp.ua par. (2) Team masla check karke item wapas bhejne ka tareeqa batayegi — item unused aur original packaging me hona chahiye. (3) Item hum tak pohnch kar inspect ho jaye to replacement ya refund arrange ho jata hai. Return sirf damaged, defective ya ghalat item par hota hai; change-of-mind par nahi — faisla team inspection ke baad karti hai.",
     link: { to: "/policy", label: "Policy page dekhein" },
   },
   {
