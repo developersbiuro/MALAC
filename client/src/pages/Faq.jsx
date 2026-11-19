@@ -33,7 +33,7 @@ const buildFaqs = (fees) => [
   },
   {
     q: "What can I buy on MALAC?",
-    a: "The catalogue covers nine categories: Mobiles & Tablets, Electronics, Fashion, Kids, Home & Living, Beauty & Health, Groceries, Sports & Fitness, and Toys & Baby. One week that might mean a winter tracksuit or a puffer jacket, a power bank or a security camera, dinner sets, skincare, desi ghee or kids' school supplies — the range keeps growing, and every price is shown in Pakistani Rupees before you order.",
+    a: "The catalogue covers six categories: Men's Fashion, Women's Fashion, Watches, Eyewear, Bags & Accessories, and Mobile Accessories. One week that might mean a winter tracksuit or a puffer jacket, a watch or sunglasses, a wallet, a power bank or a fast charger — the range keeps growing, and every price is shown in Pakistani Rupees before you order.",
   },
   {
     q: "How do I place an order on MALAC?",

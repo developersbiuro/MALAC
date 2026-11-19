@@ -14,7 +14,7 @@ export default function About() {
   const { fees, payments } = usePublicSettings();
   useSeo({
     title: "About MALAC — Online Shopping Store in Pakistan",
-    description: "MALAC (MalacPK) — M.A Luxury Apparel Collection — is an online shopping store based in Faisalabad, Pakistan: mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and nationwide delivery.",
+    description: "MALAC (MalacPK) — M.A Luxury Apparel Collection — is an online shopping store based in Faisalabad, Pakistan: men's & women's fashion, watches, eyewear, bags & accessories and mobile accessories, with Cash on Delivery and nationwide delivery.",
     jsonLd: {
       "@context": "https://schema.org",
       "@graph": [
@@ -37,7 +37,7 @@ export default function About() {
               name: "What is MALAC?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "MALAC (M.A Luxury Apparel Collection, also known as MalacPK) is an online shopping store based in Faisalabad, Pakistan, founded by Muhammad Abdullah. It sells mobiles, electronics, fashion, home & living, beauty, groceries, sports and toys products with Cash on Delivery and delivery all over Pakistan.",
+                text: "MALAC (M.A Luxury Apparel Collection, also known as MalacPK) is an online shopping store based in Faisalabad, Pakistan, founded by Muhammad Abdullah. It sells men's and women's fashion, watches, eyewear, bags & accessories and mobile accessories with Cash on Delivery and delivery all over Pakistan.",
               },
             },
             {

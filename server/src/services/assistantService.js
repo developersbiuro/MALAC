@@ -47,6 +47,7 @@
 //   Timeouts are tight (12s per call) so the worst case stays bounded
 //   and the client falls back to its instant rule-based replies.
 import env from "../config/env.js";
+import { SITE_KNOWLEDGE } from "./siteKnowledge.js";
 import Product from "../models/Product.js";
 import Settings from "../models/Settings.js";
 
@@ -404,7 +405,7 @@ export async function buildAssistantReply({ message, history = [], cart = [] }) 
   const { products, text: catalogue } = await catalogueSnapshot();
   const knowledge = await ownerKnowledge();
   const cartBlock = await cartContext(cart);
-  const systemInstruction = `${STORE_FACTS}${knowledge}\n\nCATALOGUE SNAPSHOT:\n${catalogue}${cartBlock}`;
+  const systemInstruction = `${STORE_FACTS}${knowledge}\n\nFULL WEBSITE KNOWLEDGE (also authoritative — this is the store's own published pages and features, so answer from it whenever a question touches it):\n${SITE_KNOWLEDGE}\n\nCATALOGUE SNAPSHOT:\n${catalogue}${cartBlock}`;
   // Fastest model first (Flash-Lite), then the configured primary,
   // then the remaining fallbacks — speed matters more than depth for
   // these short, fully-grounded shop answers.
