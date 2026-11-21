@@ -415,7 +415,14 @@ const STATIC_PAGES = {
     description:
       "Guides and tips from MALAC: online shopping in Pakistan, Cash on Delivery explained, and how to shop safely and save.",
     heading: "MALAC Blog",
-    body: `<ul><li><a href="/blog/how-to-choose-a-watch-in-pakistan-malac">How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women</a></li><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+    body: `<ul><li><a href="/blog/mobile-accessories-buying-guide-pakistan-malac">Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money</a></li><li><a href="/blog/how-to-choose-a-watch-in-pakistan-malac">How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women</a></li><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+  },
+  "/blog/mobile-accessories-buying-guide-pakistan-malac": {
+    title: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money — MALAC Blog",
+    description:
+      "How to pick a charger, earbuds, a power bank and the small extras from MALAC's fifteen mobile accessories — live prices from Rs 550, the honest notes on imported items, and Cash on Delivery across Pakistan.",
+    heading: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money",
+    body: `<p>A phone is only as good as the things around it. Start with a proper adapter, then one good cable instead of three weak ones, earbuds you will actually wear every day, and a power bank sized for your real day. MALAC's fifteen mobile accessories run from Rs 550 to Rs 3,999, all with Cash on Delivery and standard delivery in 2–5 working days (free over Rs 3,000; three imported items take 10–15 working days). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Mobile Accessories">Shop Mobile Accessories at MALAC</a></p>`,
   },
   "/blog/how-to-choose-a-watch-in-pakistan-malac": {
     title: "How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women — MALAC Blog",
