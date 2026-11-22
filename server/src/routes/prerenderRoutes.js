@@ -415,7 +415,7 @@ const STATIC_PAGES = {
     description:
       "Guides and tips from MALAC: online shopping in Pakistan, Cash on Delivery explained, and how to shop safely and save.",
     heading: "MALAC Blog",
-    body: `<ul><li><a href="/blog/how-to-choose-sunglasses-in-pakistan-malac">How to Choose Sunglasses in Pakistan: UV Protection, Polarized Lenses and the Right Frame for Your Face</a></li><li><a href="/blog/mobile-accessories-buying-guide-pakistan-malac">Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money</a></li><li><a href="/blog/how-to-choose-a-watch-in-pakistan-malac">How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women</a></li><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
+    body: `<ul><li><a href="/blog/how-to-choose-sunglasses-in-pakistan-malac">How to Choose Sunglasses in Pakistan: UV Protection, Polarized Lenses and the Right Frame for Your Face</a></li><li><a href="/blog/mobile-accessories-buying-guide-pakistan-malac">Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money</a></li><li><a href="/blog/how-to-choose-a-watch-in-pakistan-malac">Best Watches in Pakistan: How to Choose the Right Watch for Men and Women</a></li><li><a href="/blog/winter-shopping-in-pakistan-malac">Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It</a></li><li><a href="/blog/online-shopping-in-pakistan-malac">Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust</a></li><li><a href="/blog/cash-on-delivery-online-shopping-pakistan">Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands</a></li></ul>`,
   },
   "/blog/how-to-choose-sunglasses-in-pakistan-malac": {
     title: "How to Choose Sunglasses in Pakistan: UV Protection, Polarized Lenses and the Right Frame for Your Face — MALAC Blog",
@@ -427,21 +427,21 @@ const STATIC_PAGES = {
   "/blog/mobile-accessories-buying-guide-pakistan-malac": {
     title: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money — MALAC Blog",
     description:
-      "How to pick a charger, earbuds, a power bank and the small extras from MALAC's fifteen mobile accessories — live prices from Rs 550, the honest notes on imported items, and Cash on Delivery across Pakistan.",
+      "How to pick a charger, earbuds, a power bank and the small extras from the mobile accessories in Pakistan that MALAC sells — live prices from Rs 550, the honest notes on imported items, and Cash on Delivery across Pakistan.",
     heading: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money",
     body: `<p>A phone is only as good as the things around it. Start with a proper adapter, then one good cable instead of three weak ones, earbuds you will actually wear every day, and a power bank sized for your real day. MALAC's fifteen mobile accessories run from Rs 550 to Rs 3,999, all with Cash on Delivery and standard delivery in 2–5 working days (free over Rs 3,000; three imported items take 10–15 working days). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Mobile Accessories">Shop Mobile Accessories at MALAC</a></p>`,
   },
   "/blog/how-to-choose-a-watch-in-pakistan-malac": {
-    title: "How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women — MALAC Blog",
+    title: "Best Watches in Pakistan: How to Choose the Right Watch for Men and Women — MALAC Blog",
     description:
-      "Buying a watch online in Pakistan? A simple guide to straps, dials, analog vs smart watches — plus men's, women's and couple watches on MALAC from Rs 1,050, with Cash on Delivery across Pakistan.",
-    heading: "How to Choose the Right Watch in Pakistan: A Simple Guide for Men and Women",
+      "Looking for the best watches in Pakistan? A simple guide to straps, dials, analog vs smart watches and what a good watch should cost — plus men's, women's and couple watches on MALAC from Rs 1,050, with Cash on Delivery across Pakistan.",
+    heading: "Best Watches in Pakistan: How to Choose the Right Watch for Men and Women",
     body: `<p>A watch is the one accessory almost everyone wears every day, and one of the hardest things to buy online. Start with the strap — leather for formal, steel for daily, silicone for smart watches — then the dial size, then decide analog or smart. MALAC's watch range runs from Rs 1,050 to the MALAC Signature Watch at Rs 24,999, all with Cash on Delivery and delivery in 2–5 working days (free over Rs 3,000). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Watches">Shop Watches at MALAC</a></p>`,
   },
   "/blog/winter-shopping-in-pakistan-malac": {
     title: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It — MALAC Blog",
     description:
-      "A practical winter shopping guide for Pakistan: start with the everyday fleece layer, add one piece for real cold, and do not forget thermals, gloves and the children — with MALAC's eight winter pieces and Cash on Delivery.",
+      "A practical guide to winter shopping in Pakistan: start with the everyday fleece layer, add one piece for real cold, and do not forget thermals, gloves and the children — with MALAC's eight winter pieces and Cash on Delivery.",
     heading: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It",
     body: `<p>Winter in Pakistan never arrives all at once — a cold morning in Faisalabad, a freezing night in the north, a mild evening in Karachi. Start with the layer you will wear every day (a fleece tracksuit or zipper hoodie), then add one piece for real cold (a hooded puffer jacket), and do not skip the quiet heroes: thermal sets and leather gloves. MALAC's winter range has eight pieces, all with Cash on Delivery and standard delivery in 2–5 working days (Rs. 249, free over Rs. 3,000). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
   },
