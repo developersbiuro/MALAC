@@ -345,6 +345,27 @@ const PRICE_BANDS = {
     { max: 3500, heading: "Ladies Fashion Under Rs. 3,500 in Pakistan" },
   ],
 };
+// Sub-category sections: shoppers also search by type ("earbuds price in
+// Pakistan", "sunglasses for men", "power bank price in Pakistan").
+// Headings map "Category|SubCategory" -> the searched phrase; a group
+// renders only with >= 3 real products. Keys must match the live
+// subCategory values in the catalogue.
+const SUB_HEADINGS = {
+  "Watches|Men": "Men's Watches Price in Pakistan",
+  "Watches|Women": "Women's Watches Price in Pakistan",
+  "Watches|Unisex": "Unisex Watches in Pakistan",
+  "Eyewear|Men": "Sunglasses for Men in Pakistan",
+  "Eyewear|Women": "Women's Sunglasses Price in Pakistan",
+  "Eyewear|Unisex": "Unisex Sunglasses in Pakistan",
+  "Mobile Accessories|Audio": "Wireless Earbuds & Audio Price in Pakistan",
+  "Mobile Accessories|Chargers & Cables": "Mobile Chargers & Cables Price in Pakistan",
+  "Bags & Accessories|Bags": "Handbags for Women in Pakistan",
+  "Bags & Accessories|Wallets": "Wallets Price in Pakistan",
+  "Men's Fashion|Clothing": "Men's Clothing Online in Pakistan",
+  "Men's Fashion|Winter Collection": "Men's Winter Collection in Pakistan — Jackets & Hoodies",
+  "Women's Fashion|Clothing": "Women's Clothing Online in Pakistan",
+  "Women's Fashion|Shoes": "Women's Shoes Price in Pakistan",
+};
 router.get("/category/:name", async (req, res) => {
   let category = null;
   let products = [];
@@ -356,7 +377,7 @@ router.get("/category/:name", async (req, res) => {
           category: category.name,
           status: { $in: ["Active", "Out of Stock"] },
         })
-          .select("title slug category basePrice salePrice images ratingAvg ratingCount")
+          .select("title slug category subCategory basePrice salePrice images ratingAvg ratingCount")
           .sort({ createdAt: -1 })
           .limit(60)
           .lean();
@@ -427,6 +448,34 @@ ${lis}
       })
       .join("\n");
   })();
+  // Sub-category sections (see SUB_HEADINGS): group the category's real
+  // products by subCategory so type searches ("earbuds price in
+  // Pakistan", "sunglasses for men") land on a matching section.
+  const subSections = (() => {
+    const groups = new Map();
+    for (const p of products) {
+      const key = `${category.name}|${p.subCategory || ""}`;
+      if (!SUB_HEADINGS[key]) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+    return [...groups.entries()]
+      .filter(([, items]) => items.length >= 3)
+      .map(([key, items]) => {
+        const lis = items
+          .map(
+            (p) =>
+              `<li><a href="/product/${esc(p.slug)}">${esc(p.title)}</a> — ${rs(priceOf(p))}</li>`
+          )
+          .join("\n");
+        return `<section><h2>${esc(SUB_HEADINGS[key])}</h2>
+<ul>
+${lis}
+</ul>
+</section>`;
+      })
+      .join("\n");
+  })();
   const content = `<main>
 <nav><a href="/shop">Shop</a> &rsaquo; ${esc(category.name)}</nav>
 <h1>${esc(seo ? seo.h1 : category.name)}</h1>
@@ -435,6 +484,7 @@ ${lis}
 ${cards}
 </section>
 ${bandSections}
+${subSections}
 </main>`;
   const jsonLd = {
     "@context": "https://schema.org",
