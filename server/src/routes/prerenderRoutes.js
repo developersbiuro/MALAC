@@ -314,6 +314,37 @@ const CATEGORY_SEO = {
       "Shop women's fashion online in Pakistan at MALAC — lawn suits and everyday wear from {min} to {max}, with Cash on Delivery and delivery in 2–5 working days (standard Rs. 249, free over Rs. 3,000).",
   },
 };
+// Price-band sections: Pakistani shoppers search "under Rs. X" phrases
+// heavily ("watches under 5000", "earbuds under 3000", "handbags under
+// 3000"). Each category page gets crawlable sections whose headings are
+// those exact phrases, listing the REAL products in each price band
+// (bands partition the range, cheapest first). Thresholds were chosen
+// from the live catalogue so every section has real products in it.
+const PRICE_BANDS = {
+  Watches: [
+    { max: 2000, heading: "Watches Under Rs. 2,000 in Pakistan" },
+    { max: 5000, heading: "Best Watches Under Rs. 5,000 in Pakistan" },
+  ],
+  Eyewear: [
+    { max: 2000, heading: "Sunglasses Under Rs. 2,000 in Pakistan" },
+  ],
+  "Mobile Accessories": [
+    { max: 1000, heading: "Mobile Accessories Under Rs. 1,000 in Pakistan" },
+    { max: 3000, heading: "Best Mobile Accessories Under Rs. 3,000 in Pakistan" },
+  ],
+  "Bags & Accessories": [
+    { max: 1500, heading: "Bags & Handbags Under Rs. 1,500 in Pakistan" },
+    { max: 3000, heading: "Ladies Handbags Under Rs. 3,000 in Pakistan" },
+  ],
+  "Men's Fashion": [
+    { max: 2500, heading: "Men's Fashion Under Rs. 2,500 in Pakistan" },
+    { max: 5000, heading: "Men's Clothing Under Rs. 5,000 in Pakistan" },
+  ],
+  "Women's Fashion": [
+    { max: 2000, heading: "Women's Fashion Under Rs. 2,000 in Pakistan" },
+    { max: 3500, heading: "Ladies Fashion Under Rs. 3,500 in Pakistan" },
+  ],
+};
 router.get("/category/:name", async (req, res) => {
   let category = null;
   let products = [];
@@ -363,6 +394,39 @@ router.get("/category/:name", async (req, res) => {
       return `<article><a href="/product/${esc(p.slug)}">${img}<h3>${esc(p.title)}</h3></a><p>${esc(p.category)}</p><p><strong>${rs(price)}</strong>${was}</p></article>`;
     })
     .join("\n");
+  // Price-band sections (see PRICE_BANDS): partition the category's real
+  // products by price so each "under Rs. X" heading lists only products
+  // actually in that band.
+  const bandSections = (() => {
+    const bands = PRICE_BANDS[category.name];
+    if (!bands || !products.length) return "";
+    const sorted = [...products]
+      .map((p) => ({ p, price: priceOf(p) }))
+      .filter((x) => x.price > 0)
+      .sort((a, b) => a.price - b.price);
+    let prevMax = 0;
+    return bands
+      .map((band) => {
+        const items = sorted.filter(
+          (x) => x.price > prevMax && x.price <= band.max
+        );
+        prevMax = band.max;
+        if (items.length < 3) return "";
+        const lis = items
+          .map(
+            (x) =>
+              `<li><a href="/product/${esc(x.p.slug)}">${esc(x.p.title)}</a> — ${rs(x.price)}</li>`
+          )
+          .join("\n");
+        return `<section><h2>${esc(band.heading)}</h2>
+<p>${items.length} picks at MALAC priced under ${rs(band.max)}, with Cash on Delivery available all over Pakistan.</p>
+<ul>
+${lis}
+</ul>
+</section>`;
+      })
+      .join("\n");
+  })();
   const content = `<main>
 <nav><a href="/shop">Shop</a> &rsaquo; ${esc(category.name)}</nav>
 <h1>${esc(seo ? seo.h1 : category.name)}</h1>
@@ -370,6 +434,7 @@ router.get("/category/:name", async (req, res) => {
 <section><h2>Products</h2>
 ${cards}
 </section>
+${bandSections}
 </main>`;
   const jsonLd = {
     "@context": "https://schema.org",
