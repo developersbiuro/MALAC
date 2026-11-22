@@ -116,9 +116,19 @@ export default function CategoryPage() {
   }, [categoryName, sub, sort]);
 
   const meta = categories.find((c) => c.name === categoryName);
+  // Keyword titles mirror the server prerender exactly (2026-11-22):
+  // the phrases Pakistan actually searches, price-first.
+  const CATEGORY_TITLES = {
+    Watches: "Watches Price in Pakistan — Buy Watches Online | MALAC",
+    Eyewear: "Sunglasses Price in Pakistan — Buy Sunglasses Online | MALAC",
+    "Mobile Accessories": "Mobile Accessories Price in Pakistan — Shop Online | MALAC",
+    "Bags & Accessories": "Ladies Handbags Price in Pakistan — Buy Bags Online | MALAC",
+    "Men's Fashion": "Men's Fashion Online in Pakistan — Hoodies, Jackets & Polos | MALAC",
+    "Women's Fashion": "Women's Fashion Online in Pakistan — Lawn Suits & More | MALAC",
+  };
   const description = `Shop ${categoryName} online in Pakistan at MALAC — M.A Luxury Apparel Collection, with Cash on Delivery and free standard shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`;
   useSeo({
-    title: `${categoryName} — Shop Online in Pakistan | MALAC`,
+    title: CATEGORY_TITLES[categoryName] || `${categoryName} — Shop Online in Pakistan | MALAC`,
     description,
   });
 

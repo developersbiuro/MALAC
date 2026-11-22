@@ -72,7 +72,7 @@ export default function Home() {
   const FAQS = buildFaqs(fees);
   useSeo({
     title: "MALAC — Online Shopping in Pakistan | M.A Luxury Apparel Collection",
-    description: `MALAC — M.A Luxury Apparel Collection. Premium men's and women's fashion, watches, eyewear and bags & accessories online in Pakistan, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
+    description: `MALAC — M.A Luxury Apparel Collection. Premium men's and women's fashion, watches, eyewear, bags & accessories and mobile accessories online in Pakistan, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "FAQPage",

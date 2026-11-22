@@ -256,6 +256,64 @@ ${cards}
 // Silver theme (2026-11-17): every category has its own page in the SPA,
 // so crawlers get a matching server-rendered page here too. Unknown
 // category names go to /shop instead of a soft-404 shell.
+//
+// Keyword targeting (2026-11-22, from live Pakistan SERPs): Pakistani
+// shoppers search price-first — "watches price in Pakistan",
+// "sunglasses price in Pakistan", "mobile accessories price in
+// Pakistan", "ladies handbags price in Pakistan" — and the pages that
+// rank lead with exactly those phrases in title + H1. Each category
+// below is mapped to its strongest searched phrase; {min}/{max} are
+// filled with the category's real live price range.
+const CATEGORY_SEO = {
+  Watches: {
+    title: "Watches Price in Pakistan — Buy Watches Online | MALAC",
+    h1: "Watches Price in Pakistan",
+    description:
+      "Watches price in Pakistan at MALAC: men's watches, women's watches and couple watches with Cash on Delivery and free shipping on orders over Rs. 3,000.",
+    intro:
+      "Buy watches online in Pakistan at MALAC — men's watches, women's watches and couple watches from {min} to {max}, with Cash on Delivery and delivery in 2–5 working days (standard Rs. 249, free over Rs. 3,000). Whether you want an everyday watch or one for gifting, compare straps, dials and prices below.",
+  },
+  Eyewear: {
+    title: "Sunglasses Price in Pakistan — Buy Sunglasses Online | MALAC",
+    h1: "Sunglasses Price in Pakistan",
+    description:
+      "Sunglasses price in Pakistan at MALAC: sunglasses for men, women and kids with UV protection and Cash on Delivery, from the store's live range.",
+    intro:
+      "Buy sunglasses online in Pakistan at MALAC — sunglasses for men, women and kids from {min} to {max}, with Cash on Delivery (standard delivery Rs. 249, free over Rs. 3,000). Most styles are imported and take 10–15 working days. Pick by face shape and lens below.",
+  },
+  "Mobile Accessories": {
+    title: "Mobile Accessories Price in Pakistan — Shop Online | MALAC",
+    h1: "Mobile Accessories Price in Pakistan",
+    description:
+      "Mobile accessories price in Pakistan at MALAC: chargers, cables, earbuds, power banks, covers and stands with Cash on Delivery.",
+    intro:
+      "Shop mobile accessories in Pakistan at MALAC — fast chargers, charging cables, earbuds, power banks, covers and stands from {min} to {max}, with Cash on Delivery and delivery in 2–5 working days (free over Rs. 3,000).",
+  },
+  "Bags & Accessories": {
+    title: "Ladies Handbags Price in Pakistan — Buy Bags Online | MALAC",
+    h1: "Ladies Handbags & Bags Price in Pakistan",
+    description:
+      "Ladies handbags price in Pakistan at MALAC: handbags, wallets and bags for women with Cash on Delivery and free shipping on orders over Rs. 3,000.",
+    intro:
+      "Buy ladies handbags, wallets and bags online in Pakistan at MALAC — handbags for women from {min} to {max}, with Cash on Delivery and delivery in 2–5 working days (standard Rs. 249, free over Rs. 3,000).",
+  },
+  "Men's Fashion": {
+    title: "Men's Fashion Online in Pakistan — Hoodies, Jackets & Polos | MALAC",
+    h1: "Men's Fashion Online in Pakistan",
+    description:
+      "Men's fashion online in Pakistan at MALAC: hoodies, jackets, polos and sweatshirts with Cash on Delivery and free shipping on orders over Rs. 3,000.",
+    intro:
+      "Shop men's fashion online in Pakistan at MALAC — hoodies, jackets, polos and sweatshirts from {min} to {max}, with Cash on Delivery and delivery in 2–5 working days (standard Rs. 249, free over Rs. 3,000).",
+  },
+  "Women's Fashion": {
+    title: "Women's Fashion Online in Pakistan — Lawn Suits & More | MALAC",
+    h1: "Women's Fashion Online in Pakistan",
+    description:
+      "Women's fashion online in Pakistan at MALAC: lawn suits and everyday wear with Cash on Delivery and free shipping on orders over Rs. 3,000.",
+    intro:
+      "Shop women's fashion online in Pakistan at MALAC — lawn suits and everyday wear from {min} to {max}, with Cash on Delivery and delivery in 2–5 working days (standard Rs. 249, free over Rs. 3,000).",
+  },
+};
 router.get("/category/:name", async (req, res) => {
   let category = null;
   let products = [];
@@ -278,8 +336,20 @@ router.get("/category/:name", async (req, res) => {
   }
   if (!category) return res.redirect(302, "/shop");
   const url = `${SITE_URL}/category/${encodeURIComponent(category.name)}`;
-  const title = `${category.name} — Buy Online in Pakistan | MALAC`;
-  const description = `Shop ${category.name} online in Pakistan at MALAC — Cash on Delivery and nationwide delivery in 2–5 working days (standard Rs. 249, free on orders over Rs. 3,000).`;
+  const seo = CATEGORY_SEO[category.name];
+  const prices = products.map((p) => priceOf(p)).filter((n) => n > 0);
+  const range = {
+    min: prices.length ? rs(Math.min(...prices)) : "",
+    max: prices.length ? rs(Math.max(...prices)) : "",
+  };
+  const fillRange = (text) =>
+    text.replace("{min}", range.min).replace("{max}", range.max);
+  const title = seo
+    ? seo.title
+    : `${category.name} — Buy Online in Pakistan | MALAC`;
+  const description = seo
+    ? seo.description
+    : `Shop ${category.name} online in Pakistan at MALAC — Cash on Delivery and nationwide delivery in 2–5 working days (standard Rs. 249, free on orders over Rs. 3,000).`;
   const cards = products
     .map((p) => {
       const price = priceOf(p);
@@ -295,8 +365,8 @@ router.get("/category/:name", async (req, res) => {
     .join("\n");
   const content = `<main>
 <nav><a href="/shop">Shop</a> &rsaquo; ${esc(category.name)}</nav>
-<h1>${esc(category.name)}</h1>
-<p>Shop ${esc(category.name)} at MALAC — M.A Luxury Apparel Collection — with Cash on Delivery and nationwide delivery in 2–5 working days (standard delivery Rs. 249, free on orders over Rs. 3,000).</p>
+<h1>${esc(seo ? seo.h1 : category.name)}</h1>
+<p>${seo ? esc(fillRange(seo.intro)) : `Shop ${esc(category.name)} at MALAC — M.A Luxury Apparel Collection — with Cash on Delivery and nationwide delivery in 2–5 working days (standard delivery Rs. 249, free on orders over Rs. 3,000).`}</p>
 <section><h2>Products</h2>
 ${cards}
 </section>
