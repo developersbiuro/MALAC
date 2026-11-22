@@ -134,6 +134,16 @@ body{margin:0}
 .pr-fallback ul{padding-left:18px}
 .pr-fallback li{margin:4px 0}
 </style>`;
+// Crawlable site-wide link block appended to every prerendered page
+// (2026-11-22). GSC showed /shop as "Crawled - currently not indexed"
+// with "Referring page: None detected": each prerendered page linked
+// only to its own products, so Google found no internal path of any
+// weight into /shop or between pages. This nav gives every crawled
+// page (shop, categories, all product pages, blog, static pages) a
+// full internal link graph. The React app replaces this fallback on
+// load, so shoppers never see it.
+const SITE_NAV = `<nav aria-label="Site"><h2>Explore MALAC</h2><ul><li><a href="/">Home</a></li><li><a href="/shop">Shop All Products</a></li><li><a href="/category/Men's%20Fashion">Men's Fashion</a></li><li><a href="/category/Women's%20Fashion">Women's Fashion</a></li><li><a href="/category/Watches">Watches</a></li><li><a href="/category/Eyewear">Eyewear</a></li><li><a href="/category/Bags%20%26%20Accessories">Bags &amp; Accessories</a></li><li><a href="/category/Mobile%20Accessories">Mobile Accessories</a></li><li><a href="/blog">MALAC Blog</a></li><li><a href="/about">About MALAC</a></li><li><a href="/faq">FAQs</a></li><li><a href="/terms">Terms of Service</a></li><li><a href="/policy">Privacy &amp; Return Policy</a></li></ul></nav>`;
+
 function wrapFallback(content) {
   // The version marker matters beyond tidiness: browsers that cached a
   // pre-CSP-fix copy of these pages keep revalidating against the old
@@ -142,7 +152,7 @@ function wrapFallback(content) {
   // (Abdullah's phone, 2026-11-17). Any body change mints a fresh ETag
   // and forces a full 200 with the fixed headers — bump this marker
   // whenever a header-only fix must reach cached clients.
-  return `<!-- malac-page v2 -->\n${FALLBACK_STYLE}<div class="pr-fallback"><p class="pr-brand">MALAC</p><p class="pr-note">Loading the full store — one moment…</p>${content}</div>`;
+  return `<!-- malac-page v3 -->\n${FALLBACK_STYLE}<div class="pr-fallback"><p class="pr-brand">MALAC</p><p class="pr-note">Loading the full store — one moment…</p>${content}${SITE_NAV}</div>`;
 }
 
 function renderPage(res, page) {
@@ -399,7 +409,7 @@ const STATIC_PAGES = {
   "/about": {
     title: "About MALAC — M.A Luxury Apparel Collection | Online Shopping in Pakistan",
     description:
-      "MALAC is M.A Luxury Apparel Collection, an online shopping store based in Faisalabad, Pakistan — fashion, mobiles, electronics, beauty, home & living and more with Cash on Delivery nationwide.",
+      "MALAC is M.A Luxury Apparel Collection, an online shopping store based in Faisalabad, Pakistan — men's fashion, women's fashion, watches, eyewear, bags & accessories and mobile accessories with Cash on Delivery nationwide.",
     heading: "About MALAC",
     body: `<p>MALAC — short for M.A Luxury Apparel Collection (M.A are the initials of the founder, Muhammad Abdullah) — is an online shopping store in Pakistan, based in Faisalabad, Punjab. The catalogue covers men's fashion, women's fashion, watches, eyewear, bags &amp; accessories and mobile accessories.</p><p>Customers pay by Cash on Delivery, JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay or FirstPay — HBL Microfinance Bank. Standard delivery is Rs. 249 and free on orders over Rs. 3,000; express delivery is Rs. 399. Orders are delivered nationwide in 2–5 working days through courier partners including TCS, Leopards, Trax and PostEx.</p><p>Support: WhatsApp +92 323 6016684 · Email info@malac.pp.ua</p>`,
   },
