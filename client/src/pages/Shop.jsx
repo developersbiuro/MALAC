@@ -59,6 +59,7 @@ export default function Shop() {
   const CATEGORY_DESCRIPTIONS = buildCategoryDescriptions(fees.freeThreshold);
   const [params] = useSearchParams();
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -78,6 +79,7 @@ export default function Shop() {
     if (API_SORTS.includes(sort)) q.sort = sort;
     if (minPrice) q.minPrice = minPrice;
     if (maxPrice) q.maxPrice = maxPrice;
+    setLoading(true);
     api.get("/products", { params: q })
       .then((r) => {
         let list = r.data.products;
@@ -89,7 +91,8 @@ export default function Shop() {
         if (minRating > 0) list = list.filter((p) => (p.ratingAvg || 0) >= minRating);
         setProducts(list);
       })
-      .catch(() => setProducts([]));
+      .catch(() => setProducts([]))
+      .finally(() => setLoading(false));
   }, [search, category, sub, flash, sort, minPrice, maxPrice, minRating]);
 
   // While the mobile filter sheet is open, lock page scroll and let
@@ -116,7 +119,7 @@ export default function Shop() {
     title: !search && !category && !flash ? "Online Shopping in Pakistan — All Products | MALAC" : `${title} — MALAC`,
     description: category
       ? `Shop ${category} online in Pakistan at MALAC — M.A Luxury Apparel Collection, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`
-      : `Online shopping in Pakistan at MALAC — shop all products: mobiles, electronics, fashion, beauty, home & living and more, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
+      : `Online shopping in Pakistan at MALAC — shop all products: men's fashion, women's fashion, watches, eyewear, bags & accessories and mobile accessories, with Cash on Delivery and free shipping on orders over Rs. ${fees.freeThreshold.toLocaleString("en-PK")}.`,
   });
   return (
     <main className="max-w-7xl mx-auto px-3 pt-4">
@@ -235,7 +238,8 @@ export default function Shop() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mt-3">
         {products.map((p) => <ProductCard key={p._id} product={p} />)}
       </div>
-      {products.length === 0 && <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-cream-line mt-3">No products match your filters.</p>}
+      {loading && <p className="text-center text-gray-400 py-10">Loading products...</p>}
+      {!loading && products.length === 0 && <p className="text-center text-gray-400 py-10 bg-white rounded-2xl border border-cream-line mt-3">No products match your filters.</p>}
     </main>
   );
 }
