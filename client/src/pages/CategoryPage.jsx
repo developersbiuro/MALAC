@@ -79,6 +79,32 @@ const CAT_FAQS = [
   },
 ];
 
+// Price-band sections (mirror server prerenderRoutes.js PRICE_BANDS
+// exactly — same headings/thresholds, so bot HTML and human UI agree).
+const PRICE_BANDS = {
+  Watches: [
+    { max: 2000, heading: "Watches Under Rs. 2,000 in Pakistan" },
+    { max: 5000, heading: "Best Watches Under Rs. 5,000 in Pakistan" },
+  ],
+  Eyewear: [{ max: 2000, heading: "Sunglasses Under Rs. 2,000 in Pakistan" }],
+  "Mobile Accessories": [
+    { max: 1000, heading: "Mobile Accessories Under Rs. 1,000 in Pakistan" },
+    { max: 3000, heading: "Best Mobile Accessories Under Rs. 3,000 in Pakistan" },
+  ],
+  "Bags & Accessories": [
+    { max: 1500, heading: "Bags & Handbags Under Rs. 1,500 in Pakistan" },
+    { max: 3000, heading: "Ladies Handbags Under Rs. 3,000 in Pakistan" },
+  ],
+  "Men's Fashion": [
+    { max: 2500, heading: "Men's Fashion Under Rs. 2,500 in Pakistan" },
+    { max: 5000, heading: "Men's Clothing Under Rs. 5,000 in Pakistan" },
+  ],
+  "Women's Fashion": [
+    { max: 2000, heading: "Women's Fashion Under Rs. 2,000 in Pakistan" },
+    { max: 3500, heading: "Ladies Fashion Under Rs. 3,500 in Pakistan" },
+  ],
+};
+
 export default function CategoryPage() {
   const { name } = useParams();
   const categoryName = decodeURIComponent(name || "");
@@ -133,6 +159,28 @@ export default function CategoryPage() {
   });
 
   const flashInCategory = products.filter((p) => (p.basePrice || 0) > (p.price || 0)).slice(0, 5);
+  // Price bands: partition the loaded products by price (cheapest first),
+  // same logic as the server prerender; a band shows only with >= 3 items.
+  const priceBands = (() => {
+    const bands = PRICE_BANDS[categoryName];
+    if (!bands || loading || !products.length) return [];
+    const priceOf = (p) =>
+      p.price > 0 ? p.price : p.salePrice > 0 ? p.salePrice : p.basePrice || 0;
+    const sorted = [...products]
+      .map((p) => ({ p, price: priceOf(p) }))
+      .filter((x) => x.price > 0)
+      .sort((a, b) => a.price - b.price);
+    let prevMax = 0;
+    return bands
+      .map((band) => {
+        const items = sorted.filter(
+          (x) => x.price > prevMax && x.price <= band.max
+        );
+        prevMax = band.max;
+        return { ...band, items };
+      })
+      .filter((b) => b.items.length >= 3);
+  })();
   const subs = meta?.subCategories || [];
 
   return (
@@ -262,6 +310,24 @@ export default function CategoryPage() {
           </p>
         )}
       </section>
+
+      {/* Price-band sections — dark boxes with the exact "under Rs. X"
+          phrases Pakistan searches (mirror the server prerender). */}
+      {priceBands.map((band) => (
+        <section key={band.heading} className="mt-4 rounded-3xl bg-[#0d0d0f] text-white p-5 sm:p-6 shadow">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-wide">{band.heading}</h2>
+          <p className="text-sm text-neutral-400 mt-1">
+            {band.items.length} picks at MALAC priced under Rs. {band.max.toLocaleString("en-PK")}, with Cash on Delivery available all over Pakistan.
+          </p>
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar mt-4 pb-1">
+            {band.items.map(({ p }) => (
+              <div key={p._id} className="w-[180px] sm:w-[210px] shrink-0">
+                <ProductCard product={p} />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
 
       {/* FAQ accordion — dark container (his spec) */}
       <section className="mt-4 rounded-3xl bg-[#0d0d0f] text-white px-6 py-7 sm:px-9">
