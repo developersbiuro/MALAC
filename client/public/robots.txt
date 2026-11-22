@@ -1,5 +1,18 @@
+# The four Allow lines under each group matter as much as the Disallows:
+# the storefront is a JS app, so when Google renders a page it must be
+# allowed to fetch the PUBLIC catalogue data the page is built from
+# (products, categories, public settings, chatbot config). With a blanket
+# "Disallow: /api/" those fetches were blocked, every rendered page came
+# out empty, and Google called /shop a Soft 404 (found 2026-11-22 via
+# GSC live test: "/api/products?limit=40 — Googlebot blocked by
+# robots.txt"). Allow rules are longer/more specific than "/api/", so
+# they win for exactly these paths; the rest of /api/ stays closed.
 User-agent: Googlebot
 Allow: /
+Allow: /api/products
+Allow: /api/categories
+Allow: /api/settings/public
+Allow: /api/assistant/config
 Disallow: /admin
 Disallow: /api/
 Disallow: /checkout
@@ -11,6 +24,10 @@ Disallow: /reset-password
 
 User-agent: Googlebot-Image
 Allow: /
+Allow: /api/products
+Allow: /api/categories
+Allow: /api/settings/public
+Allow: /api/assistant/config
 Disallow: /admin
 Disallow: /api/
 Disallow: /checkout
@@ -42,6 +59,10 @@ User-agent: DuckAssistBot
 User-agent: MistralAI-User
 User-agent: YouBot
 Allow: /
+Allow: /api/products
+Allow: /api/categories
+Allow: /api/settings/public
+Allow: /api/assistant/config
 Disallow: /admin
 Disallow: /api/
 Disallow: /checkout
@@ -53,6 +74,10 @@ Disallow: /reset-password
 
 User-agent: *
 Allow: /
+Allow: /api/products
+Allow: /api/categories
+Allow: /api/settings/public
+Allow: /api/assistant/config
 Disallow: /admin
 Disallow: /api/
 Disallow: /checkout
