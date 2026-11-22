@@ -12,6 +12,51 @@
 // adding their /blog/<slug> URL to server/src/routes/sitemapRoutes.js.
 export const BLOG_POSTS = [
   {
+    slug: "how-to-choose-sunglasses-in-pakistan-malac",
+    title: "How to Choose Sunglasses in Pakistan: UV Protection, Polarized Lenses and the Right Frame for Your Face",
+    excerpt:
+      "Sunglasses in Pakistan are not just a style choice — the sun here is strong enough that the lens matters more than the frame. Here is how to pick UV protection, polarized lenses and a shape that suits your face, with all fifteen sunglasses MALAC sells, from Rs 1,200.",
+    date: "2026-11-22",
+    displayDate: "22 November 2026",
+    readTime: "5 min read",
+    faqs: [
+      {
+        q: "What should I look for first when buying sunglasses in Pakistan?",
+        a: "UV protection first. A dark lens without UV protection is worse than no sunglasses at all, because it lets your pupils open wide while the harmful rays still get in. On MALAC, look for UV protection or anti-UV in the product description before you look at the price or the frame.",
+      },
+      {
+        q: "Are polarized sunglasses worth it?",
+        a: "If you drive, ride a bike, or spend time near water, yes — polarized lenses cut the harsh glare bouncing off roads and windscreens. For everyday walking around, a good UV pair without polarization is fine. On MALAC the cheapest polarized pairs start at Rs 1,200.",
+      },
+      {
+        q: "How long does delivery take for sunglasses on MALAC?",
+        a: "Most of the range is imported, so allow 10–15 working days for 13 of the 15 pairs. The Women's Aviator Sunglasses come from a Pakistan seller and arrive in the usual 2–5 working days.",
+      },
+      {
+        q: "Can I pay Cash on Delivery for sunglasses on MALAC?",
+        a: "Yes — COD is available across Pakistan, delivery is free on orders over Rs 3,000, and WELCOME10 takes 10% off your first order.",
+      },
+    ],
+    body: [
+      { t: "p", x: "Sunglasses in Pakistan are not really a fashion purchase. The sun here is strong for most of the year — on a bike, in a car, walking to the bazaar at noon — and a cheap pair that only looks dark can do more harm than good. A dark lens makes your pupils open wider, and if that lens does not actually block UV rays, more of the harmful light gets in, not less. So the first rule of this guide is simple: buy the lens first, and the frame second. **MALAC** sells fifteen sunglasses right now, from Rs 1,200 to Rs 8,500, and this guide walks through them the way we would choose for ourselves — with every price taken live from the store today." },
+      { t: "h", x: "Start with UV protection, not darkness" },
+      { t: "p", x: "Darkness is not protection. A lens can be almost black and still let UV through, while a lighter lens with a proper UV coating blocks it. When you are comparing pairs, look for the words UV protection or anti-UV in the description before anything else. The [Women Aviator Sunglasses Gold Frame UV Protection](/product/women-aviator-sunglasses-gold-frame-uv-protection-eye-wom-avi1) (**Rs 1,700**, was Rs 2,150) says it in the name, and the [Anti-UV Sunglasses Outdoor Sports Unisex](/product/anti-uv-sunglasses-outdoor-sports-unisex-eye-uni-uv1) (**Rs 1,300**, was Rs 1,650) is the cheapest UV pair in the range. Both are honest, everyday picks — and the Aviator is also the one pair in the range that is not imported, so it arrives in the usual **2–5 working days** instead of 10–15." },
+      { t: "h", x: "Polarized: worth it if you drive or ride" },
+      { t: "p", x: "Polarized lenses do one specific job: they cut the flat, blinding glare that bounces off roads, car bonnets and windscreens. If you drive, ride a bike, or spend long hours outdoors, that glare is the thing that tires your eyes out by the afternoon — and polarization is the fix for it. The cheapest way into it on MALAC is the [Men Polarized Sunglasses Gold Frame Brown Tint](/product/men-polarized-sunglasses-gold-frame-brown-tint-eye-men-pol1) (**Rs 1,200**, was Rs 1,500) or the [Men Yellow Clip-On Sunglasses with Polarized Lens](/product/men-yellow-clip-on-sunglasses-with-polarized-lens-eye-men-clip1) (**Rs 1,200**, was Rs 1,500) — the clip-on is a clever buy if you already wear prescription glasses, because it turns the glasses you own into sunglasses. The [Men Polarized Sunglasses Black Blue Lenses](/product/men-polarized-sunglasses-black-blue-lenses-eye-men-pol2) (**Rs 1,900**, was Rs 2,400) is the everyday black pair, and the [Business Men Polarized Sunglasses Black](/product/business-men-polarized-sunglasses-black-eye-men-biz1) (**Rs 4,200**, was Rs 5,250) is the formal one, for the office and for occasions where the glasses need to look as serious as the rest of the outfit. If you mostly walk around in the shade and the sun only bothers you at noon, a plain UV pair is enough — polarization is for glare, not for shade." },
+      { t: "h", x: "Pick a frame that fits your face, not just the photo" },
+      { t: "p", x: "A frame looks good in a photo and wrong on a face for one reason: shape. The rule that actually works is contrast — a rounder face suits a squarer frame, and a squarer face suits a rounder one. Aviators suit most faces, which is why they never go out of style: the [Men's Aviator Sunglasses with Dark Lenses](/product/men-s-aviator-sunglasses-with-dark-lenses-eye-men-avi1) (**Rs 5,150**, was Rs 6,450) is the classic teardrop shape, and the women's gold-frame Aviator above is its lighter, everyday match. Square frames make a statement rather than blending in — the [Orange Gold Pink Square Sunglasses Large Frame](/product/orange-gold-pink-square-sunglasses-large-frame-eye-uni-sqr1) (**Rs 1,650**, was Rs 2,050) is the bold one in the range. Round frames soften a sharper face: the [Women Round Black Sunglasses](/product/women-round-black-sunglasses-eye-wom-rnd1) (**Rs 1,650**, was Rs 2,050) and the [Steampunk Retro Mini Sunglasses Yellow Round Frame](/product/steampunk-retro-mini-sunglasses-yellow-round-frame-eye-uni-rnd1) (**Rs 1,700**, was Rs 2,150) are the two round options. And cat-eye frames lift the face up — the [Green Cat-Eye Sunglasses for Women](/product/green-cat-eye-sunglasses-for-women-eye-wom-cat1) (**Rs 1,900**, was Rs 2,400) is the dressier women's pick, with the [Diamond Encrusted Women Sunglasses Retro Fashion](/product/diamond-encrusted-women-sunglasses-retro-fashion-eye-wom-dia1) (**Rs 1,750**, was Rs 2,200) beside it for evenings and occasions." },
+      { t: "h", x: "For sport, and for the bag" },
+      { t: "p", x: "Two pairs in the range are made for moving, not for sitting. The [Men Cycling Sunglasses Windproof Rainbow Lens](/product/men-cycling-sunglasses-windproof-rainbow-lens-eye-men-sport1) (**Rs 1,500**, was Rs 1,900) wraps round to keep the wind out on a bike, with a rainbow lens that stands out. And the [Foldable Sunglasses for Men and Women](/product/foldable-sunglasses-for-men-and-women-eye-uni-fold1) (**Rs 1,400**, was Rs 1,750) fold down small enough to live in a pocket or a bag without snapping — the pair to keep as a spare, or the pair to buy if you have broken a pair by sitting on it before. At the top of the range sits the store's own piece: [MALAC Sunglasses](/product/malac-sunglasses-malac-sun-01) (**Rs 8,500**), black frame with dark UV-protection lenses and the silver MALAC finish — the one that matches the MALAC watch, wallet and polo for a full look." },
+      { t: "h", x: "The one honest warning before you order" },
+      { t: "p", x: "Thirteen of these fifteen pairs are imported items, which means they take **10–15 working days** to arrive — not the usual 2–5. That is written on their product pages, and it is the one thing worth knowing before you order, because a pair bought for a trip next week will not arrive in time. If you need sunglasses this week, order the Women's Aviator, which comes from a Pakistan seller in 2–5 working days. If you can wait, the imported range is where the choice is — but order early, and do not pay for express delivery expecting it to beat the import time." },
+      { t: "h", x: "What to skip" },
+      { t: "p", x: "Skip any pair that does not mention UV protection at all — darkness alone is not a feature, it is a risk. Skip a second pair in the same shape you already own; one aviator and one round frame cover far more occasions than two aviators ever will. And skip buying the most expensive pair first: at Rs 1,200–1,700, most of this range is cheap enough to try a shape, learn what suits your face, and then buy the premium pair once you know." },
+      { t: "h", x: "How to order" },
+      { t: "p", x: "Every pair above is in stock on MALAC. You can pay **Cash on Delivery** anywhere in Pakistan, delivery is **free on orders over Rs 3,000**, and **WELCOME10** still takes 10% off your first order. The full range is on the [Eyewear page](/category/Eyewear) — men, women and unisex, all in one place. If an item arrives damaged or wrong, tell us within **7 days** of delivery and we will make it right." },
+      { t: "p", x: "Sunglasses are a small purchase you wear on your face every sunny day, so they are worth the five minutes to pick properly: UV protection first, polarized if you drive or ride, a frame shape that suits your face, and an honest eye on the delivery time. Pick yours, and wear them in the sun." },
+    ],
+  },
+  {
     slug: "mobile-accessories-buying-guide-pakistan-malac",
     title: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money",
     excerpt:
