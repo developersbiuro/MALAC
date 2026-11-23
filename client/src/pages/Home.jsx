@@ -156,7 +156,7 @@ export default function Home() {
           {FEATURED_TILES.map((tile) => (
             <Link key={tile.label} to={tileLink(tile)}
               className="group relative rounded-xl overflow-hidden bg-[#e8eaee] aspect-square shadow-sm hover:shadow-lux transition-shadow">
-              <img src={tile.img} alt={tile.label} loading="lazy"
+              <img src={tile.img} alt={tile.label} loading="lazy" width={600} height={600}
                 className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
             </Link>
           ))}
@@ -191,7 +191,7 @@ export default function Home() {
       <section className="bg-lux-deep text-white overflow-hidden">
         <div className="grid lg:grid-cols-[1.1fr_1.2fr_0.8fr]">
           <div className="relative min-h-[220px] lg:min-h-full">
-            <img src={DESIGN_ABOUT_STORE} alt="Inside a MALAC store" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+            <img src={DESIGN_ABOUT_STORE} alt="Inside a MALAC store" className="absolute inset-0 w-full h-full object-cover" loading="lazy" width={1000} height={667} />
             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/30" />
           </div>
           <div className="px-6 py-8 sm:px-10 flex flex-col justify-center">

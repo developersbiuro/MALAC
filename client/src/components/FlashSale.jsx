@@ -47,7 +47,7 @@ function FlashCard({ product }) {
     <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#26262B] to-[#0E0E10] border border-[#C7C7CE]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
       <div className="relative aspect-[4/3] overflow-hidden bg-[#ECECEE]">
         <Link to={`/product/${product.slug}`} className="absolute inset-0">
-          <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.title} loading="lazy" referrerPolicy="no-referrer"
+          <img src={product.images?.[0] || "/icons/icon.svg"} alt={product.title} loading="lazy" width={800} height={600} referrerPolicy="no-referrer"
             onError={(e) => { if (!e.currentTarget.src.endsWith("/icons/icon.svg")) e.currentTarget.src = "/icons/icon.svg"; }}
             className="h-full w-full object-cover" />
         </Link>

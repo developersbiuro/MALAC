@@ -20,7 +20,7 @@ export default function CategoryGrid({ categories }) {
             <Link key={c._id} to={`/category/${encodeURIComponent(c.name)}`}
               className="group relative rounded-xl overflow-hidden w-full aspect-[4/5] bg-lux-deep ring-1 ring-white/10 hover:ring-white/30 transition">
               {photo ? (
-                <img src={photo} alt={c.name} loading="lazy"
+                <img src={photo} alt={c.name} loading="lazy" width={640} height={800}
                   className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               ) : (
                 <span className="absolute inset-0 bg-gradient-to-br from-neutral-800 to-black" />
