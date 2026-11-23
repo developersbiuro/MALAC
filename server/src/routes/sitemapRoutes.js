@@ -61,6 +61,8 @@ a:hover { text-decoration: underline; }
 </xsl:stylesheet>
 `;
 
+const router = Router();
+
 router.get("/sitemap.xsl", (req, res) => {
   res.set({
     "Content-Type": "text/xsl; charset=utf-8",
@@ -68,8 +70,6 @@ router.get("/sitemap.xsl", (req, res) => {
   });
   res.send(SITEMAP_XSL);
 });
-
-const router = Router();
 
 const esc = (s) =>
   String(s)
