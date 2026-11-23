@@ -100,7 +100,7 @@ export default function Header() {
       {/* Main row — lockup · nav · search · icons */}
       <div className={`max-w-[1440px] mx-auto px-3 sm:px-8 lg:px-[60px] py-3 lg:py-0 lg:h-[84px] flex items-center gap-3 sm:gap-5 border-b ${overlay ? "border-white/10" : "border-[#1A1A1A]"}`}>
         <Link to="/" className="shrink-0 flex items-center gap-2.5" aria-label="MALAC — home">
-          <img src={LOGO_MARK} alt="" className="h-10 sm:h-[42px] w-auto" />
+          <img src={LOGO_MARK} alt="" width={256} height={330} className="h-10 sm:h-[42px] w-auto" />
           <span className="leading-none">
             <span className="block text-[22px] lg:text-[26px] font-extrabold tracking-[0.077em] text-neutral-50">MALAC</span>
             <span className="block text-[7.5px] lg:text-[9.5px] tracking-[0.13em] text-[#A0A0A0] mt-1">M.A Luxury Apparel Collection</span>

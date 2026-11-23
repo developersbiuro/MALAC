@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { DESIGN_HERO } from "../assets/design.js";
+import { DESIGN_HERO, DESIGN_HERO_MOBILE } from "../assets/design.js";
 
 // Design-1 hero (Abdullah, 2026-11-17): the background photo is the clean
 // one HE supplied (his model, his wall emblem, dark space on the left).
@@ -17,9 +17,12 @@ export default function HeroCarousel() {
     <section className="relative bg-[#060607] overflow-hidden pt-[190px] sm:pt-0">
       {/* Mobile: poori photo, koi zoom nahi */}
       <img
-        src={DESIGN_HERO}
+        src={DESIGN_HERO_MOBILE}
         alt=""
         aria-hidden="true"
+        width={828}
+        height={323}
+        fetchpriority="high"
         className="block w-full h-auto sm:hidden"
       />
       <div className="h-10 -mt-10 relative bg-gradient-to-t from-[#060607] to-transparent sm:hidden" />
@@ -28,6 +31,9 @@ export default function HeroCarousel() {
         src={DESIGN_HERO}
         alt=""
         aria-hidden="true"
+        width={1920}
+        height={749}
+        loading="lazy"
         className="hidden sm:block absolute inset-0 w-full h-full object-cover object-[78%_62%] lg:object-center"
       />
       <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />

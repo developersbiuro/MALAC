@@ -4,3 +4,4 @@
 // bundle stays small and the photos cache between visits.
 export const ABOUT_STORE = "/design-img/about-store.jpg";
 export const HERO_MAIN = "/design-img/hero-main.jpg";
+export const HERO_MAIN_MOBILE = "/design-img/hero-main-mobile.jpg";

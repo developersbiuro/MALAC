@@ -291,7 +291,7 @@ export default function CategoryPage() {
       <section id="cat-products" className="scroll-mt-24 mt-4 rounded-3xl bg-[#EAEAEA] border border-neutral-200 p-3 sm:p-5">
         <div className="flex items-center gap-2 text-sm px-1">
           <h2 className="font-display text-lg sm:text-xl font-bold tracking-[0.14em] text-lux-ink uppercase">★ Just For You</h2>
-          <span className="text-gray-400 text-xs whitespace-nowrap ml-2">{products.length} products</span>
+          <span className="text-gray-600 text-xs whitespace-nowrap ml-2">{products.length} products</span>
           <span className="flex-1" />
           <label className="flex items-center gap-2 text-xs text-gray-500">Sort
             <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort products"

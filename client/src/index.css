@@ -6,6 +6,10 @@
    sideways on phones, and remove tap delay / grey flash so taps feel
    instant on touch devices. */
 html, body { overflow-x: clip; }
+/* Reserve the scrollbar's space from the first paint: without this the
+   whole centred layout jumps sideways when the scrollbar appears after
+   the async sections load — a major CLS source on desktop. */
+html { scrollbar-gutter: stable; }
 body { @apply bg-[#f1f1f3] text-[#101014] antialiased; }
 a, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 img, video { max-width: 100%; }

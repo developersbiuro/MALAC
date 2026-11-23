@@ -1,4 +1,4 @@
-import { HERO_MAIN, ABOUT_STORE } from "./designData1.js";
+import { HERO_MAIN, HERO_MAIN_MOBILE, ABOUT_STORE } from "./designData1.js";
 import { CAT_WOMEN, CAT_BAGS, P_POLO, P_WATCH } from "./designData2.js";
 import { P_HOODIE, P_SUNGLASSES, P_WALLET, P_CAP, CAT_MOBILE, CAT_WATCH_DARK, CAT_EYEWEAR_DARK } from "./designData3.js";
 
@@ -9,6 +9,7 @@ import { P_HOODIE, P_SUNGLASSES, P_WALLET, P_CAP, CAT_MOBILE, CAT_WATCH_DARK, CA
 // text-only, same pattern as hero.js. The five product photos were also
 // uploaded to the matching catalogue products via the admin panel.
 export const DESIGN_HERO = HERO_MAIN;
+export const DESIGN_HERO_MOBILE = HERO_MAIN_MOBILE;
 export const DESIGN_ABOUT_STORE = ABOUT_STORE;
 
 export const CATEGORY_PHOTOS = {

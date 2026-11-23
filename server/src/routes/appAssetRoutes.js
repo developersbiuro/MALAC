@@ -13,6 +13,7 @@ import {
 import {
   SITE_IMG_ABOUT_STORE,
   SITE_IMG_HERO_MAIN,
+  SITE_IMG_HERO_MOBILE,
   SITE_IMG_CAT_BAGS,
   SITE_IMG_CAT_WOMEN,
   SITE_IMG_P_POLO,
@@ -140,6 +141,7 @@ const DESIGN_IMAGES = {
   "wallet.jpg": { buffer: decode(DESIGN_IMG_WALLET), type: "image/jpeg" },
   "about-store.jpg": { buffer: decode(SITE_IMG_ABOUT_STORE), type: "image/jpeg" },
   "hero-main.jpg": { buffer: decode(SITE_IMG_HERO_MAIN), type: "image/jpeg" },
+  "hero-main-mobile.jpg": { buffer: decode(SITE_IMG_HERO_MOBILE), type: "image/jpeg" },
   "cat-bags.jpg": { buffer: decode(SITE_IMG_CAT_BAGS), type: "image/jpeg" },
   "cat-women.jpg": { buffer: decode(SITE_IMG_CAT_WOMEN), type: "image/jpeg" },
   "p-polo.jpg": { buffer: decode(SITE_IMG_P_POLO), type: "image/jpeg" },
