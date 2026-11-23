@@ -13,6 +13,62 @@ import Product from "../models/Product.js";
 // whenever the connection is (or becomes) available.
 const SITE_URL = "https://www.malac.pp.ua";
 
+// Human-friendly rendering for /sitemap.xml: browsers apply this XSLT
+// and show a clean table (like WordPress sitemaps do); search engines
+// ignore the stylesheet and read the raw XML as before.
+const SITEMAP_XSL = `<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:s="http://www.sitemaps.org/schemas/sitemap/0.9">
+<xsl:output method="html" encoding="UTF-8" indent="yes"/>
+<xsl:template match="/">
+<html>
+<head>
+<title>XML Sitemap — MALAC</title>
+<style>
+body { font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f6f6f8; color: #16161a; }
+header { background: #0c0c0d; color: #f2f2f3; padding: 28px 24px; }
+header h1 { margin: 0; font-size: 24px; letter-spacing: 0.04em; }
+header p { margin: 6px 0 0; color: #b9b9c0; font-size: 13px; }
+main { max-width: 1080px; margin: 24px auto 48px; padding: 0 16px; }
+table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+th { text-align: left; background: #ececf0; padding: 10px 12px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+td { padding: 9px 12px; font-size: 13px; border-top: 1px solid #eee; word-break: break-all; }
+tr:nth-child(even) td { background: #fafafc; }
+a { color: #7a5c14; text-decoration: none; }
+a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<header>
+<h1>MALAC — XML Sitemap</h1>
+<p>M.A Luxury Apparel Collection · <xsl:value-of select="count(s:urlset/s:url)"/> URLs</p>
+</header>
+<main>
+<table>
+<tr><th>URL</th><th>Last Modified</th><th>Change Frequency</th><th>Priority</th></tr>
+<xsl:for-each select="s:urlset/s:url">
+<tr>
+<td><a href="{s:loc}"><xsl:value-of select="s:loc"/></a></td>
+<td><xsl:value-of select="s:lastmod"/></td>
+<td><xsl:value-of select="s:changefreq"/></td>
+<td><xsl:value-of select="s:priority"/></td>
+</tr>
+</xsl:for-each>
+</table>
+</main>
+</body>
+</html>
+</xsl:template>
+</xsl:stylesheet>
+`;
+
+router.get("/sitemap.xsl", (req, res) => {
+  res.set({
+    "Content-Type": "text/xsl; charset=utf-8",
+    "Cache-Control": "public, max-age=86400",
+  });
+  res.send(SITEMAP_XSL);
+});
+
 const router = Router();
 
 const esc = (s) =>
@@ -101,6 +157,7 @@ router.get("/sitemap.xml", async (req, res) => {
 
   const xml =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
+    `<?xml-stylesheet type="text/xsl" href="${SITE_URL}/sitemap.xsl"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
     entries.map(entryXml).join("\n") +
     `\n</urlset>\n`;

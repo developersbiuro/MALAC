@@ -90,6 +90,12 @@
       }
     },
     {
+      "source": "/sitemap.xsl",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/google-feed.xml",
       "destination": {
         "service": "server"
