@@ -67,6 +67,10 @@ router.get("/sitemap.xsl", (req, res) => {
   res.set({
     "Content-Type": "text/xsl; charset=utf-8",
     "Cache-Control": "public, max-age=86400",
+    // The global API CSP (default-src 'none') would block the browser
+    // from applying this stylesheet to /sitemap.xml; allow same-origin
+    // styles + the stylesheet's own inline <style> block instead.
+    "Content-Security-Policy": "default-src 'none'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'",
   });
   res.send(SITEMAP_XSL);
 });
@@ -165,6 +169,7 @@ router.get("/sitemap.xml", async (req, res) => {
   res.set({
     "Content-Type": "application/xml; charset=utf-8",
     "Cache-Control": "public, max-age=10800",
+    "Content-Security-Policy": "default-src 'none'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'",
   });
   res.send(xml);
 });
