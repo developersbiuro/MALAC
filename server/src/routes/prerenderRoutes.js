@@ -54,13 +54,20 @@ async function getTemplate() {
   if (templateCache.html && Date.now() - templateCache.at < TEMPLATE_TTL_MS) {
     return templateCache.html;
   }
-  const res = await fetch(`${SITE_URL}/`, {
+  // Fetch the RAW shell via a path no server rewrite claims: since the
+  // homepage itself is prerendered (2026-11-24), fetching "/" here would
+  // return a prerendered page whose #root is already filled — injectRoot
+  // would miss and every route would serve homepage content. The client
+  // service's catch-all serves the identical built index.html for any
+  // unmatched path, so /__app-shell always yields the pristine shell.
+  const res = await fetch(`${SITE_URL}/__app-shell`, {
     headers: { "User-Agent": "MALAC-Prerender/1.0" },
     signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`template fetch ${res.status}`);
   const html = await res.text();
   if (!html.includes('id="root"')) throw new Error("template has no #root");
+  if (html.includes("malac-page")) throw new Error("template is a prerendered page, not the raw shell");
   templateCache = { html, at: Date.now() };
   return html;
 }
@@ -189,6 +196,115 @@ function renderPage(res, page) {
       res.type("html").send(fallbackShell({ ...page, content }));
     });
 }
+
+// ---- / (homepage) ----------------------------------------------------------
+// Added 2026-11-24 for LCP: the homepage was the last major public page
+// still shipping an empty shell, so nothing painted until the React
+// bundle ran (~2s of element render delay in PageSpeed). Sections and
+// order mirror Home.jsx exactly (Hero → Invite → Flash Sale → Category
+// → Featured → New Arrivals → About → FAQ); React replaces #root on
+// mount as on every other prerendered page. The Flash Sale countdown
+// is deliberately NOT rendered here — it ticks live, so any baked-in
+// remaining time would be wrong within a minute; the section carries
+// static wording instead and React takes over on mount.
+router.get("/", async (req, res) => {
+  const title = "MALAC — Online Shopping in Pakistan | M.A Luxury Apparel Collection";
+  const description =
+    "MALAC — M.A Luxury Apparel Collection. Premium men's and women's fashion, watches, eyewear, bags & accessories and mobile accessories online in Pakistan, with Cash on Delivery and free shipping on orders over Rs. 3,000.";
+  let categories = [];
+  let flash = [];
+  let newest = [];
+  if (await tryDb()) {
+    try {
+      categories = await Category.find({}).select("name").lean();
+      flash = await Product.find({ status: "Active", flashSale: true })
+        .select("title slug category basePrice salePrice images")
+        .limit(7)
+        .lean();
+      newest = await Product.find({ status: { $in: ["Active", "Out of Stock"] } })
+        .select("title slug category basePrice salePrice images")
+        .sort({ createdAt: -1 })
+        .limit(10)
+        .lean();
+    } catch {
+      /* serve the shell with whatever was fetched */
+    }
+  }
+  const card = (p) => {
+    const price = priceOf(p);
+    const img = p.images?.[0]
+      ? `<img referrerpolicy="no-referrer" src="${esc(p.images[0])}" alt="${esc(p.title)}" loading="lazy" />`
+      : "";
+    const was =
+      p.salePrice > 0 && p.basePrice > p.salePrice
+        ? ` <s>${rs(p.basePrice)}</s>`
+        : "";
+    return `<article><a href="/product/${esc(p.slug)}">${img}<h3>${esc(p.title)}</h3></a><p>${esc(p.category)}</p><p><strong>${rs(price)}</strong>${was}</p></article>`;
+  };
+  const CAT_ORDER = ["Men's Fashion", "Women's Fashion", "Watches", "Eyewear", "Bags & Accessories", "Mobile Accessories"];
+  const known = new Set(categories.map((c) => c.name));
+  const catNames = CAT_ORDER.filter((n) => known.has(n));
+  for (const c of categories) if (!catNames.includes(c.name)) catNames.push(c.name);
+  const catLinks = (catNames.length ? catNames : CAT_ORDER)
+    .map((n) => `<li><a href="/category/${encodeURIComponent(n)}">${esc(n)}</a></li>`)
+    .join("");
+  const TILES = [
+    { img: "/design-img/p-polo.jpg", label: "MALAC Premium Polo", href: "/category/Men's%20Fashion" },
+    { img: "/design-img/p-hoodie.jpg", label: "MALAC Hoodie", href: "/category/Men's%20Fashion" },
+    { img: "/design-img/p-watch.jpg", label: "MALAC Signature Watch", href: "/category/Watches" },
+    { img: "/design-img/p-cap.jpg", label: "MALAC Cap", href: "/category/Men's%20Fashion" },
+    { img: "/design-img/p-sunglasses.jpg", label: "MALAC Sunglasses", href: "/category/Eyewear" },
+    { img: "/design-img/p-wallet.jpg", label: "MALAC Wallet", href: "/category/Bags%20%26%20Accessories" },
+  ];
+  const tiles = TILES.map(
+    (t) => `<article><a href="${t.href}"><img src="${t.img}" alt="${esc(t.label)}" loading="lazy" /><h3>${esc(t.label)}</h3></a></article>`
+  ).join("\n");
+  const content = `<main>
+<section>
+<p>Premium Lifestyle Store</p>
+<h1>MORE THAN STYLE. IT'S YOUR IDENTITY.</h1>
+<p>Discover premium fashion, accessories and lifestyle essentials crafted for the modern you.</p>
+<picture><source media="(max-width: 639px)" srcset="/design-img/hero-main-mobile.jpg" /><img src="/design-img/hero-main.jpg" alt="MALAC — M.A Luxury Apparel Collection" /></picture>
+<p><a href="/shop">Explore Collection</a></p>
+</section>
+<section>
+<h2>Doston ko bulayein, Rs. 400 tak payein!</h2>
+<p>Invite your friends to MALAC: they get free shipping on their first order, and you earn coupons worth up to Rs. 400 when they join and place their first order.</p>
+<p><a href="/signup">Join MALAC &amp; Invite Friends</a></p>
+</section>
+<section>
+<h2>Flash Sale</h2>
+<p>Limited-time deals across the store — shop before they are gone.</p>
+${flash.map(card).join("\n")}
+</section>
+<nav aria-label="Categories"><h2>Shop by Category</h2><ul>${catLinks}</ul></nav>
+<section><h2>Featured Collections</h2>
+${tiles}
+</section>
+<section><h2>New Arrivals</h2>
+${newest.map(card).join("\n")}
+</section>
+<section>
+<h2>More Than a Brand, It's a Lifestyle.</h2>
+<img src="/design-img/about-store.jpg" alt="Inside a MALAC store" loading="lazy" />
+<p>MALAC is a premium lifestyle brand, offering high-quality fashion, watches and accessories for those who value elegance and individuality.</p>
+<ul><li>Premium Quality</li><li>Authentic Products</li><li>Reliable Delivery</li><li>Dedicated Support</li></ul>
+<p><a href="/about">Know More</a></p>
+</section>
+<section>
+<h2>Frequently Asked Questions</h2>
+<article><h3>How do I place an order on MALAC?</h3><p>Create a MALAC account or sign in — an account is required to place an order. Add the items you like to your cart, go to checkout, confirm your delivery address and payment method, and place your order. Every order is reviewed and confirmed by our team before it is packed and dispatched.</p></article>
+<article><h3>How do I pay with JazzCash or Easypaisa?</h3><p>At checkout, choose JazzCash or Easypaisa and transfer the order total to account title Muhammad Abdullah, number 0303 6253428 — or choose Meezan Bank, NayaPay, SadaPay or FirstPay — HBL Microfinance Bank. Then upload your payment screenshot and transaction details with your order. Cash on Delivery is also available — pay in cash when your order arrives.</p></article>
+<article><h3>When is shipping free?</h3><p>Standard shipping is free on orders over Rs. 3,000. On smaller orders, standard delivery is Rs. 249 on most orders. Express delivery is available at checkout for Rs. 399 where offered. We deliver nationwide across Pakistan through courier partners including TCS, Leopards and Trax.</p></article>
+<article><h3>How can I track my order?</h3><p>Use the Track Your Order page with your order ID and the phone number from your order, or sign in and open My Orders to follow your order's status at any time.</p></article>
+<article><h3>What is MALAC's return and exchange policy?</h3><p>If you receive a damaged, defective or incorrect item, contact us within 7 days of delivery on WhatsApp (+92 3236016684) or by email (info@malac.pp.ua) with your order number. After we inspect the returned item, we will arrange a replacement or a refund. Items must be unused and in their original packaging.</p></article>
+<article><h3>How do I contact MALAC?</h3><p>Message us on WhatsApp at +92 3236016684 or email us at info@malac.pp.ua — for order help, payment questions, or anything about your account.</p></article>
+</section>
+</main>`;
+  // No extra JSON-LD: the shell already carries the Organization graph,
+  // and Home.jsx injects the FAQPage schema client-side.
+  renderPage(res, { title, description, canonical: `${SITE_URL}/`, content });
+});
 
 // ---- /shop ---------------------------------------------------------------
 router.get("/shop", async (req, res) => {
