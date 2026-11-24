@@ -153,16 +153,21 @@ function matchingProducts(products, message) {
 // shown to the customer are always database-true. The AI never filters
 // from memory when money is on the line.
 const BROWSE_INTENT = /\b(show|dikhao|dikha dein|list|find|dhund|dhundo|browse|suggest|recommend)\b/i;
+// Category aliases map shopper words to the SIX live categories —
+// first match wins, so specific product words (watch, sunglasses,
+// handbag, charger) are tested before the gender/fashion words.
+// (Fixed 2026-11-24: this table still pointed at the retired
+// nine-category catalogue, so category browse queried categories
+// that no longer exist and returned nothing. MALAC sells no phones,
+// electronics, groceries etc. — phone words honestly map to Mobile
+// Accessories, the closest live category.)
 const CATEGORY_ALIASES = [
-  { re: /\b(mobile|mobiles|phone|phones|tablet|tablets)\b/i, name: "Mobiles & Tablets" },
-  { re: /\b(electronic|electronics|tv|led|gadget|gadgets)\b/i, name: "Electronics" },
-  { re: /\b(fashion|clothes|clothing|dress|suits?|shoes|watch|watches|wear)\b/i, name: "Fashion" },
-  { re: /\b(kids|bachay|bachon|children|baby clothes)\b/i, name: "Kids" },
-  { re: /\b(home|living|kitchen|furniture|decor)\b/i, name: "Home & Living" },
-  { re: /\b(beauty|health|makeup|cosmetic|cosmetics|skincare)\b/i, name: "Beauty & Health" },
-  { re: /\b(grocer|grocery|groceries|food items?)\b/i, name: "Groceries" },
-  { re: /\b(sports?|fitness|gym|exercise)\b/i, name: "Sports & Fitness" },
-  { re: /\b(toys?|baby|babies)\b/i, name: "Toys & Baby" },
+  { re: /\b(watch|watches|smartwatch|ghari|ghadi)\b/i, name: "Watches" },
+  { re: /\b(sunglasses|sunglass|glasses|eyewear|chashma|ainak|shades)\b/i, name: "Eyewear" },
+  { re: /\b(mobile|mobiles|phone|phones|charger|charging|cable|cables|power ?bank|earbuds|earphones|headphones|airpods|protector|cover|covers)\b/i, name: "Mobile Accessories" },
+  { re: /\b(bag|bags|handbag|handbags|wallet|wallets|purse|backpack)\b/i, name: "Bags & Accessories" },
+  { re: /\b(women|women's|ladies|lady|aurat|female|girls?|kurti|kurtis|lawn|dupatta)\b/i, name: "Women's Fashion" },
+  { re: /\b(men|men's|gents|mard|boys?|hoodie|hoodies|polo|polos|tracksuit|chappal)\b/i, name: "Men's Fashion" },
 ];
 
 export function parseBrowse(message) {
@@ -375,6 +380,47 @@ async function callGemini({ apiKey, model, systemInstruction, input, timeoutMs, 
   }
 }
 
+// ---- Multi-key failover (Abdullah, 2026-11-24) ----
+// The pool comes from env.gemini.apiKeys (GEMINI_API_KEYS). A key that
+// answers 429 (free-tier quota exhausted) or 403 (key-level problem)
+// is parked for 10 minutes and the next key takes over, so one key's
+// limit never silences the assistant while another key still has
+// quota. The starting key rotates per call so load spreads across
+// the pool instead of always draining the first key. Other errors
+// (400 bad input, 5xx, timeouts) are thrown unchanged — the caller's
+// model-fallback loop already handles those.
+const keyCooldownUntil = new Map();
+let keyStartIndex = 0;
+
+async function callGeminiWithFailover(args) {
+  const keys = env.gemini.apiKeys.length
+    ? env.gemini.apiKeys
+    : (env.gemini.apiKey ? [env.gemini.apiKey] : []);
+  if (!keys.length) {
+    const err = new Error("gemini_no_key");
+    err.status = 0;
+    throw err;
+  }
+  const start = keyStartIndex % keys.length;
+  keyStartIndex += 1;
+  let lastErr = null;
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[(start + i) % keys.length];
+    if ((keyCooldownUntil.get(key) || 0) > Date.now()) continue;
+    try {
+      return await callGemini({ ...args, apiKey: key });
+    } catch (err) {
+      lastErr = err;
+      if (err?.status === 429 || err?.status === 403) {
+        keyCooldownUntil.set(key, Date.now() + 10 * 60 * 1000);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr || new Error("gemini_all_keys_cooling_down");
+}
+
 // history: [{ from: "user" | "bot", text }] — the recent conversation.
 // cart: [{ product, qty }] — the customer's live cart (ids + qty only).
 // Returns { reply, products, compare?, browseNote? } or null when the
@@ -400,8 +446,7 @@ export async function buildAssistantReply({ message, history = [], cart = [] }) 
     };
   }
 
-  const apiKey = env.gemini.apiKey;
-  if (!apiKey) return null;
+  if (!env.gemini.apiKeys.length && !env.gemini.apiKey) return null;
 
   const { products, text: catalogue } = await catalogueSnapshot();
   const knowledge = await ownerKnowledge();
@@ -437,7 +482,7 @@ export async function buildAssistantReply({ message, history = [], cart = [] }) 
   for (const attempt of attempts) {
     for (const model of models) {
       try {
-        const reply = await callGemini({ apiKey, model, systemInstruction, ...attempt });
+        const reply = await callGeminiWithFailover({ model, systemInstruction, ...attempt });
         // Reply-length guard: a reply that does not end a sentence is
         // almost certainly truncated (seen live 2026-11-09 at 400 max
         // tokens, which the thinking budget eats into). Retry once at
@@ -447,7 +492,7 @@ export async function buildAssistantReply({ message, history = [], cart = [] }) 
         // truncation.
         if (reply && !/[.!?]["')\]]?$/.test(parseMarkers(reply).text)) {
           try {
-            const longer = await callGemini({ apiKey, model, systemInstruction, ...attempt, timeoutMs: 20000, maxOutputTokens: 1600 });
+            const longer = await callGeminiWithFailover({ model, systemInstruction, ...attempt, timeoutMs: 20000, maxOutputTokens: 1600 });
             if (longer) return finish(longer);
           } catch { /* keep the shorter reply */ }
         }

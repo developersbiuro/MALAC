@@ -4,6 +4,7 @@ import api from "../../api/client.js";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { rs } from "../../utils/format.js";
 import { customerContact } from "../../utils/customerContact.js";
+import { isManualMethod } from "../../utils/payments.js";
 import { printBlock } from "../../utils/print.js";
 import OrderInvoice from "../../components/OrderInvoice.jsx";
 
@@ -120,7 +121,11 @@ export default function AdminOrders() {
     } catch (e) { setMsg(e.response?.data?.message || "Could not update payment verification"); }
   };
 
-  const isManual = selected && ["JazzCash", "Easypaisa"].includes(selected.paymentMethod);
+  // All six manual-transfer methods get the verification panel, not
+  // just JazzCash/Easypaisa (Abdullah, 2026-11-24 — the server accepts
+  // all six, so Meezan/NayaPay/SadaPay/FirstPay orders must be
+  // verifiable here too). MANUAL_METHODS lives in utils/payments.js.
+  const isManual = selected && isManualMethod(selected.paymentMethod);
 
   return (
     <div>
@@ -151,7 +156,7 @@ export default function AdminOrders() {
                 <td>{o.items.reduce((s, i) => s + i.qty, 0)}</td>
                 <td>{rs(o.total)}</td>
                 <td>{o.paymentMethod}
-                  {["JazzCash", "Easypaisa"].includes(o.paymentMethod) && (
+                  {isManualMethod(o.paymentMethod) && (
                     <span className={`block w-max text-[10px] rounded-full px-2 py-0.5 mt-0.5 ${verifyBadge[o.paymentVerificationStatus]}`}>
                       {o.paymentVerificationStatus.replace("_", " ")}
                     </span>)}

@@ -1,34 +1,32 @@
 # MALAC — Online Shopping in Pakistan
 
-> MALAC (also known as MalacPK and MALAC Store) is an online shopping store in Pakistan. MALAC stands for M.A Luxury Apparel Collection. It was founded by Muhammad Abdullah and is based in Faisalabad, Punjab, Pakistan. The store sells mobiles, electronics, fashion, home & living, beauty, groceries, sports and toys products with prices in Pakistani Rupees (PKR), Cash on Delivery, and courier delivery to every city in Pakistan.
+> MALAC is an online shopping store in Pakistan. MALAC stands for M.A Luxury Apparel Collection. It was founded by Muhammad Abdullah and is based in Faisalabad, Punjab, Pakistan. The store sells men's and women's fashion, watches, eyewear, bags and mobile accessories — 90 products across six categories — with prices in Pakistani Rupees (PKR), Cash on Delivery, and courier delivery to every city in Pakistan.
 
 ## Key facts
 
-- Name: MALAC — M.A Luxury Apparel Collection (also called MalacPK or MALAC Store)
+- Name: MALAC — M.A Luxury Apparel Collection
 - Pronunciation: MALAC is spoken as written in Urdu: مالاک (two syllables).
 - Founder: Muhammad Abdullah
 - Based in: Faisalabad, Punjab, Pakistan (online-only store, no walk-in shop)
 - Website: https://www.malac.pp.ua
+- Catalogue: 90 products in six categories — Men's Fashion, Women's Fashion, Watches, Eyewear, Bags & Accessories, and Mobile Accessories
 - Delivery area: all of Pakistan — Karachi, Lahore, Islamabad, Rawalpindi, Faisalabad, Multan, Peshawar, Quetta, Hyderabad, Sialkot, Gujranwala and smaller towns
 - Delivery charges: Standard Rs. 249, free on orders over Rs. 3,000; Express Rs. 399 where available
-- Delivery time: Standard 2–5 working days; Express 1–2 working days
+- Delivery time: Standard 2–5 working days; Express 1–2 working days. Imported items, where marked on the product, take 10–15 working days.
 - Courier partners: TCS, Leopards, Trax, PostEx
 - Payment methods: Cash on Delivery (COD), JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay, FirstPay — HBL Microfinance Bank
-- Returns: damaged, defective or incorrect items can be reported within 7 days of delivery for an exchange or solution; change-of-mind returns are not accepted
+- Returns: damaged, defective or incorrect items can be reported within 7 days of delivery for a replacement or refund after inspection; change-of-mind returns are not accepted
 - Contact: WhatsApp +92 323 6016684; email info@malac.pp.ua
 - New customers can use the voucher code WELCOME10 for 10% off their first order
 
 ## Product categories
 
-- Mobiles & Tablets: smartphones, tablets and mobile accessories such as power banks and wireless chargers
-- Electronics: audio, cameras, LED TVs and fans
-- Fashion: men's, women's, kids' and unisex clothing and shoes, including kurtis, polos, hoodies, handbags and Peshawari chappals
-- Kids: boys' and girls' fashion, kids' shoes and school supplies
-- Home & Living: furniture, kitchen items such as electric kettles and dinner sets, and bedding
-- Beauty & Health: skincare and makeup, including NIVEA and lipstick sets
-- Groceries: staples such as rice, pure desi ghee and honey
-- Sports & Fitness: gym equipment such as resistance bands, yoga mats and dumbbells
-- Toys & Baby: toys and educational building blocks
+- Men's Fashion (https://www.malac.pp.ua/category/Men%27s%20Fashion): clothing, shoes and winter collection — hoodies, jackets, polo t-shirts, tracksuits, sweatshirts and Peshawari chappals. Many picks under Rs. 2,500 and under Rs. 5,000.
+- Women's Fashion (https://www.malac.pp.ua/category/Women%27s%20Fashion): clothing and shoes — lawn suits, kurtis and seasonal wear. Many picks under Rs. 2,000 and under Rs. 3,500.
+- Watches (https://www.malac.pp.ua/category/Watches): watches for men, women, kids and unisex styles, priced from Rs. 1,050 to Rs. 24,999. Many watches under Rs. 2,000 and under Rs. 5,000.
+- Eyewear (https://www.malac.pp.ua/category/Eyewear): sunglasses for men, women, kids and unisex styles, from Rs. 1,200. Many sunglasses under Rs. 2,000.
+- Bags & Accessories (https://www.malac.pp.ua/category/Bags%20%26%20Accessories): ladies handbags, bags and wallets. Many picks under Rs. 1,500 and under Rs. 3,000.
+- Mobile Accessories (https://www.malac.pp.ua/category/Mobile%20Accessories): chargers & cables, power banks, audio (earbuds and headphones), covers & protectors, and holders & stands. Many picks under Rs. 1,000 and under Rs. 3,000.
 
 ## Important pages
 
@@ -46,12 +44,12 @@
 - Is MALAC a real online store in Pakistan? Yes. MALAC is an online-only store based in Faisalabad, Pakistan, founded by Muhammad Abdullah. Orders are placed on malac.pp.ua and delivered by courier (TCS, Leopards, Trax, PostEx) anywhere in Pakistan.
 - Does MALAC offer Cash on Delivery? Yes. Customers can pay cash at their doorstep, or pay in advance via JazzCash, Easypaisa or bank transfer (Meezan Bank, NayaPay, SadaPay, FirstPay — HBL Microfinance Bank).
 - How much is MALAC delivery? Standard delivery is Rs. 249 and is free on orders above Rs. 3,000. Express delivery is Rs. 399 where available.
-- How long does MALAC take to deliver? Standard delivery takes 2–5 working days and express takes 1–2 working days, depending on the city.
-- What is MALAC's return policy? Damaged, defective or incorrect items reported within 7 days of delivery are exchanged or resolved. Change-of-mind returns are not accepted.
+- How long does MALAC take to deliver? Standard delivery takes 2–5 working days and express takes 1–2 working days, depending on the city. Imported items, where marked, take 10–15 working days.
+- What is MALAC's return policy? Damaged, defective or incorrect items reported within 7 days of delivery are replaced or refunded after inspection. Change-of-mind returns are not accepted.
 - How can I contact MALAC? On WhatsApp at +92 323 6016684 or by email at info@malac.pp.ua.
 - Who founded MALAC? MALAC was founded by Muhammad Abdullah in Faisalabad, Punjab, Pakistan, as an online-only store.
 - How do you pronounce MALAC? It is spoken as written in Urdu: مالاک (two syllables).
 - What does MALAC stand for? MALAC is short for M.A Luxury Apparel Collection; the M.A are the initials of the founder, Muhammad Abdullah.
 - How do I track a MALAC order? Sign in and open Track Order on malac.pp.ua, then enter the order ID (MLC-XXXXXX) or the phone number used for the order; order updates are also sent by app notification, email and WhatsApp.
 - Does MALAC have a mobile app? Yes — the MALAC Android app is downloadable from the MALAC website, and iPhone users can use the full website in their browser or add it to their home screen.
-- What does MALAC sell? Products across nine categories: Mobiles & Tablets, Electronics, Fashion, Kids, Home & Living, Beauty & Health, Groceries, Sports & Fitness, and Toys & Baby.
+- What does MALAC sell? Products across six categories: Men's Fashion, Women's Fashion, Watches, Eyewear, Bags & Accessories, and Mobile Accessories — clothing, shoes, watches, sunglasses, handbags, wallets, chargers, power banks, earbuds and phone covers. MALAC does not sell mobile phones, electronics, groceries or toys.
