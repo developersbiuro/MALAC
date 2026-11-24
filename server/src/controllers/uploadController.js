@@ -41,7 +41,7 @@ export const paymentScreenshot = asyncHandler(async (req, res) => {
   try {
     const cloud = await tryCloudinary(req, "screenshot");
     if (cloud) return res.status(201).json({ ...cloud, filename: req.file.filename, size: req.file.size });
-  } catch { /* fall through to the disk response below */ }
+  } catch (err) { console.error("[uploads] Cloudinary screenshot upload failed, fell back to disk:", err?.message || err); }
   res.status(201).json({
     path: `/uploads/payment-screenshots/${req.file.filename}`,
     filename: req.file.filename,
@@ -72,7 +72,7 @@ export const catalogImage = asyncHandler(async (req, res) => {
   try {
     const cloud = await tryCloudinary(req, "catalog");
     if (cloud) return res.status(201).json({ ...cloud, filename: req.file.filename, size: req.file.size });
-  } catch { /* fall through to the disk response below */ }
+  } catch (err) { console.error("[uploads] Cloudinary catalog upload failed, fell back to disk:", err?.message || err); }
   res.status(201).json({
     path: `/uploads/catalog/${req.file.filename}`,
     filename: req.file.filename,
