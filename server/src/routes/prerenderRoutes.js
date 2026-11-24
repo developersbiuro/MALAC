@@ -873,8 +873,11 @@ for (const [slug, meta] of Object.entries(BLOG_SCHEMA)) {
       "@type": "BlogPosting",
       headline: entry.heading,
       description: entry.description,
-      datePublished: meta.date,
-      author: { "@type": "Organization", name: "MALAC" },
+      // Full ISO datetime with the store's timezone — a bare date made
+      // Google's Rich Results Test flag datePublished as invalid.
+      datePublished: `${meta.date}T00:00:00+05:00`,
+      image: `${SITE_URL}/og-image.png`,
+      author: { "@type": "Organization", name: "MALAC", url: `${SITE_URL}/` },
       publisher: { "@type": "Organization", name: "MALAC" },
       mainEntityOfPage: `${SITE_URL}/blog/${slug}`,
     },
