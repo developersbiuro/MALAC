@@ -63,56 +63,8 @@ export default function ProductDetails() {
     title: product ? `${product.title} — MALAC` : undefined,
     description: seoDescription,
     image: seoImage,
-    jsonLd: product
-      ? [
-          {
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: product.title,
-            image: seoImage ? [seoImage] : ["https://www.malac.pp.ua/og-image.png"],
-            description: seoDescription,
-            sku: product.sku || undefined,
-            category: product.category || undefined,
-            brand: { "@type": "Brand", "name": "MALAC" },
-            ...(product.ratingCount > 0 && product.ratingAvg > 0
-              ? {
-                  aggregateRating: {
-                    "@type": "AggregateRating",
-                    ratingValue: product.ratingAvg,
-                    reviewCount: product.ratingCount,
-                  },
-                }
-              : {}),
-            offers: {
-              "@type": "Offer",
-              url: `https://www.malac.pp.ua/product/${product.slug}`,
-              priceCurrency: "PKR",
-              price: priceOf(product),
-              availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-            },
-          },
-          {
-            "@context": "https://schema.org",
-            "@type": "BreadcrumbList",
-            itemListElement: [
-              { "@type": "ListItem", position: 1, name: "Home", item: "https://www.malac.pp.ua/" },
-              { "@type": "ListItem", position: 2, name: "Shop", item: "https://www.malac.pp.ua/shop" },
-              {
-                "@type": "ListItem",
-                position: 3,
-                name: product.category,
-                item: `https://www.malac.pp.ua/shop?category=${encodeURIComponent(product.category)}`,
-              },
-              {
-                "@type": "ListItem",
-                position: 4,
-                name: product.title,
-                item: `https://www.malac.pp.ua/product/${product.slug}`,
-              },
-            ],
-          },
-        ]
-      : undefined,
+    // No client-side JSON-LD: the Product + BreadcrumbList schema
+    // ships in the prerendered server HTML (2026-11-24).
   });
 
   if (!product) return <p className="p-8 text-center text-gray-400">Loading product...</p>;

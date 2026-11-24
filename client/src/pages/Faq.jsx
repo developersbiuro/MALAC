@@ -8,8 +8,10 @@ import { usePublicSettings } from "../utils/usePublicSettings.js";
 // ask Google — and its AI Overview — about MALAC the STORE. Every answer
 // states the store's real rules (live Settings fees via usePublicSettings,
 // the published Terms/Policy, the real contact channels) in plain, original
-// words. The FAQPage JSON-LD below is built from the SAME array that is
-// rendered on the page, so the schema can never drift from the visible text.
+// words. The FAQPage JSON-LD is built from the SAME array that is
+// rendered on the page — since 2026-11-24 it ships in the prerendered
+// server HTML (server/src/assets/schemaData.js, generated from this
+// file), so this page no longer injects it client-side.
 const buildFaqs = (fees) => [
   {
     q: "What is MALAC?",
@@ -85,15 +87,6 @@ export default function Faq() {
     title: "MALAC FAQs — Ordering, Cash on Delivery, Delivery & Returns",
     description:
       "Answers to the questions people ask about MALAC, the online shopping store from Faisalabad, Pakistan: what MALAC is, how to order, Cash on Delivery, delivery charges and times, tracking, returns and how to contact the store.",
-    jsonLd: {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: FAQS.map((f) => ({
-        "@type": "Question",
-        name: f.q,
-        acceptedAnswer: { "@type": "Answer", text: f.a },
-      })),
-    },
   });
 
   return (

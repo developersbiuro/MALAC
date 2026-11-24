@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "../config/db.js";
 import Category from "../models/Category.js";
 import Product from "../models/Product.js";
+import { SITE_FAQS, HOME_FAQS, BLOG_SCHEMA } from "../assets/schemaData.js";
 
 // Server-rendered HTML for the public pages Google needs to index
 // (/shop, /product/:slug and the static content pages).
@@ -32,6 +33,30 @@ const esc = (s) =>
 
 const rs = (n) => `Rs. ${Number(n || 0).toLocaleString("en-PK")}`;
 const priceOf = (p) => (p.salePrice > 0 ? p.salePrice : p.basePrice);
+
+// Structured-data builders (2026-11-24): FAQPage / BreadcrumbList blocks
+// served in the initial HTML. The FAQ texts come from
+// assets/schemaData.js (generated from the client pages), so the schema
+// always matches the words the rendered page shows.
+const faqPageLd = (faqs) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+});
+const breadcrumbLd = (items) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: items.map(([name, item], i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name,
+    item,
+  })),
+});
 
 // Best-effort DB access (same pattern as sitemapRoutes). Never throws.
 async function tryDb() {
@@ -302,13 +327,16 @@ ${newest.map(card).join("\n")}
 <article><h3>How do I contact MALAC?</h3><p>Message us on WhatsApp at +92 3236016684 or email us at info@malac.pp.ua — for order help, payment questions, or anything about your account.</p></article>
 </section>
 </main>`;
-  // No extra JSON-LD: the shell already carries the Organization graph,
-  // and Home.jsx injects the FAQPage schema client-side.
+  // FAQPage schema in the server HTML (2026-11-24), built from the SAME
+  // six Q&As this page renders (schemaData.js, generated from Home.jsx).
+  // Home.jsx no longer injects it client-side, so the rendered page
+  // carries exactly one copy.
+  const jsonLd = faqPageLd(HOME_FAQS);
   // Static hero preloads in the initial document (the parser sees them
   // immediately — the old JS-injected preload fired too late and
   // PageSpeed measured ~1s of LCP resource load delay on desktop).
   const extraHead = `<link rel="preload" as="image" fetchpriority="high" media="(max-width: 639px)" href="/design-img/hero-main-mobile.jpg" />\n    <link rel="preload" as="image" fetchpriority="high" media="(min-width: 640px)" href="/design-img/hero-main.jpg" />`;
-  renderPage(res, { title, description, canonical: `${SITE_URL}/`, content, extraHead });
+  renderPage(res, { title, description, canonical: `${SITE_URL}/`, content, jsonLd, extraHead });
 });
 
 // ---- /shop ---------------------------------------------------------------
@@ -607,13 +635,20 @@ ${cards}
 ${bandSections}
 ${subSections}
 </main>`;
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name: title,
-    description,
-    url,
-  };
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      name: title,
+      description,
+      url,
+    },
+    breadcrumbLd([
+      ["Home", `${SITE_URL}/`],
+      ["Shop", `${SITE_URL}/shop`],
+      [category.name, url],
+    ]),
+  ];
   renderPage(res, { title, description, canonical: url, content, jsonLd });
 });
 
@@ -671,35 +706,50 @@ ${rating}
 ${rawDesc ? `<section><h2>Product details</h2><p>${esc(rawDesc)}</p></section>` : ""}
 <p><a href="/shop">Continue shopping at MALAC</a></p>
 </main>`;
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.title,
-    description,
-    image: product.images || [],
-    sku: product.sku,
-    category: product.category,
-    brand: { "@type": "Brand", name: "MALAC" },
-    offers: {
-      "@type": "Offer",
-      url,
-      priceCurrency: "PKR",
-      price: price,
-      availability:
-        product.stock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: product.title,
+      description,
+      // Absolute URLs only — Google rejects relative image paths in
+      // Product schema (the design products use /design-img/ paths).
+      image: (product.images || []).map((src) =>
+        src.startsWith("/") ? `${SITE_URL}${src}` : src
+      ),
+      sku: product.sku,
+      category: product.category,
+      brand: { "@type": "Brand", name: "MALAC" },
+      offers: {
+        "@type": "Offer",
+        url,
+        priceCurrency: "PKR",
+        price: price,
+        availability:
+          product.stock > 0
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+      },
+      ...(product.ratingCount > 0
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: Number(product.ratingAvg).toFixed(1),
+              reviewCount: product.ratingCount,
+            },
+          }
+        : {}),
     },
-    ...(product.ratingCount > 0
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: Number(product.ratingAvg).toFixed(1),
-            reviewCount: product.ratingCount,
-          },
-        }
-      : {}),
-  };
+    breadcrumbLd([
+      ["Home", `${SITE_URL}/`],
+      ["Shop", `${SITE_URL}/shop`],
+      [
+        product.category,
+        `${SITE_URL}/category/${encodeURIComponent(product.category)}`,
+      ],
+      [product.title, url],
+    ]),
+  ];
   renderPage(res, {
     title,
     description,
@@ -791,6 +841,52 @@ const STATIC_PAGES = {
   },
 };
 
+// Schema strengthening (2026-11-24): /faq carries the full 16-question
+// FAQPage built from the SAME array as its body (schemaData.js,
+// generated from Faq.jsx — the short 5-question summary body above is
+// replaced), and every blog post carries BlogPosting + BreadcrumbList
+// (+ its own FAQPage where the post has FAQs), all in the server HTML
+// instead of only after React mounts. The client pages no longer inject
+// these blocks, so each rendered page carries exactly one copy.
+{
+  const faq = STATIC_PAGES["/faq"];
+  faq.body = SITE_FAQS.map(
+    (f) => `<p><strong>${esc(f.q)}</strong> ${esc(f.a)}</p>`
+  ).join("");
+  faq.jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: faq.title,
+      description: faq.description,
+      url: `${SITE_URL}/faq`,
+    },
+    faqPageLd(SITE_FAQS),
+  ];
+}
+for (const [slug, meta] of Object.entries(BLOG_SCHEMA)) {
+  const entry = STATIC_PAGES[`/blog/${slug}`];
+  if (!entry) continue;
+  entry.jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: entry.heading,
+      description: entry.description,
+      datePublished: meta.date,
+      author: { "@type": "Organization", name: "MALAC" },
+      publisher: { "@type": "Organization", name: "MALAC" },
+      mainEntityOfPage: `${SITE_URL}/blog/${slug}`,
+    },
+    breadcrumbLd([
+      ["Home", `${SITE_URL}/`],
+      ["Blog", `${SITE_URL}/blog`],
+      [entry.heading, `${SITE_URL}/blog/${slug}`],
+    ]),
+    ...(meta.faqs.length ? [faqPageLd(meta.faqs)] : []),
+  ];
+}
+
 for (const [path, page] of Object.entries(STATIC_PAGES)) {
   router.get(path, (req, res) => {
     renderPage(res, {
@@ -798,7 +894,7 @@ for (const [path, page] of Object.entries(STATIC_PAGES)) {
       description: page.description,
       canonical: `${SITE_URL}${path}`,
       content: `<main><h1>${esc(page.heading)}</h1>${page.body}</main>`,
-      jsonLd: {
+      jsonLd: page.jsonLd || {
         "@context": "https://schema.org",
         "@type": "WebPage",
         name: page.title,

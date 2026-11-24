@@ -88,32 +88,9 @@ export default function BlogPost() {
       ? {
           title: `${post.title} — MALAC Blog`,
           description: post.excerpt,
-          jsonLd: {
-            "@context": "https://schema.org",
-            "@graph": [
-              {
-                "@type": "BlogPosting",
-                headline: post.title,
-                description: post.excerpt,
-                datePublished: post.date,
-                author: { "@type": "Organization", name: "MALAC" },
-                publisher: { "@type": "Organization", name: "MALAC" },
-                mainEntityOfPage: `https://www.malac.pp.ua/blog/${post.slug}`,
-              },
-              ...(post.faqs?.length
-                ? [
-                    {
-                      "@type": "FAQPage",
-                      mainEntity: post.faqs.map((f) => ({
-                        "@type": "Question",
-                        name: f.q,
-                        acceptedAnswer: { "@type": "Answer", text: f.a },
-                      })),
-                    },
-                  ]
-                : []),
-            ],
-          },
+          // No client-side JSON-LD: BlogPosting + BreadcrumbList + the
+          // post's FAQPage ship in the prerendered server HTML
+          // (2026-11-24, server/src/assets/schemaData.js).
         }
       : { title: "Post not found — MALAC Blog" }
   );
