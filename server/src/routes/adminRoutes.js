@@ -29,6 +29,7 @@ router.delete("/push/saved-templates/:id", push.deleteSavedTemplate);
 // (analytics) above stays visible to every staff account.
 router.get("/orders", requirePermission("orders"), orders.adminListOrders);
 router.get("/orders/:id", requirePermission("orders"), orders.adminGetOrder);
+router.get("/orders/:id/payment-screenshot", requirePermission("orders"), orders.adminOrderScreenshot);
 router.patch("/orders/:id/status", requirePermission("orders"), orders.adminUpdateStatus);
 // Payment verification is a billing action gated by the separate
 // "payments" permission: a Vice-Admin with "orders" but not "payments"

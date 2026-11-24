@@ -47,6 +47,24 @@ export default function AdminOrders() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [msg, setMsg] = useState("");
+  // Payment-screenshot display URL for the open order. Legacy uploads
+  // are plain "/uploads/..." paths and are used directly; screenshots
+  // stored privately on Cloudinary carry an opaque "cld:" marker
+  // (audit M4/M6) and are fetched as a blob through the
+  // permission-checked admin endpoint, so no public URL ever exists.
+  const [shotUrl, setShotUrl] = useState("");
+  useEffect(() => {
+    setShotUrl("");
+    const stored = selected?.paymentScreenshot || "";
+    if (!stored) return;
+    if (!stored.startsWith("cld:")) { setShotUrl(stored); return; }
+    let alive = true;
+    let objUrl = "";
+    api.get(`/admin/orders/${selected._id}/payment-screenshot`, { responseType: "blob" })
+      .then((r) => { if (!alive) return; objUrl = URL.createObjectURL(r.data); setShotUrl(objUrl); })
+      .catch(() => { if (alive) setShotUrl("error"); });
+    return () => { alive = false; if (objUrl) URL.revokeObjectURL(objUrl); };
+  }, [selected?._id, selected?.paymentScreenshot]);
   // Fulfillment-form state for the open order: the step staff picked, the
   // courier/tracking for dispatch, and the cancel reason flow.
   const [formStatus, setFormStatus] = useState("");
@@ -302,10 +320,14 @@ export default function AdminOrders() {
                     <p>Sender account: <b>{selected.senderAccount || "-"}</b></p>
                     <p>Sender title: <b>{selected.senderTitle || "-"}</b></p>
                     {selected.paymentScreenshot ? (
-                      <a href={selected.paymentScreenshot} target="_blank" rel="noreferrer">
-                        <img src={selected.paymentScreenshot} alt="Customer payment screenshot" className="max-h-64 rounded border mt-1" />
-                        <span className="text-xs text-sky-600">Open screenshot full size</span>
-                      </a>
+                      shotUrl === "error" ? (
+                        <p className="text-red-500">Screenshot load nahi ho saka — Cloudinary dashboard me bhi mojood hai.</p>
+                      ) : shotUrl ? (
+                        <a href={shotUrl} target="_blank" rel="noreferrer">
+                          <img src={shotUrl} alt="Customer payment screenshot" className="max-h-64 rounded border mt-1" />
+                          <span className="text-xs text-sky-600">Open screenshot full size</span>
+                        </a>
+                      ) : <p className="text-gray-400">Loading screenshot…</p>
                     ) : <p className="text-red-500">No screenshot attached.</p>}
                     {selected.paymentVerificationNote && <p className="text-gray-500">Note: {selected.paymentVerificationNote}</p>}
                     {selected.paymentVerifiedBy && <p className="text-gray-400 text-xs">Last action by {selected.paymentVerifiedBy}</p>}

@@ -7,6 +7,9 @@ export const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   mongoUri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017/malac",
   jwtSecret: process.env.JWT_SECRET || "dev-only-secret-change-me",
+  // Durable upload storage (audit M6): cloudinary://<key>:<secret>@<cloud>
+  // — empty means uploads fall back to the local/ephemeral disk.
+  cloudinaryUrl: process.env.CLOUDINARY_URL || "",
   seedToken: process.env.SEED_TOKEN || "",
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "30d",
   // Staff sessions (Super Admin / Vice-Admin) are deliberately shorter

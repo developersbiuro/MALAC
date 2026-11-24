@@ -13,6 +13,7 @@ import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import { gzipSync } from "node:zlib";
 import uploadRoutes from "./routes/uploadRoutes.js";
+import { cloudinaryConfigured } from "./services/cloudinary.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
 import whatsappRoutes from "./routes/whatsappRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
@@ -167,7 +168,12 @@ app.use(prerenderRoutes);
 
 // Public API — mounted under /api, matching the /api/(.*) rewrite to this
 // service in vercel.json and the client's baseURL ("/api").
-app.get("/api/health", (req, res) => res.json({ status: "ok", service: "MALAC API" }));
+app.get("/api/health", (req, res) => res.json({
+  status: "ok", service: "MALAC API",
+  // Which upload storage is live (audit M6): "cloudinary" once the
+  // CLOUDINARY_URL credential is set, "ephemeral" before it.
+  uploads: cloudinaryConfigured() ? "cloudinary" : "ephemeral",
+}));
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);

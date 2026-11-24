@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { createOrder, cancelOrder, setOrderStatus } from "../services/orderService.js";
 import { onOrderPlaced, onReturnRequested } from "../services/notifyService.js";
 import { isVerifiedCustomer } from "../utils/verification.js";
+import { cloudinarySignedDownloadUrl, cloudinarySignedDeliveryUrl } from "../services/cloudinary.js";
 
 export const placeOrder = asyncHandler(async (req, res) => {
   // Only verified customers may order. Sign-up is ONE-method — the
@@ -281,6 +282,41 @@ export const adminUpdateStatus = asyncHandler(async (req, res) => {
   res.json({ order });
 });
 
+
+// GET /api/admin/orders/:id/payment-screenshot (staff, orders
+// permission — route-gated). Payment screenshots uploaded since the
+// Cloudinary move are PRIVATE assets (audit M4/M6, 2026-11-24): the
+// order stores only an opaque "cld:" marker, and this endpoint streams
+// the bytes to staff through a short-lived signed URL that never
+// reaches the browser. Legacy "/uploads/..." screenshots predate the
+// move and are served by the static route as before — this endpoint
+// answers 404 for them.
+export const adminOrderScreenshot = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id).select("paymentScreenshot");
+  if (!order) return res.status(404).json({ message: "Order not found" });
+  const stored = order.paymentScreenshot || "";
+  if (!stored.startsWith("cld:")) {
+    return res.status(404).json({ message: "No cloud-stored screenshot for this order" });
+  }
+  const raw = stored.slice(4);
+  const dot = raw.lastIndexOf(".");
+  const publicId = raw.slice(0, dot);
+  const format = raw.slice(dot + 1);
+  const downloadUrl = cloudinarySignedDownloadUrl(publicId, format);
+  if (!downloadUrl) return res.status(503).json({ message: "Cloud storage is not configured" });
+  let upstream = await fetch(downloadUrl, { redirect: "follow" }).catch(() => null);
+  if (!upstream || !upstream.ok) {
+    const deliveryUrl = cloudinarySignedDeliveryUrl(publicId, format);
+    if (deliveryUrl) upstream = await fetch(deliveryUrl).catch(() => null);
+  }
+  if (!upstream || !upstream.ok) {
+    return res.status(502).json({ message: "Could not load the screenshot from cloud storage" });
+  }
+  const buf = Buffer.from(await upstream.arrayBuffer());
+  res.set("Content-Type", upstream.headers.get("content-type") || "image/jpeg");
+  res.set("Cache-Control", "private, no-store");
+  res.send(buf);
+});
 
 // ---- Manual payment verification (wallets + bank transfer) ----
 // Route-guarded to Super Admin: billing/financial action per RBAC brief.
