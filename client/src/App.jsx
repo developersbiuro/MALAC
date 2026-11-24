@@ -17,7 +17,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 // slow connections most customers use, first load is now a fraction of
 // what it was; the shell (header/nav/cart/chat) stays eager so the
 // frame paints instantly. (Owner flagged slow app loading, 2026-11-11.)
-const Home = lazy(() => import("./pages/Home.jsx"));
+import Home from "./pages/Home.jsx";
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const Categories = lazy(() => import("./pages/Categories.jsx"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage.jsx"));
@@ -58,7 +58,12 @@ const AdminPassword = lazy(() => import("./pages/admin/AdminPassword.jsx"));
 const AdminNotifications = lazy(() => import("./pages/admin/AdminNotifications.jsx"));
 const AdminChatbot = lazy(() => import("./pages/admin/AdminChatbot.jsx"));
 
-const PageLoading = <p className="p-8 text-center text-gray-400">Loading...</p>;
+// The fallback keeps a full viewport of height (CLS fix, 2026-11-24):
+// as a one-line "Loading..." it left the page nearly empty, so the
+// footer sat high on screen and then slammed down when the page chunk
+// mounted — a 0.602 layout shift on desktop. With min-h-screen the
+// footer starts below the fold and its move is never counted.
+const PageLoading = <div className="min-h-screen"><p className="p-8 text-center text-gray-400">Loading...</p></div>;
 
 // Shown when a staff account opens a section URL directly without the
 // access for it (the sidebar already hides those sections; this covers
