@@ -4,6 +4,7 @@ import { connectDB } from "../config/db.js";
 import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import { SITE_FAQS, HOME_FAQS, BLOG_SCHEMA } from "../assets/schemaData.js";
+import { BLOG_BODIES } from "../assets/blogBodies.js";
 
 // Server-rendered HTML for the public pages Google needs to index
 // (/shop, /product/:slug and the static content pages).
@@ -890,6 +891,20 @@ for (const [slug, meta] of Object.entries(BLOG_SCHEMA)) {
     ]),
     ...(meta.faqs.length ? [faqPageLd(meta.faqs)] : []),
   ];
+}
+for (const [slug, html] of Object.entries(BLOG_BODIES)) {
+  const entry = STATIC_PAGES[`/blog/${slug}`];
+  if (!entry) continue;
+  // Full article text in the prerendered HTML (audit L1, 2026-11-24):
+  // the entry body opens with a one-paragraph lede and closes with a
+  // "More from the MALAC Blog" footer — the generated article HTML
+  // (blogBodies.js, from the same blogPosts.js the app renders) goes
+  // between them, so non-JS crawlers and AI fetchers get the whole
+  // post, not just the summary.
+  const marker = '<p><a href="/blog">More from the MALAC Blog</a>';
+  entry.body = entry.body.includes(marker)
+    ? entry.body.replace(marker, `${html}${marker}`)
+    : entry.body + html;
 }
 
 for (const [path, page] of Object.entries(STATIC_PAGES)) {

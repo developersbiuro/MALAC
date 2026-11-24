@@ -157,13 +157,14 @@ export default function Login() {
         {method === "otp" && (step === 1 ? (
           <form onSubmit={request} className="space-y-3 mt-4">
             <div className="flex gap-2 text-sm">
-              {/* TEMP (2026-11-09): WhatsApp/SMS OTP paused until Meta Business
-                  Verification decides (check Wed 2026-11-11 11:00 PKT). Meta
-                  rejects the OTP template until then, so a phone code can
-                  never arrive — offering the buttons only strands customers.
-                  Revert: restore ["whatsapp", "WhatsApp"] and ["sms", "SMS"]
-                  to this list and remove the note below. */}
-              {[["email", "Email"]].map(([v, label]) => (
+              {/* WhatsApp OTP restored 2026-11-24 (audit L8): the
+                  2026-11-09 pause waited on Meta Business Verification,
+                  which completed 2026-11-10 — WhatsApp OTP has been
+                  live for signup and admin login ever since, on the
+                  same server plumbing this tab uses. SMS stays off:
+                  no SMS provider is configured, so the button would
+                  only strand customers. */}
+              {[["email", "Email"], ["whatsapp", "WhatsApp"]].map(([v, label]) => (
                 <button type="button" key={v} onClick={() => {
                   setChannel(v); setError("");
                   // The identifier box is shared across channels: drop a
@@ -174,8 +175,6 @@ export default function Login() {
                   className={`flex-1 border rounded py-2 ${channel === v ? "border-brand text-brand bg-brand-light" : ""}`}>{label}</button>
               ))}
             </div>
-            {/* TEMP (2026-11-09): remove with the WhatsApp/SMS revert above. */}
-            <p className="text-xs text-gray-500">WhatsApp and SMS codes are paused until Meta finishes verification (expected Wed 11 Nov) — Email OTP, password and Google sign-in all work.</p>
             {channel === "email" ? (
               <input required type="email" autoComplete="email" className={input} placeholder="Email address"
                 value={identifier} onChange={(e) => setIdentifier(e.target.value)} />
