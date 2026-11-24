@@ -15,7 +15,12 @@ import { onProductCreated, onFlashSaleStarted } from "../services/notifyService.
 const escapeRegex = (s) => String(s).slice(0, 64).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 export const listProducts = asyncHandler(async (req, res) => {
-  const { search, category, subCategory, minPrice, maxPrice, flashSale, page = 1, limit = 20, sort } = req.query;
+  const { search, category, subCategory, minPrice, maxPrice, flashSale, sort } = req.query;
+  const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+  // Clamp the caller-supplied limit (audit L12, 2026-11-24): it was
+  // passed to Mongo unclamped, so ?limit=100000 would pull the whole
+  // collection in one response. 100 covers the full catalogue + admin.
+  const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
   // The admin panel manages the whole catalog through this same endpoint
   // (its calls carry an admin token): staff with the "products" permission
   // see every status, including Archived, so an archived product can be

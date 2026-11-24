@@ -667,10 +667,12 @@ router.get("/product/:slug", async (req, res) => {
   }
   if (!product) {
     // Unknown or non-public product: serve the untouched shell so the
-    // SPA shows its own not-found state, exactly as before.
+    // SPA shows its own not-found state, exactly as before — but with a
+    // real 404 status (audit L4, 2026-11-24): a 200 here made every
+    // dead product URL a soft 404 in Search Console.
     try {
       const tpl = await getTemplate();
-      res.type("html").send(tpl);
+      res.status(404).type("html").send(tpl);
     } catch {
       res.status(404).type("html").send("<!doctype html><title>MALAC</title>");
     }

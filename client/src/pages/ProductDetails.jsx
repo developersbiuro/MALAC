@@ -28,7 +28,6 @@ export default function ProductDetails() {
   const [selected, setSelected] = useState({}); // variant group -> variant object
   const [qty, setQty] = useState(1);
   const [sheet, setSheet] = useState(null); // Daraz-style variant sheet: null | "add" | "buy"
-  const [city, setCity] = useState("Lahore");
   const [openQa, setOpenQa] = useState(null);
   const [question, setQuestion] = useState("");
   const [reviewMsg, setReviewMsg] = useState("");
@@ -244,14 +243,9 @@ export default function ProductDetails() {
         {/* Delivery box */}
         <aside className="text-sm space-y-3 border-l pl-4 hidden md:block">
           <p className="font-semibold flex items-center gap-1.5"><Truck size={16} /> Delivery</p>
-          <label className="block">City
-            <select value={city} onChange={(e) => setCity(e.target.value)} className="border rounded w-full mt-1 px-2 py-1.5">
-              {["Lahore", "Karachi", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta"].map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </label>
-          <p>Standard delivery to {city}: <b>{rs(shipping)}</b></p>
+          <p>Standard delivery: <b>{rs(shipping)}</b></p>
           <p className="text-gray-500">Get it by {deliveryWindow("Standard")}</p>
-          <p>Express: <b>{rs(399)}</b> · by {deliveryWindow("Express")}</p>
+          <p>Express: <b>{rs(fees.express)}</b> · by {deliveryWindow("Express")}</p>
           {product.codAvailable && <p className="flex items-center gap-1.5 text-green-600"><BadgeCheck size={16} /> Cash on Delivery available</p>}
           <p className="flex items-center gap-1.5 text-gray-500"><ShieldCheck size={16} /> 7-days easy return (change of mind not applicable)</p>
         </aside>

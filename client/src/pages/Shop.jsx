@@ -44,14 +44,12 @@ const RATING_OPTIONS = [0, 1, 2, 3, 4, 5];
 // the store's real category names. The free-shipping figure is the LIVE
 // threshold from Admin → Settings, passed in by the component.
 const buildCategoryDescriptions = (t) => ({
-  "Mobiles & Tablets": `Shop mobiles and tablets online in Pakistan at MALAC — smartphones, tablets and mobile accessories with prices in PKR, Cash on Delivery, and standard shipping free on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Electronics": `Shop electronics online in Pakistan at MALAC — LED TVs, audio and cameras for home and everyday use, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Fashion": `Shop fashion online in Pakistan at MALAC — clothing and footwear for men and women, from embroidered lawn suits and kurta shalwar to everyday shoes, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Home & Living": `Shop home and living essentials online in Pakistan at MALAC — furniture, kitchen and bedding picks for every room, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Beauty & Health": `Shop beauty and health products online in Pakistan at MALAC — skincare, makeup and personal care essentials, with Cash on Delivery and standard shipping free on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Groceries": `Shop groceries online in Pakistan at MALAC — everyday staples, snacks and beverages for your kitchen, delivered to your door with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Sports & Fitness": `Shop sports and fitness gear online in Pakistan at MALAC — gym equipment, cricket gear and outdoor essentials, with Cash on Delivery and standard shipping free on orders over Rs. ${t.toLocaleString("en-PK")}.`,
-  "Toys & Baby": `Shop toys and baby products online in Pakistan at MALAC — toys, diapers and feeding essentials for little ones, delivered nationwide with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Men's Fashion": `Shop men's fashion online in Pakistan at MALAC — hoodies, jackets, polos, sweatshirts and shoes for men, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Women's Fashion": `Shop women's fashion online in Pakistan at MALAC — embroidered lawn suits, everyday clothing and shoes for women, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Watches": `Shop watches online in Pakistan at MALAC — men's watches, women's watches and unisex styles at prices in PKR, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Eyewear": `Shop sunglasses online in Pakistan at MALAC — sunglasses for men, women and unisex styles with UV protection, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Bags & Accessories": `Shop bags and accessories online in Pakistan at MALAC — ladies handbags, wallets and everyday bags, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
+  "Mobile Accessories": `Shop mobile accessories online in Pakistan at MALAC — fast chargers, cables, earbuds, power banks, covers and stands, with Cash on Delivery and free standard shipping on orders over Rs. ${t.toLocaleString("en-PK")}.`,
 });
 
 export default function Shop() {
@@ -71,7 +69,10 @@ export default function Shop() {
   const flash = params.get("flash");
 
   useEffect(() => {
-    const q = { limit: 40 };
+    // Fetch the whole catalogue (90 products) so "All Products" really
+    // shows everything — the old limit of 40 silently hid 50 products
+    // here (audit M3, 2026-11-24). The API clamps limit at 100.
+    const q = { limit: 100 };
     if (search) q.search = search;
     if (category) q.category = category;
     if (sub) q.subCategory = sub;

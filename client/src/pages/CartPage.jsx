@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import api from "../api/client.js";
@@ -45,24 +45,46 @@ export default function CartPage() {
   const toggleOne = (key) =>
     setSelected((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
-  const applyCoupon = async () => {
-    const c = code.trim();
-    if (!c) { setMsgKind("err"); setMsg("Pehle voucher code likhein, phir Apply dabayein."); return; }
+  const validateCoupon = async (c) => {
     setApplying(true);
     try {
       const r = await api.get(`/coupons/validate/${c}`, { params: { subtotal: selSubtotal } });
       if (r.data.valid) {
         setCoupon(r.data); setMsgKind("ok");
         setMsg(`Voucher lag gaya — aap ko ${rs(r.data.discount)} ki bachat hui.`);
+        // Carry-over (audit L9, 2026-11-24): the applied voucher is
+        // remembered, so Checkout picks it up without re-typing.
+        try { localStorage.setItem("malac_coupon", r.data.code); } catch { /* ignore */ }
       } else {
         setCoupon(null); setMsgKind("err"); setMsg(couponReason(r.data.reason));
+        try { localStorage.removeItem("malac_coupon"); } catch { /* ignore */ }
       }
     } catch {
       setCoupon(null); setMsgKind("err");
       setMsg("Voucher check nahi ho saka — connection dekh kar dobara try karein.");
     } finally { setApplying(false); }
   };
-  const removeCoupon = () => { setCoupon(null); setCode(""); setMsg(""); };
+  const applyCoupon = async () => {
+    const c = code.trim();
+    if (!c) { setMsgKind("err"); setMsg("Pehle voucher code likhein, phir Apply dabayein."); return; }
+    await validateCoupon(c);
+  };
+  const removeCoupon = () => {
+    setCoupon(null); setCode(""); setMsg("");
+    try { localStorage.removeItem("malac_coupon"); } catch { /* ignore */ }
+  };
+
+  // Restore a voucher applied earlier (here or at Checkout) so it is
+  // never typed twice. Runs once, when the cart first has items.
+  const restoredCoupon = useRef(false);
+  useEffect(() => {
+    if (restoredCoupon.current || items.length === 0) return;
+    restoredCoupon.current = true;
+    let saved = "";
+    try { saved = localStorage.getItem("malac_coupon") || ""; } catch { /* ignore */ }
+    if (saved && !coupon) { setCode(saved); validateCoupon(saved); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.length]);
 
   const discount = coupon?.discount || 0;
   const shipping = selItems.length === 0 ? 0 : (selSubtotal - discount >= fees.freeThreshold ? 0 : fees.standard);

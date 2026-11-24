@@ -235,25 +235,46 @@ export default function Checkout() {
   // on the address/delivery steps (Abdullah, 2026-11-11).
   const [couponMsg, setCouponMsg] = useState(null); // { kind: "ok"|"err", text }
   const [applying, setApplying] = useState(false);
-  const applyCoupon = async () => {
-    const c = code.trim();
-    if (!c) { setCouponMsg({ kind: "err", text: "Pehle voucher code likhein, phir Apply dabayein." }); return; }
+  const validateCoupon = async (c) => {
     setApplying(true);
     try {
       const r = await api.get(`/coupons/validate/${c}`, { params: { subtotal } });
       if (r.data.valid) {
         setCoupon(r.data);
         setCouponMsg({ kind: "ok", text: `Voucher lag gaya — aap ko ${rs(r.data.discount)} ki bachat hui.` });
+        try { localStorage.setItem("malac_coupon", r.data.code); } catch { /* ignore */ }
       } else {
         setCoupon(null);
         setCouponMsg({ kind: "err", text: couponReason(r.data.reason) });
+        try { localStorage.removeItem("malac_coupon"); } catch { /* ignore */ }
       }
     } catch {
       setCoupon(null);
       setCouponMsg({ kind: "err", text: "Voucher check nahi ho saka — connection dekh kar dobara try karein." });
     } finally { setApplying(false); }
   };
-  const removeCoupon = () => { setCoupon(null); setCode(""); setCouponMsg(null); };
+  const applyCoupon = async () => {
+    const c = code.trim();
+    if (!c) { setCouponMsg({ kind: "err", text: "Pehle voucher code likhein, phir Apply dabayein." }); return; }
+    await validateCoupon(c);
+  };
+  const removeCoupon = () => {
+    setCoupon(null); setCode(""); setCouponMsg(null);
+    try { localStorage.removeItem("malac_coupon"); } catch { /* ignore */ }
+  };
+
+  // Carry-over (audit L9, 2026-11-24): a voucher applied on the Cart
+  // page arrives here already applied — re-validated once against this
+  // order's subtotal, never typed twice.
+  const restoredCoupon = useRef(false);
+  useEffect(() => {
+    if (restoredCoupon.current || subtotal <= 0) return;
+    restoredCoupon.current = true;
+    let saved = "";
+    try { saved = localStorage.getItem("malac_coupon") || ""; } catch { /* ignore */ }
+    if (saved && !coupon) { setCode(saved); validateCoupon(saved); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [subtotal]);
 
   const uploadScreenshot = async (file) => {
     if (!file) return;
@@ -325,6 +346,9 @@ export default function Checkout() {
       } else {
         clear();
       }
+      // The voucher is spent with this order — forget the carried-over
+      // code so it is not auto-applied to the next cart.
+      try { localStorage.removeItem("malac_coupon"); } catch { /* ignore */ }
       navigate(`/order-confirmation/${r.data.order.orderId}`, { state: { order: r.data.order } });
     } catch (e) {
       if (e.response?.status === 401) navigate(`/login?redirect=${encodeURIComponent("/checkout")}`);
