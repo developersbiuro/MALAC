@@ -31,7 +31,7 @@ const STEPS = [
   {
     targets: ["[data-tour='categories']", "[data-tour='tab-categories']"],
     title: "Categories",
-    text: "9 categories — Mobiles & Tablets, Fashion, Electronics, Beauty & Health aur bohat kuch. Apni pasand ki category chunain.",
+    text: "6 categories — Men's Fashion, Women's Fashion, Watches, Eyewear, Bags & Accessories aur Mobile Accessories. Apni pasand ki category chunain.",
   },
   {
     targets: ["[data-tour='cart']", "[data-tour='tab-cart']"],
@@ -197,16 +197,16 @@ export default function WelcomeGuide() {
             style={{
               left: rect.x - 6, top: rect.y - 6, width: rect.w + 12, height: rect.h + 12,
               boxShadow: "0 0 0 9999px rgba(10, 10, 20, 0.62)",
-              outline: "2.5px solid #F59E0B", outlineOffset: 2,
+              outline: "2.5px solid #d6dae0", outlineOffset: 2,
             }} />
-          <div className="absolute bg-[#FFFBF2] rounded-2xl shadow-2xl p-5" style={tipStyle}>
+          <div className="absolute bg-white border border-[#d7d8de] rounded-2xl shadow-2xl p-5" style={tipStyle}>
             <TourCard step={step} idx={idx} total={steps.length} last={last}
               onClose={close} onBack={() => setIdx(idx - 1)} onNext={() => setIdx(idx + 1)} onFinish={finish} />
           </div>
         </>
       ) : (
         <div className="absolute inset-0 bg-[rgba(10,10,20,0.62)] flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-[#FFFBF2] rounded-3xl shadow-2xl p-6 relative">
+          <div className="w-full max-w-sm bg-white border border-[#d7d8de] rounded-3xl shadow-2xl p-6 relative">
             <TourCard step={step} idx={idx} total={steps.length} last={last} centered
               onClose={close} onBack={() => setIdx(idx - 1)} onNext={() => setIdx(idx + 1)} onFinish={finish} />
           </div>
