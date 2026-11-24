@@ -791,42 +791,42 @@ const STATIC_PAGES = {
     description:
       "Sunglasses in Pakistan are not just a style choice — the lens matters more than the frame. How to pick UV protection, polarized lenses and a shape that suits your face, with all fifteen sunglasses MALAC sells, from Rs 1,200.",
     heading: "How to Choose Sunglasses in Pakistan: UV Protection, Polarized Lenses and the Right Frame for Your Face",
-    body: `<p>In Pakistan's sun, a dark lens without UV protection can do more harm than good — buy the lens first and the frame second. This guide covers UV protection, when polarized lenses are worth it, and which frame shape suits your face, across MALAC's fifteen sunglasses from Rs 1,200 to Rs 8,500, all with Cash on Delivery (free delivery over Rs 3,000; most pairs are imported and take 10–15 working days). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Eyewear">Shop Eyewear at MALAC</a></p>`,
+    body: `<p>In Pakistan's sun, a dark lens without UV protection can do more harm than good — buy the lens first and the frame second. This guide covers UV protection, when polarized lenses are worth it, and which frame shape suits your face, across MALAC's fifteen sunglasses from Rs 1,200 to Rs 8,500, all with Cash on Delivery (free delivery over Rs 3,000; most pairs are imported and take 10–15 working days).</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Eyewear">Shop Eyewear at MALAC</a></p>`,
   },
   "/blog/mobile-accessories-buying-guide-pakistan-malac": {
     title: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money — MALAC Blog",
     description:
       "How to pick a charger, earbuds, a power bank and the small extras from the mobile accessories in Pakistan that MALAC sells — live prices from Rs 550, the honest notes on imported items, and Cash on Delivery across Pakistan.",
     heading: "Mobile Accessories in Pakistan: What to Buy, What to Skip, and How Not to Waste Money",
-    body: `<p>A phone is only as good as the things around it. Start with a proper adapter, then one good cable instead of three weak ones, earbuds you will actually wear every day, and a power bank sized for your real day. MALAC's fifteen mobile accessories run from Rs 550 to Rs 3,999, all with Cash on Delivery and standard delivery in 2–5 working days (free over Rs 3,000; three imported items take 10–15 working days). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Mobile Accessories">Shop Mobile Accessories at MALAC</a></p>`,
+    body: `<p>A phone is only as good as the things around it. Start with a proper adapter, then one good cable instead of three weak ones, earbuds you will actually wear every day, and a power bank sized for your real day. MALAC's fifteen mobile accessories run from Rs 550 to Rs 3,999, all with Cash on Delivery and standard delivery in 2–5 working days (free over Rs 3,000; three imported items take 10–15 working days).</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Mobile Accessories">Shop Mobile Accessories at MALAC</a></p>`,
   },
   "/blog/how-to-choose-a-watch-in-pakistan-malac": {
     title: "Best Watches in Pakistan: How to Choose the Right Watch for Men and Women — MALAC Blog",
     description:
       "Looking for the best watches in Pakistan? A simple guide to straps, dials, analog vs smart watches and what a good watch should cost — plus men's, women's and couple watches on MALAC from Rs 1,050, with Cash on Delivery across Pakistan.",
     heading: "Best Watches in Pakistan: How to Choose the Right Watch for Men and Women",
-    body: `<p>A watch is the one accessory almost everyone wears every day, and one of the hardest things to buy online. Start with the strap — leather for formal, steel for daily, silicone for smart watches — then the dial size, then decide analog or smart. MALAC's watch range runs from Rs 1,050 to the MALAC Signature Watch at Rs 24,999, all with Cash on Delivery and delivery in 2–5 working days (free over Rs 3,000). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Watches">Shop Watches at MALAC</a></p>`,
+    body: `<p>A watch is the one accessory almost everyone wears every day, and one of the hardest things to buy online. Start with the strap — leather for formal, steel for daily, silicone for smart watches — then the dial size, then decide analog or smart. MALAC's watch range runs from Rs 1,050 to the MALAC Signature Watch at Rs 24,999, all with Cash on Delivery and delivery in 2–5 working days (free over Rs 3,000).</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/category/Watches">Shop Watches at MALAC</a></p>`,
   },
   "/blog/winter-shopping-in-pakistan-malac": {
     title: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It — MALAC Blog",
     description:
       "A practical guide to winter shopping in Pakistan: start with the everyday fleece layer, add one piece for real cold, and do not forget thermals, gloves and the children — with MALAC's eight winter pieces and Cash on Delivery.",
     heading: "Winter Shopping in Pakistan: What to Buy First, and How Not to Waste Money on It",
-    body: `<p>Winter in Pakistan never arrives all at once — a cold morning in Faisalabad, a freezing night in the north, a mild evening in Karachi. Start with the layer you will wear every day (a fleece tracksuit or zipper hoodie), then add one piece for real cold (a hooded puffer jacket), and do not skip the quiet heroes: thermal sets and leather gloves. MALAC's winter range has eight pieces, all with Cash on Delivery and standard delivery in 2–5 working days (Rs. 249, free over Rs. 3,000). Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
+    body: `<p>Winter in Pakistan never arrives all at once — a cold morning in Faisalabad, a freezing night in the north, a mild evening in Karachi. Start with the layer you will wear every day (a fleece tracksuit or zipper hoodie), then add one piece for real cold (a hooded puffer jacket), and do not skip the quiet heroes: thermal sets and leather gloves. MALAC's winter range has eight pieces, all with Cash on Delivery and standard delivery in 2–5 working days (Rs. 249, free over Rs. 3,000).</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
   },
   "/blog/online-shopping-in-pakistan-malac": {
     title: "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust — MALAC Blog",
     description:
       "How MALAC earns trust when you shop online in Pakistan: verified sellers, Cash on Delivery, clear prices and real order tracking.",
     heading: "Online Shopping in Pakistan, Without the Worry: How MALAC Earns Your Trust",
-    body: `<p>Online shopping in Pakistan works best when the store earns your trust first: clear prices in rupees, Cash on Delivery so you pay when the parcel is in your hands, order tracking at every step, and support that answers on WhatsApp and email. That is how MALAC — M.A Luxury Apparel Collection, based in Faisalabad — runs its store. Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
+    body: `<p>Online shopping in Pakistan works best when the store earns your trust first: clear prices in rupees, Cash on Delivery so you pay when the parcel is in your hands, order tracking at every step, and support that answers on WhatsApp and email. That is how MALAC — M.A Luxury Apparel Collection, based in Faisalabad — runs its store.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
   },
   "/blog/cash-on-delivery-online-shopping-pakistan": {
     title: "Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands — MALAC Blog",
     description:
       "Cash on Delivery in Pakistan explained: how COD works at MALAC, when to choose it, and how advance payment by JazzCash or Easypaisa differs.",
     heading: "Cash on Delivery in Pakistan: Order Online and Pay Only When the Parcel Is in Your Hands",
-    body: `<p>With Cash on Delivery you order online and pay in cash only when the parcel reaches your door — no card, no advance transfer. At MALAC, COD is available across Pakistan alongside JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay and FirstPay. Read the full article in the MALAC app or on the website blog.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
+    body: `<p>With Cash on Delivery you order online and pay in cash only when the parcel reaches your door — no card, no advance transfer. At MALAC, COD is available across Pakistan alongside JazzCash, Easypaisa, Meezan Bank, NayaPay, SadaPay and FirstPay.</p><p><a href="/blog">More from the MALAC Blog</a> · <a href="/shop">Shop at MALAC</a></p>`,
   },
   "/terms": {
     title: "Terms of Service — MALAC",
