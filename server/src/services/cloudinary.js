@@ -16,7 +16,11 @@ import env from "../config/env.js";
 // ever read from the environment — never logged, never returned.
 
 function config() {
-  const m = /^cloudinary:\/\/([^:]+):([^@]+)@(.+)$/.exec(String(env.cloudinaryUrl || "").trim());
+  // Tolerate the value exactly as the Cloudinary dashboard offers it:
+  // a bare cloudinary:// URL, or the .env sample line
+  // "CLOUDINARY_URL=cloudinary://..." (either may arrive quoted).
+  const raw = String(env.cloudinaryUrl || "").trim().replace(/^["']|["']$/g, "");
+  const m = /cloudinary:\/\/([^:]+):([^@]+)@([^\s"']+)$/.exec(raw);
   if (!m) return null;
   return { apiKey: m[1], apiSecret: m[2], cloudName: m[3] };
 }
