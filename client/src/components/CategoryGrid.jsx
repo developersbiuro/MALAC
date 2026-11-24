@@ -8,8 +8,23 @@ import { CATEGORY_PHOTOS } from "../assets/design.js";
 // curated black/silver design shots (assets/design.js); a category with
 // no curated photo falls back to a dark metal gradient. Each card opens
 // that category's own page (/category/:name) with only its products.
-export default function CategoryGrid({ categories }) {
-  if (!categories?.length) return null;
+export default function CategoryGrid({ categories, loading }) {
+  if (!categories?.length) {
+    // Same-size skeleton while the categories load (CLS fix,
+    // 2026-11-24 — the grid used to pop in from nothing).
+    if (!loading) return null;
+    return (
+      <div aria-hidden="true">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="relative rounded-xl overflow-hidden w-full aspect-[4/5] bg-lux-deep ring-1 ring-white/10">
+              <span className="absolute inset-0 bg-neutral-800 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   return (
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">

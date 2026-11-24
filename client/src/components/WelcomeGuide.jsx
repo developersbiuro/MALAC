@@ -223,7 +223,7 @@ function TourCard({ step, idx, total, last, centered, onClose, onBack, onNext, o
         <X size={18} />
       </button>
       <div className={centered ? "flex flex-col items-center text-center" : ""}>
-        {step.logo && <img src={LOGO_FULL} alt="MALAC" className="h-16 w-auto object-contain mb-2" />}
+        {step.logo && <img src={LOGO_FULL} alt="MALAC" className="h-16 w-auto object-contain mb-2" width={233} height={256} />}
         <h3 className="text-base font-bold text-lux-ink pr-5">{step.title}</h3>
         <p className="mt-1.5 text-[13px] leading-relaxed text-gray-600">{step.text}</p>
       </div>

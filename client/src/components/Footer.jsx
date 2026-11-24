@@ -70,7 +70,7 @@ export default function Footer() {
       </div>
       <div className="max-w-7xl mx-auto px-3 pt-8 pb-5 grid grid-cols-2 md:grid-cols-3 gap-6 text-[13px]">
         <div>
-          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-16 w-auto" />
+          <img src={LOGO_SILVER} alt="MALAC — M.A Luxury Apparel Collection" className="h-16 w-auto" width={518} height={573} />
           <p className="mt-3 leading-relaxed text-neutral-500">Premium fashion, watches and accessories — designed for the modern you, delivered all over Pakistan.</p>
           <p className="mt-3 flex items-start gap-1.5"><Truck size={14} className="mt-0.5 shrink-0 text-neutral-400" /> Standard delivery {rs(fees.standard)} — FREE on orders over {rs(fees.freeThreshold)}. TCS · Leopards · Trax · PostEx.</p>
           <p className="mt-2 flex items-center gap-1.5"><Mail size={14} className="shrink-0 text-neutral-400" /> info@malac.pp.ua</p>

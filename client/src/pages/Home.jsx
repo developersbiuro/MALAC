@@ -88,9 +88,16 @@ export default function Home() {
   const [flash, setFlash] = useState([]);
   const [newest, setNewest] = useState([]);
   const [pool, setPool] = useState([]);
+  // Loading flags drive same-size skeletons (CLS fix, 2026-11-24):
+  // the sections used to render as nothing / one text line and then
+  // balloon when the API data landed, shoving the footer ~0.6 of a
+  // viewport (desktop CLS 0.685, footer alone 0.602).
+  const [catLoading, setCatLoading] = useState(true);
+  const [flashLoading, setFlashLoading] = useState(true);
+  const [arrivalsLoading, setArrivalsLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {});
+    api.get("/categories").then((r) => setCategories(r.data.categories)).catch(() => {}).finally(() => setCatLoading(false));
     // Flash Sale (Abdullah, 2026-11-17): MIX categories — pehle har
     // category ka aik product (store ki category order me), phir baqi.
     api.get("/products", { params: { flashSale: "true", limit: 12 } }).then((r) => {
@@ -111,9 +118,11 @@ export default function Home() {
         if (!added) break;
       }
       setFlash(mixed);
-    }).catch(() => {});
-    api.get("/products", { params: { sort: "newest", limit: 10 } }).then((r) => setNewest(r.data.products)).catch(() => {});
-    api.get("/products", { params: { limit: 100 } }).then((r) => setPool(r.data.products)).catch(() => {});
+    }).catch(() => {}).finally(() => setFlashLoading(false));
+    let arrivalsSettled = 0;
+    const arrivalsDone = () => { arrivalsSettled += 1; if (arrivalsSettled === 2) setArrivalsLoading(false); };
+    api.get("/products", { params: { sort: "newest", limit: 10 } }).then((r) => setNewest(r.data.products)).catch(() => {}).finally(arrivalsDone);
+    api.get("/products", { params: { limit: 100 } }).then((r) => setPool(r.data.products)).catch(() => {}).finally(arrivalsDone);
   }, []);
 
   const tileLink = (tile) => {
@@ -137,13 +146,13 @@ export default function Home() {
         {/* Invite — hero ke foran baad (Abdullah, 23:43) */}
         <InviteBanner />
 
-        <FlashSale products={flash} />
+        <FlashSale products={flash} loading={flashLoading} />
       </div>
 
       {/* Shop by Category — design 1 ki dark band: sirf photo cards ki row */}
       <section className="bg-[#0b0b0d] mt-10 sm:mt-12 py-5 sm:py-7">
         <div className="max-w-7xl mx-auto px-3">
-          <CategoryGrid categories={[...categories].sort((a, b) => CAT_ORDER.indexOf(a.name) - CAT_ORDER.indexOf(b.name))} />
+          <CategoryGrid loading={catLoading} categories={[...categories].sort((a, b) => CAT_ORDER.indexOf(a.name) - CAT_ORDER.indexOf(b.name))} />
         </div>
       </section>
 
@@ -176,12 +185,26 @@ export default function Home() {
             </Link>
           </div>
           <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar pb-1 flex-1 min-w-0">
-            {arrivals.map((p) => (
-              <div key={p._id} className="w-[200px] sm:w-[224px] shrink-0">
-                <ProductCard product={p} badge={DESIGN_SKUS.includes(p.sku) ? "New" : undefined} />
-              </div>
-            ))}
-            {arrivals.length === 0 && <p className="text-gray-400 text-sm py-8">Loading products...</p>}
+            {arrivalsLoading && arrivals.length === 0
+              ? [0, 1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-[200px] sm:w-[224px] shrink-0">
+                    <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-cream-line">
+                      <div className="p-1.5 pb-0 sm:p-2 sm:pb-0"><div className="rounded-xl aspect-square bg-neutral-200 animate-pulse" /></div>
+                      <div className="p-2.5 sm:p-3.5 flex flex-col gap-2">
+                        <div className="h-3 rounded bg-neutral-200 animate-pulse w-3/4" />
+                        <div className="h-3 rounded bg-neutral-200 animate-pulse w-1/2" />
+                        <div className="h-4 rounded bg-neutral-200 animate-pulse w-2/5 mt-1" />
+                        <div className="h-8 rounded-full bg-neutral-200 animate-pulse mt-2" />
+                      </div>
+                    </div>
+                  </div>
+                ))
+              : arrivals.map((p) => (
+                  <div key={p._id} className="w-[200px] sm:w-[224px] shrink-0">
+                    <ProductCard product={p} badge={DESIGN_SKUS.includes(p.sku) ? "New" : undefined} />
+                  </div>
+                ))}
+            {arrivals.length === 0 && !arrivalsLoading && <p className="text-gray-400 text-sm py-8">Loading products...</p>}
           </div>
         </div>
         </div>

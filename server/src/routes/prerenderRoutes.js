@@ -189,6 +189,7 @@ function renderPage(res, page) {
       html = setMetaName(html, "twitter:title", title);
       html = setMetaName(html, "twitter:description", description);
       html = injectJsonLd(html, jsonLd);
+      if (page.extraHead) html = html.replace("</head>", `${page.extraHead}\n  </head>`);
       html = injectRoot(html, content);
       res.type("html").send(html);
     })
@@ -303,7 +304,11 @@ ${newest.map(card).join("\n")}
 </main>`;
   // No extra JSON-LD: the shell already carries the Organization graph,
   // and Home.jsx injects the FAQPage schema client-side.
-  renderPage(res, { title, description, canonical: `${SITE_URL}/`, content });
+  // Static hero preloads in the initial document (the parser sees them
+  // immediately — the old JS-injected preload fired too late and
+  // PageSpeed measured ~1s of LCP resource load delay on desktop).
+  const extraHead = `<link rel="preload" as="image" fetchpriority="high" media="(max-width: 639px)" href="/design-img/hero-main-mobile.jpg" />\n    <link rel="preload" as="image" fetchpriority="high" media="(min-width: 640px)" href="/design-img/hero-main.jpg" />`;
+  renderPage(res, { title, description, canonical: `${SITE_URL}/`, content, extraHead });
 });
 
 // ---- /shop ---------------------------------------------------------------

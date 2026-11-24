@@ -180,6 +180,12 @@
       }
     },
     {
+      "source": "/fonts/(.*)",
+      "destination": {
+        "service": "server"
+      }
+    },
+    {
       "source": "/",
       "destination": {
         "service": "server"

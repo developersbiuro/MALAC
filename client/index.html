@@ -11,20 +11,11 @@
     <meta name="theme-color" content="#0f172a" />
     <!-- PWA: installable web app (manifest + /sw.js registered in main.jsx) -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <script>
-      // Homepage hero preload ("/" only): the hero photo is the LCP
-      // element and React only discovers it after the bundle renders.
-      // Preloading the device-appropriate size here makes it arrive
-      // with the first paint. Other pages skip it entirely.
-      if (location.pathname === "/") {
-        var heroPreload = document.createElement("link");
-        heroPreload.rel = "preload";
-        heroPreload.as = "image";
-        heroPreload.setAttribute("fetchpriority", "high");
-        heroPreload.href = window.innerWidth < 640 ? "/design-img/hero-main-mobile.jpg" : "/design-img/hero-main.jpg";
-        document.head.appendChild(heroPreload);
-      }
-    </script>
+    <!-- Fonts are self-hosted (see src/index.css @font-face) — no
+         external font stylesheet to block rendering. The two files
+         every page uses are preloaded here. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/plus-jakarta-sans.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin href="/fonts/cinzel.woff2" />
     <link rel="apple-touch-icon" href="/app-icons/apple-touch-icon.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -101,9 +92,6 @@
       ]
     }
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>

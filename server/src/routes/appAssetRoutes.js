@@ -11,6 +11,12 @@ import {
   DESIGN_IMG_WALLET,
 } from "../assets/designImageAssets.js";
 import {
+  FONT_CINZEL,
+  FONT_CORMORANT,
+  FONT_CORMORANT_ITALIC,
+  FONT_JAKARTA,
+} from "../assets/fontAssets.js";
+import {
   SITE_IMG_ABOUT_STORE,
   SITE_IMG_HERO_MAIN,
   SITE_IMG_HERO_MOBILE,
@@ -168,6 +174,27 @@ router.get("/design-img/:file", (req, res) => {
     "Cache-Control": "public, max-age=31536000, immutable",
   });
   res.send(entry.buffer);
+});
+
+// Self-hosted webfonts (2026-11-24): replaces the render-blocking
+// Google Fonts stylesheet. Same decode-behind-try/catch rule as every
+// other asset here — a bad font 404s its own route only.
+const FONT_FILES = {
+  "cinzel.woff2": decode(FONT_CINZEL),
+  "cormorant-garamond.woff2": decode(FONT_CORMORANT),
+  "cormorant-garamond-italic.woff2": decode(FONT_CORMORANT_ITALIC),
+  "plus-jakarta-sans.woff2": decode(FONT_JAKARTA),
+};
+router.get("/fonts/:file", (req, res) => {
+  const buffer = FONT_FILES[req.params.file];
+  if (!buffer) return res.status(404).json({ message: "Font not found." });
+  res.set({
+    "Content-Type": "font/woff2",
+    "Content-Length": buffer.length,
+    "Cache-Control": "public, max-age=31536000, immutable",
+    "Access-Control-Allow-Origin": "*",
+  });
+  res.send(buffer);
 });
 
 export default router;

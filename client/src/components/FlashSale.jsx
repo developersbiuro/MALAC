@@ -80,9 +80,58 @@ function FlashCard({ product }) {
 // Flash Sale — Abdullah's dark reference design (2026-11-17): black
 // glossy frame, "FLASH SALE / Stay updated with your order status",
 // dark countdown pills (02h 45m 12s), View All →, 5 dark cards.
-export default function FlashSale({ products }) {
+// One skeleton card with the FlashCard's exact geometry, shown while
+// the flash products load (CLS fix, 2026-11-24 — the section used to
+// render as null and then pop in at full height).
+function FlashCardSkeleton() {
+  return (
+    <div className="flex flex-col h-full rounded-2xl overflow-hidden bg-gradient-to-b from-[#26262B] to-[#0E0E10] border border-[#C7C7CE]/60">
+      <div className="aspect-[4/3] bg-neutral-800 animate-pulse" />
+      <div className="flex flex-col flex-1 p-3">
+        <div className="h-[11px] w-20 rounded bg-neutral-700 animate-pulse" />
+        <div className="mt-1 min-h-[2.6em]">
+          <div className="h-3 w-full rounded bg-neutral-700 animate-pulse" />
+          <div className="h-3 w-2/3 rounded bg-neutral-700 animate-pulse mt-1.5" />
+        </div>
+        <div className="mt-1.5 h-6 w-24 rounded bg-neutral-700 animate-pulse" />
+        <div className="mt-auto pt-2.5"><div className="h-8 rounded-full bg-neutral-700 animate-pulse" /></div>
+      </div>
+    </div>
+  );
+}
+
+export default function FlashSale({ products, loading }) {
   const [h, m, s] = useCountdown(products?.[0]?.flashSaleEndsAt);
-  if (!products?.length) return null;
+  if (!products?.length) {
+    if (!loading) return null;
+    return (
+      <section className="relative bg-[#08080A] rounded-[26px] ring-1 ring-white/15 shadow-[0_14px_44px_rgba(0,0,0,0.4)] mt-8 sm:mt-10 p-4 sm:p-5 overflow-hidden" aria-hidden="true">
+        <div className="relative flex items-center gap-3 sm:gap-5 flex-wrap">
+          <div>
+            <h2 className="flex items-center gap-1.5 font-display text-xl sm:text-2xl font-bold leading-none text-white tracking-wide">
+              <Zap size={20} className="fill-white text-white" /> FLASH SALE
+            </h2>
+            <p className="text-[11px] text-neutral-400 mt-1.5">Stay updated with your order status</p>
+          </div>
+          <span className="flex items-center gap-1.5">
+            {[["--", "h"], ["--", "m"], ["--", "s"]].map(([v, u]) => (
+              <span key={u} className="bg-white/[0.07] border border-white/15 text-white rounded-full px-3.5 py-1 font-mono text-[13px] font-bold">
+                {v}<span className="text-[10px] font-semibold text-neutral-400 ml-0.5">{u}</span>
+              </span>
+            ))}
+          </span>
+          <span className="ml-auto inline-flex items-center gap-1 text-[13px] font-semibold text-neutral-200">
+            View All <ArrowRight size={14} />
+          </span>
+        </div>
+        <div className="relative flex gap-2.5 sm:gap-3.5 overflow-x-auto no-scrollbar mt-4 pb-1 lg:grid lg:grid-cols-5 lg:overflow-visible">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="w-[176px] sm:w-[200px] lg:w-auto shrink-0 lg:shrink"><FlashCardSkeleton /></div>
+          ))}
+        </div>
+      </section>
+    );
+  }
   const units = [[h, "h"], [m, "m"], [s, "s"]];
   return (
     <section className="relative bg-[#08080A] rounded-[26px] ring-1 ring-white/15 shadow-[0_14px_44px_rgba(0,0,0,0.4)] mt-8 sm:mt-10 p-4 sm:p-5 overflow-hidden">
