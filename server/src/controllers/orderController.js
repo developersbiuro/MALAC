@@ -240,6 +240,38 @@ export const adminUpdateStatus = asyncHandler(async (req, res) => {
   }
   const order = await Order.findById(req.params.id);
   if (!order) return res.status(404).json({ message: "Order not found" });
+  // Status state machine (audit L10, 2026-11-24): the pipeline only
+  // moves FORWARD — no Delivered → Pending style jumps. The side exits
+  // are Cancelled (any time before Delivered, via cancelOrder with its
+  // mandatory reason) and Returned (only from Delivered). Re-saving
+  // the SAME status stays allowed so dispatch details can be corrected
+  // in place, and "Shipped" now REQUIRES courier + tracking — the
+  // shipped WhatsApp/push messages quote them, so a shipment without
+  // them was a broken promise to the customer.
+  const FLOW = ["Pending", "Confirmed", "Packed", "Shipped", "OutForDelivery", "Delivered"];
+  const prevStatus = order.status === "Processing" ? "Confirmed" : order.status; // legacy stored label
+  if (status !== order.status) {
+    if (status === "Returned" && prevStatus !== "Delivered") {
+      return res.status(400).json({ message: "An order can only be marked Returned after it has been Delivered" });
+    }
+    if (status === "Cancelled" && ["Delivered", "Returned"].includes(prevStatus)) {
+      return res.status(400).json({ message: "A delivered or returned order cannot be cancelled" });
+    }
+    if (status !== "Cancelled" && status !== "Returned") {
+      const from = FLOW.indexOf(prevStatus);
+      const to = FLOW.indexOf(status);
+      if (from === -1 || to === -1 || to < from) {
+        return res.status(400).json({ message: `Order cannot move from ${order.status} to ${status}` });
+      }
+    }
+    if (status === "Shipped") {
+      const c = String(courier || order.courier || "").trim();
+      const t = String(trackingId || order.trackingId || "").trim();
+      if (!c || !t) {
+        return res.status(400).json({ message: "Courier and tracking ID are required to mark an order Shipped" });
+      }
+    }
+  }
   if (status === "Cancelled") {
     // Staff cancels also require a reason (admin list — enforced in service).
     try { await cancelOrder(order, "admin", { reason, note }); } catch (e) { return res.status(400).json({ message: e.message }); }

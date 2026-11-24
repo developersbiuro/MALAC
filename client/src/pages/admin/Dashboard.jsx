@@ -24,7 +24,7 @@ export default function Dashboard() {
   useEffect(() => { api.get("/admin/analytics").then((r) => setData(r.data)).catch(() => {}); }, []);
   if (!data) return <p className="text-gray-400">Loading analytics...</p>;
   const cards = [
-    { label: "Total Gross Revenue", value: rs(data.totalRevenue), Icon: Banknote },
+    { label: "Revenue (Paid Orders)", value: rs(data.totalRevenue), Icon: Banknote },
     { label: "Active Orders", value: data.activeOrders, Icon: ShoppingBag },
     { label: "Low Stock Alerts", value: data.lowStockAlerts, Icon: AlertTriangle },
     { label: "Total SKUs", value: data.totalSkus, Icon: Package },

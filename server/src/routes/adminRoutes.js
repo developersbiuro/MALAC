@@ -16,8 +16,11 @@ router.post("/notifications/read", orders.markNotificationsRead);
 // Mobile push (FCM) for the Admin app: device registration happens via
 // the app's bridge after staff sign-in; test fires a push to all devices.
 router.post("/push/register", push.registerPushDevice);
-router.post("/push/test", push.testPush);
-router.post("/push/broadcast", push.broadcastToCustomers);
+// Sending pushes (test or broadcast to every customer) is a Super
+// Admin action (audit L10, 2026-11-24) — device registration and the
+// template lists stay available to all staff.
+router.post("/push/test", isSuperAdmin, push.testPush);
+router.post("/push/broadcast", isSuperAdmin, push.broadcastToCustomers);
 router.get("/push/templates", push.listPushTemplates);
 router.get("/push/saved-templates", push.listSavedTemplates);
 router.post("/push/saved-templates", push.createSavedTemplate);
@@ -34,7 +37,10 @@ router.patch("/orders/:id/payment-verification", requirePermission("payments"), 
 // Review moderation: gated by "products" (reviews belong to the catalogue).
 router.get("/reviews", requirePermission("products"), admin.listReviewsAdmin);
 router.patch("/reviews/:id/status", requirePermission("products"), admin.setReviewStatus);
-router.get("/users", admin.listUsers);
+// The full user list exposes every customer's email + phone — Super
+// Admin only (audit L10, 2026-11-24); user WRITES were already gated
+// the same way below.
+router.get("/users", isSuperAdmin, admin.listUsers);
 // Super Admin only: staff creation + role assignment + reset approvals +
 // per-Vice-Admin access (permissions), verification, setup resend,
 // alternate phone and deletion. Creating staff (Vice-Admins) exists ONLY

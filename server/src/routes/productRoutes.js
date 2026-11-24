@@ -31,5 +31,5 @@ router.delete("/:id", protect, isStaff, requirePermission("products"), products.
 router.get("/:id/reviews", products.listReviews);
 router.post("/:id/reviews", protect, products.createReview);
 router.post("/:id/questions", protect, products.askQuestion);
-router.post("/:id/questions/:qid/answer", protect, isStaff, products.answerQuestion);
+router.post("/:id/questions/:qid/answer", protect, isStaff, requirePermission("products"), products.answerQuestion);
 export default router;

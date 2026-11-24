@@ -6,7 +6,14 @@ export async function getAnalytics() {
     Order.find({ status: { $ne: "Cancelled" } }).lean(),
     Product.find({ status: { $ne: "Archived" } }).lean(),
   ]);
-  const totalRevenue = orders.reduce((s, o) => s + o.total, 0);
+  // Revenue counts money actually received (audit L10, 2026-11-24):
+  // an order earns its total only once paymentStatus is "Paid" —
+  // manual transfers when staff verify them, COD when the order is
+  // Delivered (setOrderStatus stamps Paid at that point). Pending /
+  // unpaid orders still count as ORDERS below, never as revenue, and
+  // a Returned order's money went back, so it earns nothing either.
+  const earnsRevenue = (o) => o.paymentStatus === "Paid" && o.status !== "Returned";
+  const totalRevenue = orders.reduce((s, o) => s + (earnsRevenue(o) ? o.total : 0), 0);
   const activeOrders = orders.filter((o) =>
     ["Pending", "Confirmed", "Packed", "Shipped", "OutForDelivery"].includes(o.status) || o.status === "Processing").length;
   const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5)
@@ -15,7 +22,7 @@ export async function getAnalytics() {
   for (const o of orders) {
     const day = new Date(o.createdAt).toISOString().slice(0, 10);
     byDay[day] = byDay[day] || { date: day, orders: 0, revenue: 0 };
-    byDay[day].orders += 1; byDay[day].revenue += o.total;
+    byDay[day].orders += 1; byDay[day].revenue += earnsRevenue(o) ? o.total : 0;
   }
   const byCategory = {};
   for (const o of orders) for (const item of o.items) {
@@ -24,9 +31,12 @@ export async function getAnalytics() {
   }
   const categoryMap = new Map(products.map((p) => [String(p._id), p.category]));
   const categorySales = {};
-  for (const o of orders) for (const item of o.items) {
-    const cat = categoryMap.get(String(item.product)) || "Other";
-    categorySales[cat] = (categorySales[cat] || 0) + item.price * item.qty;
+  for (const o of orders) {
+    if (!earnsRevenue(o)) continue;
+    for (const item of o.items) {
+      const cat = categoryMap.get(String(item.product)) || "Other";
+      categorySales[cat] = (categorySales[cat] || 0) + item.price * item.qty;
+    }
   }
   return {
     totalRevenue,
