@@ -88,13 +88,16 @@ export const env = {
   // back to the built-in rule-based replies, so the chat never breaks.
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || "",
-    // Multi-key pool (Abdullah, 2026-11-24): GEMINI_API_KEYS is a
-    // comma-separated list of Gemini API keys. When one key hits its
-    // free-tier quota (HTTP 429) the assistant fails over to the next
-    // key instead of going silent. Falls back to the single
-    // GEMINI_API_KEY when the list variable is unset.
-    apiKeys: (process.env.GEMINI_API_KEYS || process.env.GEMINI_API_KEY || "")
-      .split(",").map((k) => k.trim()).filter(Boolean),
+    // Multi-key pool (Abdullah, 2026-11-24): the pool is the existing
+    // GEMINI_API_KEY plus every key in the comma-separated
+    // GEMINI_API_KEYS list. When one key hits its free-tier quota
+    // (HTTP 429) the assistant fails over to the next key instead of
+    // going silent. Adding a key = appending it to GEMINI_API_KEYS;
+    // the original key never has to be touched or re-entered.
+    apiKeys: [...new Set([
+      process.env.GEMINI_API_KEY || "",
+      ...(process.env.GEMINI_API_KEYS || "").split(",").map((k) => k.trim()),
+    ].map((k) => k.trim()).filter(Boolean))],
     // gemini-3.8-flash: current free-tier Flash model (Nov 2026);
     // gemini-2.5-flash was retired for new users.
     model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
