@@ -22,6 +22,12 @@ function config() {
   const raw = String(env.cloudinaryUrl || "").trim().replace(/^["']|["']$/g, "");
   const m = /cloudinary:\/\/([^:]+):([^@]+)@([^\s"']+)$/.exec(raw);
   if (!m) return null;
+  // The dashboard's format sample uses literal placeholders
+  // ("<your_api_key>") — a value pasted from that sample is NOT a
+  // credential. Refuse it so /api/health reports the truth instead
+  // of claiming Cloudinary is live (this exact paste happened on
+  // 2026-11-25 and cost a redeploy cycle to diagnose).
+  if (/[<>{}]|your_/i.test(m[1] + m[2] + m[3])) return null;
   return { apiKey: m[1], apiSecret: m[2], cloudName: m[3] };
 }
 
