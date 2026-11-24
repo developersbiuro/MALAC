@@ -79,8 +79,12 @@ const CAT_FAQS = [
   },
 ];
 
-// Price-band sections (mirror server prerenderRoutes.js PRICE_BANDS
-// exactly — same headings/thresholds, so bot HTML and human UI agree).
+// Price bands (thresholds mirror server prerenderRoutes.js PRICE_BANDS).
+// Abdullah, 2026-11-24: the bands exist for the SEO keyword phrases — on
+// the human page they must be a FILTER, not separate sections. The server
+// prerender keeps its keyword sections for Google; this page turns the
+// same bands into price-filter chips above the product grid, and shows
+// the band's keyword heading as the grid title while a band is active.
 const PRICE_BANDS = {
   Watches: [
     { max: 2000, heading: "Watches Under Rs. 2,000 in Pakistan" },
@@ -113,6 +117,7 @@ export default function CategoryPage() {
   const [products, setProducts] = useState([]);
   const [sub, setSub] = useState("");
   const [sort, setSort] = useState("");
+  const [band, setBand] = useState(0); // price-band filter: 0 = All Prices, else max price
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState(0);
   const [h, m, s] = useMidnightCountdown();
@@ -127,6 +132,7 @@ export default function CategoryPage() {
     const wanted = new URLSearchParams(window.location.search).get("sub") || "";
     setSub(wanted);
     setSort("");
+    setBand(0);
   }, [categoryName]);
 
   useEffect(() => {
@@ -159,27 +165,21 @@ export default function CategoryPage() {
   });
 
   const flashInCategory = products.filter((p) => (p.basePrice || 0) > (p.price || 0)).slice(0, 5);
-  // Price bands: partition the loaded products by price (cheapest first),
-  // same logic as the server prerender; a band shows only with >= 3 items.
-  const priceBands = (() => {
-    const bands = PRICE_BANDS[categoryName];
-    if (!bands || loading || !products.length) return [];
-    const priceOf = (p) =>
-      p.price > 0 ? p.price : p.salePrice > 0 ? p.salePrice : p.basePrice || 0;
-    const sorted = [...products]
-      .map((p) => ({ p, price: priceOf(p) }))
-      .filter((x) => x.price > 0)
-      .sort((a, b) => a.price - b.price);
-    let prevMax = 0;
-    return bands
-      .map((band) => {
-        const items = sorted.filter(
-          (x) => x.price > prevMax && x.price <= band.max
-        );
-        prevMax = band.max;
-        return { ...band, items };
-      })
-      .filter((b) => b.items.length >= 3);
+  // Price-band FILTER (not sections — Abdullah, 2026-11-24): the bands for
+  // this category become chips above the grid. A band filters the loaded
+  // products to price <= band.max; with no explicit sort chosen it shows
+  // cheapest first, like the old sections did.
+  const priceOf = (p) =>
+    p.price > 0 ? p.price : p.salePrice > 0 ? p.salePrice : p.basePrice || 0;
+  const bandsForCategory = PRICE_BANDS[categoryName] || [];
+  const activeBand = bandsForCategory.find((b) => b.max === band) || null;
+  const shownProducts = (() => {
+    if (!activeBand) return products;
+    const filtered = products.filter((p) => {
+      const price = priceOf(p);
+      return price > 0 && price <= activeBand.max;
+    });
+    return sort ? filtered : [...filtered].sort((a, b) => priceOf(a) - priceOf(b));
   })();
   const subs = meta?.subCategories || [];
 
@@ -290,8 +290,8 @@ export default function CategoryPage() {
       {/* Products — light metallic panel (his spec) */}
       <section id="cat-products" className="scroll-mt-24 mt-4 rounded-3xl bg-[#EAEAEA] border border-neutral-200 p-3 sm:p-5">
         <div className="flex items-center gap-2 text-sm px-1">
-          <h2 className="font-display text-lg sm:text-xl font-bold tracking-[0.14em] text-lux-ink uppercase">★ Just For You</h2>
-          <span className="text-gray-600 text-xs whitespace-nowrap ml-2">{products.length} products</span>
+          <h2 className="font-display text-lg sm:text-xl font-bold tracking-[0.14em] text-lux-ink uppercase">{activeBand ? activeBand.heading : "★ Just For You"}</h2>
+          <span className="text-gray-600 text-xs whitespace-nowrap ml-2">{shownProducts.length} products</span>
           <span className="flex-1" />
           <label className="flex items-center gap-2 text-xs text-gray-500">Sort
             <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort products"
@@ -300,34 +300,34 @@ export default function CategoryPage() {
             </select>
           </label>
         </div>
+        {/* Price filter chips — the SEO price bands as a filter, not
+            separate sections (Abdullah, 2026-11-24). */}
+        {bandsForCategory.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap mt-3 px-1">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Price</span>
+            {[{ max: 0, label: "All Prices" }, ...bandsForCategory.map((b) => ({ max: b.max, label: `Under Rs. ${b.max.toLocaleString("en-PK")}` }))].map((chip) => {
+              const active = band === chip.max;
+              return (
+                <button key={chip.max} type="button" onClick={() => setBand(chip.max)} aria-pressed={active}
+                  className={`text-xs font-semibold rounded-full px-3.5 py-2 border transition ${active ? "bg-neutral-900 text-white border-neutral-900" : "bg-white text-lux-ink border-neutral-300 hover:border-neutral-500"}`}>
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 mt-4">
-          {products.map((p) => <ProductCard key={p._id} product={p} />)}
+          {shownProducts.map((p) => <ProductCard key={p._id} product={p} />)}
         </div>
         {loading && <p className="text-center text-gray-400 py-10">Loading products...</p>}
-        {!loading && products.length === 0 && (
+        {!loading && shownProducts.length === 0 && (
           <p className="text-center text-gray-400 py-10">
-            Is category me abhi koi product nahi — jald araha hai.
+            {activeBand
+              ? `Rs. ${activeBand.max.toLocaleString("en-PK")} tak is category me abhi koi product nahi — All Prices par dekh lein.`
+              : "Is category me abhi koi product nahi — jald araha hai."}
           </p>
         )}
       </section>
-
-      {/* Price-band sections — dark boxes with the exact "under Rs. X"
-          phrases Pakistan searches (mirror the server prerender). */}
-      {priceBands.map((band) => (
-        <section key={band.heading} className="mt-4 rounded-3xl bg-[#0d0d0f] text-white p-5 sm:p-6 shadow">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-wide">{band.heading}</h2>
-          <p className="text-sm text-neutral-400 mt-1">
-            {band.items.length} picks at MALAC priced under Rs. {band.max.toLocaleString("en-PK")}, with Cash on Delivery available all over Pakistan.
-          </p>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto no-scrollbar mt-4 pb-1">
-            {band.items.map(({ p }) => (
-              <div key={p._id} className="w-[180px] sm:w-[210px] shrink-0">
-                <ProductCard product={p} />
-              </div>
-            ))}
-          </div>
-        </section>
-      ))}
 
       {/* FAQ accordion — dark container (his spec) */}
       <section className="mt-4 rounded-3xl bg-[#0d0d0f] text-white px-6 py-7 sm:px-9">
