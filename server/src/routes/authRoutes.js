@@ -56,6 +56,8 @@ router.get("/me", protect, auth.me);
 router.get("/referral", protect, auth.referralInfo);
 router.put("/me", protect, auth.updateProfile);
 router.put("/me/password", protect, auth.changePassword);
+router.get("/me/wishlist", protect, auth.getWishlist);
+router.put("/me/wishlist", protect, auth.setWishlist);
 // Profile photo: memory-storage multer capped at 400 KB (see
 // middleware/upload.js for why the photo lives on the user record as a
 // data URI). Multer's size error is reworded here — the shared error

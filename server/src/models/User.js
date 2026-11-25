@@ -67,6 +67,12 @@ const userSchema = new mongoose.Schema({
   // owner has not set a password yet; "active" = normal account.
   accountStatus: { type: String, enum: ["active", "pending_setup"], default: "active" },
   addresses: [addressSchema],
+  // Cross-device wishlist (audit L5, 2026-11-25): product IDs the
+  // customer has wishlisted, synced across their devices. The client
+  // keeps a localStorage mirror; this is the account copy. Customer
+  // data — never deleted by admin actions (retention rule); it
+  // changes only through the customer's own wishlist toggles.
+  wishlist: { type: [String], default: [] },
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
   googleId: { type: String, index: true, sparse: true },

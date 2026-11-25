@@ -604,6 +604,24 @@ export const updateProfile = asyncHandler(async (req, res) => {
   res.json({ user: publicUser(full || req.user) });
 });
 
+// Wishlist sync (audit L5, 2026-11-25): the account copy of the
+// customer's wishlist (product IDs). GET returns it; PUT replaces it
+// with the client's merged list — the client merges local + server
+// on sign-in (union, so nothing is ever lost) and pushes the full
+// list back on every toggle. IDs are sanitized (strings, deduped,
+// capped); dead IDs (archived products) drop out at merge time.
+export const getWishlist = asyncHandler(async (req, res) => {
+  res.json({ wishlist: req.user.wishlist || [] });
+});
+
+export const setWishlist = asyncHandler(async (req, res) => {
+  const raw = Array.isArray(req.body?.ids) ? req.body.ids : [];
+  const ids = [...new Set(raw.map((x) => String(x || "").trim()).filter((x) => x && x.length <= 40))].slice(0, 200);
+  req.user.wishlist = ids;
+  await req.user.save();
+  res.json({ wishlist: ids });
+});
+
 // Change password: only for accounts that HAVE one (customers who chose
 // a password at sign-up; staff who set one via the approval-gated reset).
 // Google / OTP-only accounts have no passwordHash and get a clear 400 —
