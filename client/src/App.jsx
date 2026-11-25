@@ -143,6 +143,21 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+  // Image protection (owner, 2026-11-25): the logo and photos stay
+  // fully visible everywhere (including Google), but casual saving
+  // is blocked — no right-click "Save image", no drag-out on images.
+  // This only deters casual copying; the legal protection is the
+  // copyright / trademark notice (Terms §10, footer).
+  useEffect(() => {
+    const onMenu = (e) => { if (e.target?.closest?.("img")) e.preventDefault(); };
+    const onDrag = (e) => { if (e.target?.closest?.("img")) e.preventDefault(); };
+    document.addEventListener("contextmenu", onMenu);
+    document.addEventListener("dragstart", onDrag);
+    return () => {
+      document.removeEventListener("contextmenu", onMenu);
+      document.removeEventListener("dragstart", onDrag);
+    };
+  }, []);
   const isAdmin = pathname.startsWith("/admin");
   // Daraz-style (owner, 2026-11-11): the bottom nav disappears inside
   // the buying flow — product page, cart, checkout, order confirmation

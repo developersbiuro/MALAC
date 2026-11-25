@@ -124,6 +124,10 @@ html { scrollbar-gutter: stable; }
 body { @apply bg-[#f1f1f3] text-[#101014] antialiased; }
 a, button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 img, video { max-width: 100%; }
+/* Image protection (owner, 2026-11-25): no drag-out, no iOS
+   long-press save menu on images — they display everywhere but
+   casual downloading is blocked. */
+img { -webkit-user-drag: none; -webkit-touch-callout: none; }
 
 /* iOS Safari auto-zooms when a focused form field renders below 16px,
    which makes checkout/auth forms feel jumpy on iPhones. Force 16px on
