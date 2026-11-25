@@ -99,7 +99,7 @@ export default function Footer() {
       </div>
       <div className="border-t border-white/10">
         <div className="max-w-7xl mx-auto px-3 py-3 flex flex-col sm:flex-row justify-between gap-1 text-xs text-neutral-500">
-          <span>© {new Date().getFullYear()} MALAC (M.A Luxury Apparel Collection). All Rights Reserved.</span>
+          <span>© {new Date().getFullYear()} MALAC (M.A Luxury Apparel Collection). All Rights Reserved.<br />MALAC™ — the MALAC name, logo and website content are the property of MALAC. Copying or misuse is prohibited.</span>
           <span className="hidden xl:inline">Delivering to: {CITIES.join(" · ")} &amp; all over Pakistan</span>
         </div>
       </div>

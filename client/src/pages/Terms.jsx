@@ -64,7 +64,12 @@ export default function Terms() {
         <p>How we collect, use and protect your personal information is described in our <Link to="/policy" className="text-lux-burnt font-medium hover:underline">Privacy Policy</Link>.</p>
       </LegalSection>
 
-      <LegalSection title="10. Governing Law & Contact">
+      <LegalSection title="10. Copyright & Trademark — Our Name and Logo">
+        <p><b>MALAC</b>, <b>M.A Luxury Apparel Collection</b>, the MALAC name, the MALAC logo (the M monogram and wordmark), and this website's design, text and other original content are the exclusive property of MALAC and its owner, Muhammad Abdullah. The MALAC logo is an original artwork; the MALAC name and logo are used as the trademarks of this business.</p>
+        <p>You may not copy, reproduce, imitate or use the MALAC name, the MALAC logo, or any content of this website — in whole or in part — for any purpose without our prior written permission. Unauthorised use may be reported to the platform concerned and pursued under the applicable laws of Pakistan, including the Copyright Ordinance, 1962 and the Trade Marks Ordinance, 2001. Product images on this store belong to MALAC or its suppliers and are shown only to present the products for sale.</p>
+      </LegalSection>
+
+      <LegalSection title="11. Governing Law & Contact">
         <p>These terms are governed by the laws of Pakistan. For anything about these terms or your order, contact us at info@malac.pp.ua or on WhatsApp at +92 3236016684.</p>
       </LegalSection>
     </LegalPage>
