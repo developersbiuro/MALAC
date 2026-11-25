@@ -11,7 +11,12 @@ import Product from "../models/Product.js";
 // Mounted OUTSIDE the /api database-readiness gate in app.js (same as
 // the sitemap): Google's fetcher must always get a 200, so any DB
 // failure falls back to a valid feed with an empty channel.
-const SITE_URL = "https://malac1.vercel.app";
+// Feed links point at the canonical store domain (audit L3,
+// 2026-11-25): the Merchant Center website claim moved to
+// www.malac.pp.ua first (Verified + Claimed via Search Console),
+// and only then were these links switched — the reverse order
+// would have disapproved every product for a domain mismatch.
+const SITE_URL = "https://www.malac.pp.ua";
 
 const router = Router();
 
